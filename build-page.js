@@ -76,10 +76,35 @@ function verify(html) {
         if (!html.includes(`src="${tag}"`)) problems.push(`missing <script src="${tag}">`);
     }
     if (html.includes('serviceWorker.register')) problems.push('service worker registration still present');
+    if (/href="\/settings\/"/.test(html)) problems.push('href="/settings/" survived — Settings would open the search page');
     if (html.indexOf('src="app.js"') > html.indexOf('<script src="/assets/')) {
         problems.push('app.js is not the first script — the fetch shim would install too late');
     }
     if (problems.length) throw new Error(`build-page.js produced a bad page:\n  - ${problems.join('\n  - ')}`);
+}
+
+// The site links to its own sub-pages as directories — href="/settings/". A web server resolves
+// that to settings/index.html; Capacitor's asset server does not, and an unresolved path there
+// falls back to the root index.html. So tapping the gear loaded the SEARCH page at the address
+// /settings/, the SPA router read "settings" as a keyword, and the reader got a failed search for
+// the word instead of their settings. There was no way into Settings at all.
+//
+// Pointing at the file directly is what makes it resolve. The site keeps the directory form,
+// which is the nicer URL and works there; only the app build is rewritten.
+const DIRECTORY_LINKS = /href="\/(settings|memo)\/"/g;
+
+function resolveDirectoryLinks(html) {
+    let count = 0;
+    const out = html.replace(DIRECTORY_LINKS, (_, dir) => { count++; return `href="/${dir}/index.html"`; });
+    if (!count) {
+        throw new Error(
+            'build-page.js: no directory-style links found in search/index.html.\n' +
+            'Either they were rewritten upstream (drop this step) or their shape changed ' +
+            '(update DIRECTORY_LINKS) — leaving them makes Settings unreachable in the app.'
+        );
+    }
+    console.log(`  directory links resolved to index.html: ${count}`);
+    return out;
 }
 
 function main() {
@@ -90,6 +115,7 @@ function main() {
 
     html = injectAppScripts(html);
     html = dropServiceWorker(html);
+    html = resolveDirectoryLinks(html);
     verify(html);
 
     fs.mkdirSync(WWW, { recursive: true });

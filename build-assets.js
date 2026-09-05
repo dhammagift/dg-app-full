@@ -269,11 +269,24 @@ function injectOfflineLibraryRow() {
       <div class="row">
         <div><p class="row-title" id="t-clearHist">`;
     if (!html.includes('id="dgOfflineLibRow"')) {
-        if (!html.includes(marker)) { console.warn('offline-library-settings: anchor not found, skipped'); return; }
+        // A warning used to be enough here. It is not: this row is the ONLY way a reader can see
+        // whether the library downloaded, retry a failed download, or take an update, so a build
+        // that quietly skips it ships an app with no route to any of that — and the warning
+        // scrolls past in a CI log nobody reads on a green run.
+        if (!html.includes(marker)) {
+            throw new Error(
+                'injectOfflineLibraryRow: anchor not found in settings/index.html.\n' +
+                'The Data section markup changed upstream in dg-node. Update `marker` to match it — ' +
+                'without this row there is no way to download, retry, or update the offline library.'
+            );
+        }
         html = html.replace(marker, rows);
     }
     const tag = '<script src="/offline-library-settings.js"></script>\n';
     if (!html.includes(tag)) html = html.replace('</body>', `${tag}</body>`);
+    if (!html.includes('id="dgOfflineLibBtn"') || !html.includes(tag)) {
+        throw new Error('injectOfflineLibraryRow: the row or its script is not in the output page');
+    }
     fs.writeFileSync(dest, html, 'utf8');
 }
 
@@ -302,10 +315,20 @@ function copyVendor() {
     fs.mkdirSync(to, { recursive: true });
     // index.mjs is the module the worker imports; the .wasm is what it fetches beside itself; the
     // async proxy is loaded by the OPFS VFS at runtime, and a missing one fails only on a device.
-    for (const name of ['index.mjs', 'sqlite3.wasm', 'sqlite3-opfs-async-proxy.js']) {
+    //
+    // It lands as index.js, RENAMED. A browser accepts a module only with a JavaScript MIME type,
+    // and Android's MimeTypeMap — what Capacitor's asset server consults — has no entry for "mjs",
+    // so it was served as application/octet-stream and the module worker refused to import it.
+    // That took out the entire data layer on the device: every search and every reader request
+    // failed, while autocomplete, which never touches it, kept working and made the app look
+    // half-alive. Nothing inside the file refers to its own name (it locates the .wasm and the
+    // async proxy through import.meta.url), so the rename is safe.
+    const VENDOR_FILES = { 'index.mjs': 'index.js', 'sqlite3.wasm': 'sqlite3.wasm',
+                           'sqlite3-opfs-async-proxy.js': 'sqlite3-opfs-async-proxy.js' };
+    for (const [name, as] of Object.entries(VENDOR_FILES)) {
         const src = path.join(from, name);
         if (!fs.existsSync(src)) throw new Error(`sqlite-wasm is missing ${name} — package layout changed?`);
-        fs.copyFileSync(src, path.join(to, name));
+        fs.copyFileSync(src, path.join(to, as));
     }
 }
 

@@ -14,9 +14,16 @@
 // exercise was meant to end. If the core ever stops being portable, this should fail loudly
 // rather than paper over it — hence the assertions below.
 //
-// Output: www/core-bundle.mjs, default-exporting the core (and also assigning it to self, so a
+// Output: www/core-bundle.js, default-exporting the core (and also assigning it to self, so a
 // classic script can reach it too). ES module because the worker that loads it must be one —
 // @sqlite.org/sqlite-wasm ships ESM only.
+//
+// The extension is .js, not .mjs, and that is load-bearing rather than taste. A browser accepts a
+// module only when it arrives with a JavaScript MIME type, and Android's MimeTypeMap — which is
+// what Capacitor's local asset server consults — has no entry for "mjs". It served the bundle as
+// application/octet-stream, the module worker refused to import it, and every search and every
+// reader request in the app failed while autocomplete (which does not go through the data layer)
+// kept working. .js is in every MIME table there is.
 //
 // Usage: node build-core-bundle.js   (DG_NODE_PATH as everywhere else)
 
@@ -114,7 +121,7 @@ if (typeof self !== 'undefined') self.DG_SEARCH_CORE = DG_SEARCH_CORE;
 `;
 
     fs.mkdirSync(WWW, { recursive: true });
-    const dest = path.join(WWW, 'core-bundle.mjs');
+    const dest = path.join(WWW, 'core-bundle.js');
     fs.writeFileSync(dest, out);
     console.log(`core bundle: ${path.relative(process.cwd(), dest)} (${(out.length / 1024).toFixed(1)} KB, ` +
         `configs: ${inlined.length}, reader langs: ${readerLangs.length})`);

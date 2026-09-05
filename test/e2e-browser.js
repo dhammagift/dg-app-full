@@ -59,6 +59,37 @@ const CASES = [
         process.exit(1);
     }
 
+    // Two device-only failures this file now guards, both invisible to the request matrix below.
+    //
+    // The worker: it imports two ES modules, and a browser accepts a module only with a
+    // JavaScript MIME type. When those files ended in .mjs, Capacitor's asset server — which
+    // consults Android's MimeTypeMap, and that has no "mjs" — served them as octet-stream, the
+    // worker never started, and every search and reader request in the app failed. The check is
+    // just the await above: it now runs against a server whose MIME table is no more permissive
+    // than a device's (see test/serve-local.js), so a return to .mjs fails here.
+    //
+    // Settings: the site links to it as a directory, href="/settings/". Capacitor does not
+    // resolve a directory, and an unresolved path falls back to the root index.html — so the gear
+    // opened the SEARCH page at the address /settings/, the router read "settings" as a keyword,
+    // and there was no way into Settings at all.
+    const gear = await page.evaluate(() => {
+        const a = document.getElementById('settingsButton');
+        return a && a.getAttribute('href');
+    });
+    const settings = await page.goto(BASE + gear, { waitUntil: 'domcontentloaded', timeout: 45000 })
+        .then(() => page.evaluate(() => ({ title: document.title, isSearch: !!document.getElementById('paliauto') })))
+        .catch(e => ({ error: e.message }));
+    const settingsOk = settings && !settings.error && !settings.isSearch;
+    console.log((settingsOk ? 'SAME  ' : 'DIFF  ') + `settings reachable via ${gear} -> ` +
+        JSON.stringify(settings && (settings.title || settings.error)));
+    if (!settingsOk) {
+        console.log('   the gear does not open Settings — a directory link that Capacitor cannot resolve');
+        await browser.close();
+        process.exit(1);
+    }
+    await page.goto(BASE + '/', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.evaluate(() => window.dgOfflineReady);
+
     let same = 0;
     const differing = [];
     for (const [name, url] of CASES) {

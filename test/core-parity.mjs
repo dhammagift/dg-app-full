@@ -43,7 +43,7 @@ function nodeSqliteShim(db) {
 
 // Loaded exactly the way the worker loads it: as an ES module.
 async function loadBundle() {
-    const url = pathToFileURL(path.join(REPO, 'www', 'core-bundle.mjs')).href;
+    const url = pathToFileURL(path.join(REPO, 'www', 'core-bundle.js')).href;
     const mod = await import(url);
     if (!mod.default) throw new Error('bundle has no default export');
     return mod.default;

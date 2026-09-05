@@ -11,8 +11,12 @@
 // The page's fetch shim is already asynchronous, so nothing above this file had to change to
 // accommodate the boundary.
 
-import sqlite3InitModule from './vendor/sqlite-wasm/index.mjs';
-import core from './core-bundle.mjs';
+// Both imports end in .js, deliberately: a browser only accepts a module served with a
+// JavaScript MIME type, and Android's MimeTypeMap has no entry for "mjs". Capacitor's asset
+// server therefore served these as application/octet-stream, this worker failed to start, and
+// with it went every search and every reader request in the app. See build-core-bundle.js.
+import sqlite3InitModule from './vendor/sqlite-wasm/index.js';
+import core from './core-bundle.js';
 
 // dg-mobile.db, not dg.db: the server's own database is dg.db and lives on the same box, so
 // sharing the name is how a symlink ends up pointing 600MB of every language at a phone.
