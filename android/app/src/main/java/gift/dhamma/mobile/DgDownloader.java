@@ -55,6 +55,22 @@ public class DgDownloader extends Plugin {
     static final String NOTIFICATIONS = "notifications";
     private static final String FILE_NAME = "dg-mobile.db";
 
+    /**
+     * PluginCall.getLong() casts the bridged value to Long, and a JS number arrives through
+     * org.json as an Integer — so the cast fails and returns null, and every status() call was
+     * rejected with "id is required" while the download itself ran fine. Read the raw value and
+     * widen it instead. A DownloadManager id can outgrow an int, so both widths are accepted, and
+     * so is a string, which is what a caller reaches for after being bitten by this once.
+     */
+    private Long readId(PluginCall call) {
+        Object raw = call.getData().opt("id");
+        if (raw instanceof Number) return ((Number) raw).longValue();
+        if (raw instanceof String) {
+            try { return Long.parseLong(((String) raw).trim()); } catch (NumberFormatException e) { return null; }
+        }
+        return null;
+    }
+
     private DownloadManager manager() {
         return (DownloadManager) getContext().getSystemService(Context.DOWNLOAD_SERVICE);
     }
@@ -127,7 +143,7 @@ public class DgDownloader extends Plugin {
      */
     @PluginMethod
     public void status(PluginCall call) {
-        Long id = call.getLong("id");
+        Long id = readId(call);
         if (id == null) {
             call.reject("id is required");
             return;
@@ -198,7 +214,7 @@ public class DgDownloader extends Plugin {
      */
     @PluginMethod
     public void clear(PluginCall call) {
-        Long id = call.getLong("id");
+        Long id = readId(call);
         try {
             if (id != null) manager().remove(id);
             File target = new File(getContext().getExternalFilesDir(null), FILE_NAME);

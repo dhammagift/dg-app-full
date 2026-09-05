@@ -152,7 +152,8 @@ async function runNativeDownload(downloader, url, ru) {
             title: 'Dhamma.gift',
             description: ru ? 'Тексты и переводы для работы без сети' : 'Texts and translations for offline use',
         });
-        id = started.id;
+        id = started && started.id;
+        if (id === undefined || id === null) throw new Error('the system downloader returned no id');
         try { localStorage.setItem(DOWNLOAD_ID_KEY, String(id)); } catch (e) { /* ignore */ }
     }
 
