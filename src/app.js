@@ -48,7 +48,10 @@
 
 })();
 
-const DIST_BASE = 'https://test.dhamma.gift/mobile-data';
+// Where the offline databases are published: siteroot/mobile-data in dg-node, served from
+// the live host. Not test.dhamma.gift — that was left over from development and is not
+// where the files actually are.
+const DIST_BASE = 'https://dhamma.gift/mobile-data';
 const MIN_KEYWORD_LENGTH = 3; // mirrors dg-light.js's MIN_KEYWORD_LENGTH
 
 let SQL;

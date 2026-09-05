@@ -53,7 +53,7 @@ same `fetch('/search?q=…')` it issues on the web.
 | everything else | the real fetch (local files) |
 
 The databases are **not** bundled in the APK (which is ~4.5 MB). They are downloaded on first
-launch from `test.dhamma.gift/mobile-data/` and cached on the device.
+launch from `dhamma.gift/mobile-data/` and cached on the device.
 
 ## Building locally
 
