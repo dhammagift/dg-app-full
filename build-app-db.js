@@ -22,6 +22,8 @@
 //   curl -O https://raw.githubusercontent.com/dhammagift/dg-app-full/main/build-app-db.js
 //   node build-app-db.js --from=/var/www/html/nodejs/dg.db --langs=ru,en --out=/var/www/dg-ru-en.db
 //   node build-app-db.js --langs=all           # everything, i.e. a plain copy
+//   node build-app-db.js --langs=ru,en --fts=prefix   # smaller index, weaker matching (see below)
+//   node build-app-db.js --langs=ru,en --fts=none     # no index at all — for measuring only
 //
 // Output: dist/dg.db
 
@@ -44,13 +46,35 @@ try { repoPaths = require('./paths'); } catch (e) { /* running as a single file 
 // out of the search index. Kept in sync by hand — if that set grows there, it grows here.
 const UNINDEXED_TRANSLATORS = ['ai'];
 
+// How to index. The trigram index is what makes the app's search agree with the site's: it
+// indexes every 3-character window, which is what lets "kacchapa" match inside "mahākacchapa" the
+// way the server's grep did. That coverage is also why it is large — several times the text it
+// indexes. The alternatives exist to be measured against it, not because either is equivalent:
+//
+//   trigram  (default) — matches the server exactly.
+//   prefix             — unicode61 tokens, queried as "word*". Finds the start of a word only,
+//                        so compounds stop matching mid-word. This is the FTS4 behaviour the app
+//                        shipped before, and its results DIVERGE from the site's.
+//   none               — no index. Search does not work; useful only to see what the index costs
+//                        and to price building it on the device instead of shipping it.
+const FTS_MODES = {
+    trigram: "tokenize='trigram remove_diacritics 1'",
+    prefix:  "tokenize='unicode61 remove_diacritics 2', prefix='2 3 4'",
+    none:    null,
+};
+
 function parseArgs() {
-    const args = { from: null, langs: null, out: null };
+    const args = { from: null, langs: null, out: null, fts: 'trigram' };
     for (const arg of process.argv.slice(2)) {
         const [key, value] = arg.replace(/^--/, '').split('=');
         if (key === 'from') args.from = value;
         if (key === 'out') args.out = value;
         if (key === 'langs') args.langs = value === 'all' ? 'all' : value.split(',').map(s => s.trim()).filter(Boolean);
+        if (key === 'fts') args.fts = value;
+    }
+    if (!(args.fts in FTS_MODES)) {
+        console.error(`--fts must be one of: ${Object.keys(FTS_MODES).join(', ')}`);
+        process.exit(1);
     }
     if (!args.from) {
         if (!repoPaths) {
@@ -155,19 +179,37 @@ function main() {
 
     // The index is rebuilt rather than copied: it is derived data, and building it here keeps the
     // ё-folding and the excluded translators identical to build-search-db.js by construction.
-    t = Date.now();
-    db.exec(`
-        CREATE VIRTUAL TABLE fts USING fts5(
-            txt, content='texts', content_rowid='rowid',
-            tokenize='trigram remove_diacritics 1');
-    `);
-    const ph = UNINDEXED_TRANSLATORS.map(() => '?').join(',');
-    db.prepare(
-        `INSERT INTO fts(rowid, txt)
-         SELECT rowid, replace(replace(txt, 'ё', 'е'), 'Ё', 'Е') FROM texts
-         WHERE translator IS NULL OR translator NOT IN (${ph})`
-    ).run(...UNINDEXED_TRANSLATORS);
-    console.log(`fts index (${Date.now() - t}ms)`);
+    if (FTS_MODES[args.fts]) {
+        t = Date.now();
+        db.exec(`
+            CREATE VIRTUAL TABLE fts USING fts5(
+                txt, content='texts', content_rowid='rowid',
+                ${FTS_MODES[args.fts]});
+        `);
+        const ph = UNINDEXED_TRANSLATORS.map(() => '?').join(',');
+        db.prepare(
+            `INSERT INTO fts(rowid, txt)
+             SELECT rowid, replace(replace(txt, 'ё', 'е'), 'Ё', 'Е') FROM texts
+             WHERE translator IS NULL OR translator NOT IN (${ph})`
+        ).run(...UNINDEXED_TRANSLATORS);
+        console.log(`fts index, ${args.fts} (${Date.now() - t}ms)`);
+    } else {
+        console.log('fts index: skipped (--fts=none) — search will NOT work in this file');
+    }
+
+    // Where the bytes went. The index usually dominates, and that is the number worth seeing
+    // before deciding what to ship — guessing at it is how you end up shipping 170MB by accident.
+    let breakdown = '';
+    try {
+        const rows = db.prepare('SELECT name, sum(pgsize) b FROM dbstat GROUP BY name').all();
+        let ftsBytes = 0, idxBytes = 0, dataBytes = 0;
+        for (const r of rows) {
+            if (r.name.startsWith('fts')) ftsBytes += Number(r.b);
+            else if (r.name.startsWith('idx_') || r.name.startsWith('sqlite_')) idxBytes += Number(r.b);
+            else dataBytes += Number(r.b);
+        }
+        breakdown = `  data ${mb(dataBytes)} MB · indexes ${mb(idxBytes)} MB · fts ${mb(ftsBytes)} MB\n`;
+    } catch (e) { /* dbstat is a compile-time option; skip the breakdown if absent */ }
 
     db.exec('DETACH DATABASE src');
     db.exec('ANALYZE');
@@ -176,7 +218,7 @@ function main() {
     const srcMb = mb(fs.statSync(args.from).size);
     const outMb = mb(fs.statSync(args.out).size);
     console.log(
-        `\n${args.out}: ${outMb} MB (from ${srcMb} MB)\n` +
+        `\n${args.out}: ${outMb} MB (from ${srcMb} MB)\n` + breakdown +
         `translations kept: ${kept.map(r => `${r.lang} ${r.c}`).join(', ') || 'none'}\n` +
         `Total ${((Date.now() - started) / 1000).toFixed(1)}s`
     );
