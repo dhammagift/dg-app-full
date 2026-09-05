@@ -76,7 +76,12 @@ function nodeSqliteShim(oo1db) {
 // download that silently stops moving forever. STALL_MS bounds how long any single read may take;
 // past it the fetch is aborted and the whole thing is retried rather than left hanging.
 const STALL_MS = 15000;
-const MAX_ATTEMPTS = 4;
+const MAX_ATTEMPTS = 6;
+const MANIFEST_TIMEOUT_MS = 8000;
+// Retrying instantly into a connection that just dropped tends to hit the same dead spot again.
+// Backoff is capped low (network conditions on a phone change in seconds, not minutes) and jitter
+// keeps a whole fleet of readers from retrying in lockstep against the same server.
+const RETRY_BACKOFF_MS = attempt => Math.min(8000, 500 * 2 ** attempt) + Math.floor(Math.random() * 500);
 
 async function downloadInto(pool, url, name) {
     // Reading a file the system already fetched is not a download and should not be described as
@@ -123,6 +128,7 @@ async function downloadInto(pool, url, name) {
             // importDbChunked() (sqlite-wasm) already removes the partial file on the exception
             // this abort caused, so the next attempt starts clean — nothing to unlink here.
             post({ type: 'progress', loaded: 0, total: 0, phase, retrying: attempt + 1 });
+            await new Promise(resolve => setTimeout(resolve, RETRY_BACKOFF_MS(attempt)));
         } finally {
             clearInterval(watchdog);
         }
@@ -236,11 +242,19 @@ async function fetchCurrent(pool, distBase, sourceUrl) {
 // The manifest is small and its absence is not an error: a device that is offline, or pointed at
 // a server that publishes none, must still open the copy it already has.
 async function fetchManifest(distBase) {
+    // Same silent-hang risk as the database itself (see STALL_MS above), but this one runs before
+    // the reader ever sees a progress bar — 'status' calls it just to decide whether to ask about
+    // a download at all, so a hang here would mean nothing on screen, not just a stuck bar. A
+    // manifest is a few hundred bytes; if it hasn't arrived in MANIFEST_TIMEOUT_MS it never will
+    // on this attempt, and its absence is already a handled, non-fatal case.
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), MANIFEST_TIMEOUT_MS);
     try {
-        const response = await fetch(`${distBase}/db-manifest.json`, { cache: 'no-store' });
+        const response = await fetch(`${distBase}/db-manifest.json`, { cache: 'no-store', signal: controller.signal });
         if (!response.ok) return null;
         return await response.json();
     } catch (e) { return null; }
+    finally { clearTimeout(timer); }
 }
 
 async function open(distBase, sourceUrl) {
