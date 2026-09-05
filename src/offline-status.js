@@ -20,6 +20,33 @@
         return name;
     }
 
+    // Owner: the consent sheet showed the language set as "RU+EN", which reads like a build flag
+    // rather than like something offered to a reader. These are the names people use. Unknown
+    // codes fall back to the bare code rather than being dropped — a language nobody named here
+    // should still be visible in the figure.
+    var LANG_NAMES = {
+        ru: { ru: 'русский', en: 'Russian' },
+        en: { ru: 'английский', en: 'English' },
+        pli: { ru: 'пали', en: 'Pali' },
+        de: { ru: 'немецкий', en: 'German' },
+    };
+    function languageList(langs, ru) {
+        var names = String(langs || '').split(',').map(function (code) {
+            var key = code.trim().toLowerCase();
+            var entry = LANG_NAMES[key];
+            return entry ? entry[ru ? 'ru' : 'en'] : key.toUpperCase();
+        }).filter(Boolean);
+        if (!names.length) return ru ? 'русский и английский' : 'Russian and English';
+        if (names.length === 1) return names[0];
+        var last = names.pop();
+        return names.join(', ') + (ru ? ' и ' : ' and ') + last;
+    }
+
+    function formatMb(bytes) {
+        var mb = bytes / 1048576;
+        return (mb < 10 ? mb.toFixed(1) : Math.round(mb));
+    }
+
     // Self-colored (like .bubble-notification above), no dark/light variant needed — visible on
     // either theme the same way the existing toast is.
     const style = document.createElement('style');
@@ -105,8 +132,61 @@
         #dgConsentSheet .dgc-primary { background: var(--dgc-accent); color: #fff; }
         #dgConsentSheet .dgc-primary:hover { filter: brightness(1.08); }
         #dgConsentSheet button:focus-visible { outline: 2px solid var(--dgc-accent); outline-offset: 2px; }
+        /* The language figure carries words now, not a "RU+EN" flag, so it gets its own scale
+           and is allowed to wrap rather than being clipped by the number-sized rule above. */
+        #dgConsentSheet .dgc-fig-wide dd {
+            font-size: 13.5px; font-weight: 500; line-height: 1.35;
+            font-variant-numeric: normal;
+        }
+
+        /* Download progress. Owner asked for a real bar, not a line of text — this is the same
+           surface, radius and accent as the consent sheet above so the two read as one thing,
+           and it is deliberately NOT interactive: nothing here can be clicked, so it never eats
+           a tap meant for the page underneath. */
+        #dgDlCard {
+            position: fixed; left: 50%; bottom: 14px; transform: translate(-50%, 14px);
+            width: min(420px, calc(100% - 28px)); z-index: 10001;
+            --dgc-surface: #fff; --dgc-sunk: #f1f5f4; --dgc-rule: #dde5e2;
+            --dgc-ink: #141a18; --dgc-muted: #5b6b66; --dgc-faint: #8a9994; --dgc-accent: #136857;
+            background: var(--dgc-surface); color: var(--dgc-ink);
+            border: 1px solid var(--dgc-rule); border-radius: 18px; padding: 14px 16px 15px;
+            box-shadow: 0 18px 48px -14px rgba(9, 30, 25, .38);
+            display: flex; flex-direction: column; gap: 9px;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            opacity: 0; pointer-events: none;
+            transition: opacity .18s ease, transform .2s cubic-bezier(.2,.8,.3,1);
+        }
+        #dgDlCard.show { opacity: 1; transform: translate(-50%, 0); }
+        [data-bs-theme="dark"] #dgDlCard {
+            --dgc-surface: #171f1d; --dgc-sunk: #101816; --dgc-rule: #27332f;
+            --dgc-ink: #e8efec; --dgc-muted: #9aaba6; --dgc-faint: #6d7f7a; --dgc-accent: #3f9d86;
+            box-shadow: 0 18px 48px -14px rgba(0, 0, 0, .65);
+        }
+        #dgDlCard .dgdl-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+        #dgDlCard .dgdl-title { font-size: 13.5px; font-weight: 600; }
+        #dgDlCard .dgdl-pct {
+            font-size: 13.5px; font-weight: 600; color: var(--dgc-accent);
+            font-variant-numeric: tabular-nums;
+        }
+        #dgDlCard .dgdl-track {
+            height: 6px; border-radius: 999px; background: var(--dgc-sunk); overflow: hidden;
+        }
+        #dgDlCard .dgdl-fill {
+            height: 100%; width: 0; border-radius: 999px; background: var(--dgc-accent);
+            transition: width .25s ease;
+        }
+        /* Before Content-Length is known there is no fraction to show, so the bar says "working"
+           rather than lying about a position. */
+        #dgDlCard.indeterminate .dgdl-fill {
+            width: 35%; animation: dgDlSlide 1.1s ease-in-out infinite alternate;
+        }
+        @keyframes dgDlSlide { from { margin-left: 0; } to { margin-left: 65%; } }
+        #dgDlCard .dgdl-sub {
+            font-size: 11.5px; color: var(--dgc-muted); font-variant-numeric: tabular-nums;
+        }
         @media (prefers-reduced-motion: reduce) {
-            #dgConsent, #dgConsentSheet { transition: none; }
+            #dgConsent, #dgConsentSheet, #dgDlCard, #dgDlCard .dgdl-fill { transition: none; }
+            #dgDlCard.indeterminate .dgdl-fill { animation: none; }
         }
     `;
     document.head.appendChild(style);
@@ -121,16 +201,51 @@
         return bar;
     }
 
+    // Owner: "очень хорошо было бы иметь прогресс бар загрузки". The download is 170MB — a line
+    // of text saying "50%" gives no sense of whether it is moving, and this is the longest wait
+    // the app ever asks anyone to sit through.
+    var dlCard = null;
+    function ensureDlCard() {
+        if (dlCard) return dlCard;
+        dlCard = document.createElement('div');
+        dlCard.id = 'dgDlCard';
+        dlCard.setAttribute('role', 'status');
+        dlCard.setAttribute('aria-live', 'polite');
+        dlCard.innerHTML =
+            '<div class="dgdl-head"><span class="dgdl-title"></span><span class="dgdl-pct"></span></div>' +
+            '<div class="dgdl-track"><div class="dgdl-fill"></div></div>' +
+            '<div class="dgdl-sub"></div>';
+        document.body.appendChild(dlCard);
+        return dlCard;
+    }
+
+    var dlHideTimer = null;
     window.addEventListener('dg:dl-progress', function (e) {
-        const { name, step, totalSteps, loaded, total } = e.detail;
-        const ru = isRuLang();
-        const pct = total ? Math.round((loaded / total) * 100) : null;
-        const stepLabel = ru ? `Загрузка (${step}/${totalSteps})` : `Downloading (${step}/${totalSteps})`;
-        const el = ensureBar();
-        el.textContent = pct !== null
-            ? `${stepLabel}: ${labelFor(name, ru)} ${pct}%`
-            : `${stepLabel}: ${labelFor(name, ru)}`;
-        el.classList.add('show');
+        var detail = e.detail || {};
+        var loaded = detail.loaded || 0;
+        var total = detail.total || 0;
+        var ru = isRuLang();
+        var card = ensureDlCard();
+        var pct = total ? Math.min(100, Math.round((loaded / total) * 100)) : null;
+
+        card.querySelector('.dgdl-title').textContent = ru
+            ? 'Загрузка офлайн-библиотеки' : 'Downloading the offline library';
+        card.querySelector('.dgdl-pct').textContent = pct === null ? '' : pct + '%';
+        card.classList.toggle('indeterminate', pct === null);
+        if (pct !== null) card.querySelector('.dgdl-fill').style.width = pct + '%';
+        card.querySelector('.dgdl-sub').textContent = total
+            ? (ru ? formatMb(loaded) + ' МБ из ' + formatMb(total) + ' МБ'
+                  : formatMb(loaded) + ' MB of ' + formatMb(total) + ' MB')
+            : (ru ? formatMb(loaded) + ' МБ' : formatMb(loaded) + ' MB');
+        card.classList.add('show');
+
+        // The last progress event arrives when the stream ends, so completion is visible here
+        // rather than needing its own signal from the worker.
+        clearTimeout(dlHideTimer);
+        if (total && loaded >= total) {
+            card.querySelector('.dgdl-title').textContent = ru ? 'Библиотека загружена' : 'Library downloaded';
+            dlHideTimer = setTimeout(function () { card.classList.remove('show'); }, 2500);
+        }
     });
 
     // app.js dispatches this (and awaits the resolve it carries) only when a download is
@@ -179,8 +294,8 @@
                   '<dl class="dgc-figures">' +
                     '<div class="dgc-fig"><dt>' + (ru ? 'Размер' : 'Size') + '</dt>' +
                       '<dd>' + approx + mb + '<span>' + (ru ? 'МБ' : 'MB') + '</span></dd></div>' +
-                    '<div class="dgc-fig"><dt>' + (ru ? 'Языки' : 'Languages') + '</dt>' +
-                      '<dd>' + langs.split(',').join('+').toUpperCase() + '</dd></div>' +
+                    '<div class="dgc-fig dgc-fig-wide"><dt>' + (ru ? 'Языки' : 'Languages') + '</dt>' +
+                      '<dd>' + languageList(langs, ru) + '</dd></div>' +
                   '</dl>' +
                   '<div class="dgc-actions">' +
                     '<button type="button" class="dgc-ghost">' + (ru ? 'Не сейчас' : 'Not now') + '</button>' +
