@@ -29,6 +29,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 // node:sqlite, not better-sqlite3, even though this repo depends on the latter: that keeps the
 // file runnable on its own. The database being sliced lives on the prod server, which has
 // dg-node but no checkout of this repo and no reason to gain one — so this has to work as a
@@ -58,38 +59,129 @@ const UNINDEXED_TRANSLATORS = ['ai'];
 //   none               — no index. Search does not work; useful only to see what the index costs
 //                        and to price building it on the device instead of shipping it.
 const FTS_MODES = {
-    trigram: "tokenize='trigram'",
+    trigram: "tokenize='trigram remove_diacritics 1'",
     prefix:  "tokenize='unicode61 remove_diacritics 2', prefix='2 3 4'",
     none:    null,
 };
 
-// dg.db's own index is tokenize='trigram remove_diacritics 1'. The app cannot use that option:
-// @capacitor-community/sqlite talks to SQLCipher for Android (net.zetetic:android-database-
-// sqlcipher:4.5.3, SQLite ~3.39), and remove_diacritics was only added to the TRIGRAM tokenizer in
-// SQLite 3.45 — the trigram tokenizer itself has been there since 3.34, it is just that option
-// that is newer. Rather than depend on which SQLite a given device ships, the slice folds the text
-// itself before indexing and uses a plain trigram tokenizer, which works on every version that has
-// trigram at all.
+// The index is defined exactly as build-search-db.js defines dg.db's, down to the tokenizer
+// options, and populated from exactly the same expression. That is not tidiness: the core running
+// in the app builds its MATCH queries the same way it does on the server, so any difference in how
+// the index folds text is a difference the core cannot see and cannot correct.
 //
-// This is the same trick build-search-db.js already uses for ё (the tokenizer will not fold that
-// one either, being a Cyrillic letter in its own right) — just extended to every mark. The fold is
-// length-preserving, matching dg-fastify.js's foldText(), so an offset found in folded text still
-// slices the real word form ("kacchapānaṁ", not "kacchapanam") out of the original.
-const foldCharCache = new Map();
-function foldChar(ch) {
-    let folded = foldCharCache.get(ch);
-    if (folded === undefined) {
-        const stripped = ch.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
-        folded = stripped.length === 1 ? stripped : ch.toLowerCase();
-        if (folded.length !== 1) folded = ch;
-        if (folded === 'ё') folded = 'е';
-        foldCharCache.set(ch, folded);
+// It used to differ, and that was exactly the divergence. The slice indexed a fully folded copy of
+// the text — every diacritic stripped — under a PLAIN trigram tokenizer, so the stored side was
+// folded and the query side was not: the server's tokenizer folds both, a plain one folds neither.
+// Searching for "kacchapanam" therefore worked while "kacchapānaṁ", as the word is actually
+// written, found nothing in the app and two suttas on the site. Caught by test/e2e-browser.js.
+//
+// What forced the plain tokenizer was @capacitor-community/sqlite, whose SQLCipher build sits
+// around SQLite 3.39 while remove_diacritics reached the TRIGRAM tokenizer in 3.45. That
+// dependency is gone — the app runs @sqlite.org/sqlite-wasm 3.53 and nothing else — so the
+// constraint went with it. ё stays the one fold done by hand, for the same reason it is on the
+// server: the tokenizer treats it as a letter in its own right, and the query side folds it the
+// same way.
+const YO_FOLD = "replace(replace(txt, 'ё', 'е'), 'Ё', 'Е')";
+
+// Bumped when the SHAPE of the database changes — a column added, a table renamed, the FTS
+// definition altered. The app checks it on open and refuses a file it was not built against,
+// because the alternative is queries that almost fit.
+const SCHEMA_VERSION = 1;
+
+// ---- provenance: what this build contains, at a granularity a patch can address ---------------
+// A database that cannot say what is in it can only ever be replaced whole. These two tables are
+// what makes anything smaller possible later, and they have to be in the file BEFORE it reaches a
+// device: a patch is computed by comparing two builds, and a build that never recorded its own
+// contents cannot be one of them.
+//
+// The unit is (sutta_id, kind, lang, translator). That is the shape corpus changes actually have
+// — "these segments of this sutta, by this translator" — never a scattering of single lines. Each
+// chunk carries a hash of its text in segment order, so comparing two builds means reading a few
+// hundred KB of hashes rather than having both 170MB files. Without this table the only way to
+// diff two published databases is to download the old one.
+//
+// build_id is the hash OF those hashes, not a timestamp or a counter. Two builds of the same
+// corpus therefore get the same id even though their bytes differ — the FTS index is rebuilt from
+// scratch every run, so page layout never matches — which is what lets a device ask "is there
+// anything new for me?" and get an honest no after a CI run that changed nothing.
+function buildProvenance(db, args, srcPath) {
+    db.exec(`
+        CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT) WITHOUT ROWID;
+        CREATE TABLE chunks (
+            sutta_id TEXT, kind TEXT, lang TEXT, translator TEXT,
+            n INTEGER, hash TEXT,
+            PRIMARY KEY (sutta_id, kind, lang, translator)) WITHOUT ROWID;
+    `);
+
+    const insert = db.prepare('INSERT INTO chunks VALUES (?, ?, ?, ?, ?, ?)');
+    const buildHash = crypto.createHash('sha256');
+    let chunkCount = 0, rowCount = 0;
+    let key = null, hash = null, n = 0;
+
+    const flush = () => {
+        if (!key) return;
+        const digest = hash.digest('hex').slice(0, 32);
+        insert.run(key[0], key[1], key[2], key[3], n, digest);
+        // The key goes into build_id alongside the digest, so a chunk that MOVES — same text,
+        // different translator — still counts as a change.
+        buildHash.update(`${key.join(' ')} ${digest}\n`);
+        chunkCount++;
+    };
+
+    // Streamed, not .all(): this walks every row in the database, and materialising 1.4M of them
+    // as JS objects to hash each once would cost more memory than the rest of the build together.
+    // html joins in as its own kind — markup changes with the corpus like anything else.
+    const statement = db.prepare(`
+        SELECT sutta_id, kind, COALESCE(lang, '') lang, COALESCE(translator, '') translator, ord, txt
+          FROM texts
+         UNION ALL
+        SELECT sutta_id, 'html', '', '', ord, txt FROM html
+         ORDER BY 1, 2, 3, 4, 5`);
+
+    db.exec('BEGIN');
+    for (const row of statement.iterate()) {
+        rowCount++;
+        if (!key || key[0] !== row.sutta_id || key[1] !== row.kind ||
+            key[2] !== row.lang || key[3] !== row.translator) {
+            flush();
+            key = [row.sutta_id, row.kind, row.lang, row.translator];
+            hash = crypto.createHash('sha256');
+            n = 0;
+        }
+        // segment_id is deliberately not hashed: ord already fixes the position, and a
+        // renumbering that leaves every text alone is not a change a reader can see.
+        hash.update(row.txt == null ? '' : String(row.txt));
+        hash.update('\n');
+        n++;
     }
-    return folded;
+    flush();
+    db.exec('COMMIT');
+
+    const meta = {
+        schema_version: String(SCHEMA_VERSION),
+        build_id: buildHash.digest('hex').slice(0, 16),
+        langs: args.langs === 'all' ? 'all' : args.langs.join(','),
+        fts: args.fts,
+        source: path.basename(srcPath),
+        built_at: new Date().toISOString(),
+    };
+    const setMeta = db.prepare('INSERT INTO meta VALUES (?, ?)');
+    for (const [k, v] of Object.entries(meta)) setMeta.run(k, v);
+    return { meta, chunks: chunkCount, rows: rowCount };
 }
-const FOLDABLE_CHARS = /[A-Z\u0080-\uFFFF]/g;
-function foldText(text) {
-    return typeof text === 'string' ? text.replace(FOLDABLE_CHARS, foldChar) : text;
+
+// Read in 1MB blocks rather than through fs.readFileSync: the file being hashed is the 170MB one.
+function sha256File(file) {
+    const hash = crypto.createHash('sha256');
+    const fd = fs.openSync(file, 'r');
+    try {
+        const buffer = Buffer.allocUnsafe(1 << 20);
+        let read;
+        while ((read = fs.readSync(fd, buffer, 0, buffer.length, null)) > 0) {
+            hash.update(buffer.subarray(0, read));
+        }
+    } finally { fs.closeSync(fd); }
+    return hash.digest('hex');
 }
 
 function parseArgs() {
@@ -216,18 +308,21 @@ function main() {
                 ${FTS_MODES[args.fts]});
         `);
         const ph = UNINDEXED_TRANSLATORS.map(() => '?').join(',');
-        // Folding happens inside SQLite through a user-defined function, so this stays one
-        // set-based insert over ~1.4M rows instead of a round trip per row.
-        db.function('dg_fold', { deterministic: true }, foldText);
         db.prepare(
             `INSERT INTO fts(rowid, txt)
-             SELECT rowid, dg_fold(txt) FROM texts
+             SELECT rowid, ${YO_FOLD} FROM texts
              WHERE translator IS NULL OR translator NOT IN (${ph})`
         ).run(...UNINDEXED_TRANSLATORS);
         console.log(`fts index, ${args.fts} (${Date.now() - t}ms)`);
     } else {
         console.log('fts index: skipped (--fts=none) — search will NOT work in this file');
     }
+
+    t = Date.now();
+    const provenance = buildProvenance(db, args, args.from);
+    console.log(
+        `provenance: build ${provenance.meta.build_id}, ` +
+        `${provenance.chunks} chunks over ${provenance.rows} rows (${Date.now() - t}ms)`);
 
     // Where the bytes went. The index usually dominates, and that is the number worth seeing
     // before deciding what to ship — guessing at it is how you end up shipping 170MB by accident.
@@ -247,10 +342,33 @@ function main() {
     db.exec('ANALYZE');
     db.close();
 
+    // The manifest is what a device reads BEFORE deciding to download anything: it is a few
+    // hundred bytes, it carries the same build_id the file itself records in meta, and comparing
+    // the two is the entire "do I need this?" question. Published next to the database, under a
+    // fixed name, so the app needs no index of past builds to find the current one.
+    const bytes = fs.statSync(args.out).size;
+    t = Date.now();
+    const manifest = {
+        ...provenance.meta,
+        schema_version: SCHEMA_VERSION,
+        file: path.basename(args.out),
+        bytes,
+        sha256: sha256File(args.out),
+        chunks: provenance.chunks,
+        // Empty for now, and named anyway: the applier reads this list to decide between a patch
+        // chain and a full download, and a device shipped today must already understand the shape
+        // it will see tomorrow rather than choke on an unknown field.
+        patches: [],
+    };
+    const manifestPath = path.join(path.dirname(args.out), 'db-manifest.json');
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
+    console.log(`manifest: ${manifestPath} (sha256 in ${Date.now() - t}ms)`);
+
     const srcMb = mb(fs.statSync(args.from).size);
-    const outMb = mb(fs.statSync(args.out).size);
+    const outMb = mb(bytes);
     console.log(
         `\n${args.out}: ${outMb} MB (from ${srcMb} MB)\n` + breakdown +
+        `build ${manifest.build_id} · schema ${SCHEMA_VERSION} · ${provenance.chunks} chunks\n` +
         `translations kept: ${kept.map(r => `${r.lang} ${r.c}`).join(', ') || 'none'}\n` +
         `Total ${((Date.now() - started) / 1000).toFixed(1)}s`
     );

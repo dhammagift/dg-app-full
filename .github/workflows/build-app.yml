@@ -256,6 +256,17 @@ jobs:
       - name: List offline database output
         run: ls -lah dist/ || { echo "::error::no dist/ — the slice was not produced"; exit 1; }
 
+      # The check that would have caught the one real divergence this slice ever had: it was
+      # indexed under a plain trigram tokenizer over pre-folded text, so the stored side folded
+      # diacritics and the query side did not, and searching for "kacchapānaṁ" as the word is
+      # actually written found nothing in the app and two suttas on the site. Cheap, needs no
+      # corpus and no device — it compares the slice's index definition against dg.db's and then
+      # exercises the folding on rows it builds itself.
+      - name: Check the slice folds like dg.db
+        env:
+          DG_NODE_PATH: /var/www/html/nodejs
+        run: node test/fts-fold.test.js dist/dg-mobile.db
+
       # dg-light.js's app.listen() accepts connections immediately, while its async initServer()
       # (buildSettingsDemoCache — Aksharamukha conversion for every script — then
       # buildScriptListCache/buildLangCountsCache/buildTranslatorCatalogCache) keeps running in
@@ -351,7 +362,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dg-app-full-db-${{ github.run_number }}
-          path: dist/*.db
+          path: |
+            dist/*.db
+            dist/db-manifest.json
           if-no-files-found: error
           retention-days: 30
 
@@ -362,6 +375,7 @@ jobs:
           files: |
             android/app/build/outputs/apk/debug/app-debug.apk
             dist/dg-mobile.db
+            dist/db-manifest.json
           body: |
             UI built from dg-node@${{ steps.pin.outputs.ref }}.
           token: ${{ secrets.GITHUB_TOKEN }}
