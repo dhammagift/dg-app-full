@@ -1,0 +1,17 @@
+{
+ "status": 200,
+ "body": {
+  "metadata": {
+   "query": "zzzzzz",
+   "langs": [
+    "ru",
+    "en"
+   ],
+   "totalFiles": 0,
+   "totalMatches": 0,
+   "hasVariantMatch": false
+  },
+  "data": {},
+  "variantSegments": []
+ }
+}

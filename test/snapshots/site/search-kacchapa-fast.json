@@ -1,0 +1,123 @@
+{
+ "status": 200,
+ "body": {
+  "metadata": {
+   "query": "kacchapa",
+   "scope": "default",
+   "resolvedPrefixes": [
+    "dn",
+    "mn",
+    "sn",
+    "an",
+    "ud",
+    "snp",
+    "dhp",
+    "thag",
+    "thig",
+    "iti"
+   ],
+   "langs": [
+    "ru",
+    "en"
+   ],
+   "totalFiles": 2,
+   "totalMatches": 3,
+   "hasVariantMatch": true,
+   "partial": true
+  },
+  "data": {
+   "dn22": {
+    "sutta_id": "dn22",
+    "category": "dhamma",
+    "dir_path": "pli/ms/sutta/dn",
+    "titles": {
+     "root": "Mahāsatipaṭṭhānasutta"
+    },
+    "mr": 12,
+    "count": 2,
+    "unique_words": [],
+    "segments": [
+     {
+      "segment": "dn22:1.3",
+      "root_text": "",
+      "variant": "kacchapo → kacchapa",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "dn22:1.4",
+      "root_text": "Mahākacchapānaṁ pana rūpaṁ evaṁ hoti.",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "sn56.11": {
+    "sutta_id": "sn56.11",
+    "category": "dhamma",
+    "dir_path": "pli/ms/sutta/sn/sn56",
+    "titles": {
+     "root": "Dhammacakkappavattanasutta"
+    },
+    "mr": 9,
+    "count": 1,
+    "unique_words": [],
+    "segments": [
+     {
+      "segment": "sn56.11:2.2",
+      "root_text": "Kacchapānaṁ viya gati dukkhā hoti.",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   }
+  },
+  "wordReport": [
+   {
+    "word": "kacchapa",
+    "textCount": 1,
+    "matchCount": 1,
+    "links": [
+     {
+      "sutta_id": "dn22",
+      "segment": "dn22:1.3"
+     }
+    ]
+   },
+   {
+    "word": "kacchapānaṁ",
+    "textCount": 1,
+    "matchCount": 1,
+    "links": [
+     {
+      "sutta_id": "sn56.11",
+      "segment": "sn56.11:2.2"
+     }
+    ]
+   },
+   {
+    "word": "mahākacchapānaṁ",
+    "textCount": 1,
+    "matchCount": 1,
+    "links": [
+     {
+      "sutta_id": "dn22",
+      "segment": "dn22:1.4"
+     }
+    ]
+   }
+  ],
+  "variantSegments": [
+   {
+    "sutta_id": "dn22",
+    "segment": "dn22:1.3",
+    "text": "kacchapo → kacchapa"
+   }
+  ]
+ }
+}

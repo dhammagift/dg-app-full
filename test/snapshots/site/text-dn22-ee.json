@@ -1,0 +1,77 @@
+{
+ "status": 200,
+ "body": {
+  "sutta_id": "dn22",
+  "category": "dhamma",
+  "dir_path": "pli/ms/sutta/dn",
+  "title": "Mahāsatipaṭṭhānasutta",
+  "mr": 12,
+  "segments": [
+   {
+    "segment": "dn22:0.1",
+    "root_text": "Dīgha Nikāya 22",
+    "variant": "",
+    "html": "<header><h1>",
+    "translations": {
+     "ru_o": "Дигха Никая 22",
+     "en_thanissaro": "DN 22"
+    }
+   },
+   {
+    "segment": "dn22:1.1",
+    "root_text": "Evaṁ me sutaṁ—",
+    "variant": "",
+    "html": "<p>",
+    "translations": {
+     "ru_o": "Так я слышал —",
+     "en_thanissaro": "I have heard that on one occasion"
+    }
+   },
+   {
+    "segment": "dn22:1.2",
+    "root_text": "ekaṁ samayaṁ bhagavā kurūsu viharati.",
+    "variant": "kurūsu → kurusu",
+    "html": "",
+    "translations": {
+     "ru_o": "однажды Благословенный жил среди куру.",
+     "en_thanissaro": "the Blessed One was staying among the Kurus."
+    }
+   },
+   {
+    "segment": "dn22:1.3",
+    "root_text": "Seyyathāpi kacchapo aṅgāni sake kapāle samodahati.",
+    "variant": "kacchapo → kacchapa",
+    "html": "",
+    "translations": {
+     "ru_o": "Подобно тому, как черепаха втягивает конечности в панцирь.",
+     "en_thanissaro": "Just as a tortoise gathers its limbs in its own shell."
+    }
+   },
+   {
+    "segment": "dn22:1.4",
+    "root_text": "Mahākacchapānaṁ pana rūpaṁ evaṁ hoti.",
+    "variant": "",
+    "html": "",
+    "translations": {
+     "ru_o": "У больших черепах облик именно таков.",
+     "en_thanissaro": "Of great tortoises the form is thus."
+    }
+   },
+   {
+    "segment": "dn22:1.5",
+    "root_text": "Idaṁ vuccati, bhikkhave, dukkhaṁ ariyasaccaṁ.",
+    "variant": "",
+    "html": "</p>",
+    "translations": {
+     "ru_o": "Это, монахи, называется благородной истиной о страдании.",
+     "en_thanissaro": "This, monks, is called the noble truth of stress."
+    }
+   }
+  ],
+  "columns": [
+   "ru",
+   "en"
+  ],
+  "lang": "ru"
+ }
+}

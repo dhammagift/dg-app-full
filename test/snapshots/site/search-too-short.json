@@ -1,0 +1,32 @@
+{
+ "status": 200,
+ "body": {
+  "metadata": {
+   "query": "ka",
+   "scope": "default",
+   "resolvedPrefixes": [
+    "dn",
+    "mn",
+    "sn",
+    "an",
+    "ud",
+    "snp",
+    "dhp",
+    "thag",
+    "thig",
+    "iti"
+   ],
+   "langs": [
+    "ru",
+    "en"
+   ],
+   "totalFiles": 0,
+   "totalMatches": 0,
+   "hasVariantMatch": false,
+   "tooShort": true
+  },
+  "data": {},
+  "wordReport": [],
+  "variantSegments": []
+ }
+}

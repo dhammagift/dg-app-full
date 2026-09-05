@@ -1,0 +1,134 @@
+{
+ "status": 200,
+ "body": {
+  "metadata": {
+   "query": "kacchapa",
+   "scope": "dhamma",
+   "resolvedPrefixes": [
+    "dhamma"
+   ],
+   "langs": [
+    "ru",
+    "en"
+   ],
+   "lb": 0,
+   "la": 0,
+   "exactMatch": false,
+   "totalFiles": 2,
+   "totalMatches": 3,
+   "hasVariantMatch": true
+  },
+  "data": {
+   "dn22": {
+    "sutta_id": "dn22",
+    "category": "dhamma",
+    "dir_path": "pli/ms/sutta/dn",
+    "titles": {
+     "root": "Dīgha Nikāya 22",
+     "ru_o": "Дигха Никая 22",
+     "en_thanissaro": "DN 22"
+    },
+    "mr": 12,
+    "count": 2,
+    "unique_words": [
+     "mahākacchapānaṁ",
+     "kacchapa"
+    ],
+    "segments": [
+     {
+      "segment": "dn22:1.3",
+      "root_text": "Seyyathāpi kacchapo aṅgāni sake kapāle samodahati.",
+      "variant": "kacchapo → kacchapa",
+      "translations": {
+       "ru_o": "Подобно тому, как черепаха втягивает конечности в панцирь.",
+       "en_thanissaro": "Just as a tortoise gathers its limbs in its own shell."
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "dn22:1.4",
+      "root_text": "Mahākacchapānaṁ pana rūpaṁ evaṁ hoti.",
+      "variant": "",
+      "translations": {
+       "ru_o": "У больших черепах облик именно таков.",
+       "en_thanissaro": "Of great tortoises the form is thus."
+      },
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "sn56.11": {
+    "sutta_id": "sn56.11",
+    "category": "dhamma",
+    "dir_path": "pli/ms/sutta/sn/sn56",
+    "titles": {
+     "root": "Saṁyutta Nikāya 56.11",
+     "ru_o": "Саньютта Никая 56.11",
+     "en_sujato": "Linked Discourses 56.11"
+    },
+    "mr": 9,
+    "count": 1,
+    "unique_words": [
+     "kacchapānaṁ"
+    ],
+    "segments": [
+     {
+      "segment": "sn56.11:2.2",
+      "root_text": "Kacchapānaṁ viya gati dukkhā hoti.",
+      "variant": "",
+      "translations": {
+       "ru_o": "Участь их тяжка, словно у черепах.",
+       "en_sujato": "Their going is hard, as of turtles."
+      },
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   }
+  },
+  "wordReport": [
+   {
+    "word": "kacchapa",
+    "textCount": 1,
+    "matchCount": 1,
+    "links": [
+     {
+      "sutta_id": "dn22",
+      "segment": "dn22:1.3"
+     }
+    ]
+   },
+   {
+    "word": "kacchapānaṁ",
+    "textCount": 1,
+    "matchCount": 1,
+    "links": [
+     {
+      "sutta_id": "sn56.11",
+      "segment": "sn56.11:2.2"
+     }
+    ]
+   },
+   {
+    "word": "mahākacchapānaṁ",
+    "textCount": 1,
+    "matchCount": 1,
+    "links": [
+     {
+      "sutta_id": "dn22",
+      "segment": "dn22:1.4"
+     }
+    ]
+   }
+  ],
+  "variantSegments": [
+   {
+    "sutta_id": "dn22",
+    "segment": "dn22:1.3",
+    "text": "kacchapo → kacchapa"
+   }
+  ]
+ }
+}

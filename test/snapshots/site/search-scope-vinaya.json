@@ -1,0 +1,70 @@
+{
+ "status": 200,
+ "body": {
+  "metadata": {
+   "query": "kacchapa",
+   "scope": "vinaya",
+   "resolvedPrefixes": [
+    "vinaya"
+   ],
+   "langs": [
+    "ru",
+    "en"
+   ],
+   "lb": 0,
+   "la": 0,
+   "exactMatch": false,
+   "totalFiles": 1,
+   "totalMatches": 1,
+   "hasVariantMatch": true
+  },
+  "data": {
+   "pli-tv-bu-vb-pj1": {
+    "sutta_id": "pli-tv-bu-vb-pj1",
+    "category": "vinaya",
+    "dir_path": "pli/ms/vinaya/pli-tv-vi/pli-tv-bu-vb",
+    "titles": {
+     "root": "Paṭhamapārājika"
+    },
+    "mr": 4,
+    "count": 1,
+    "unique_words": [
+     "kacchapasadisā"
+    ],
+    "segments": [
+     {
+      "segment": "pli-tv-bu-vb-pj1:1.2",
+      "root_text": "Kacchapasadisā te bhikkhū ahesuṁ.",
+      "variant": "",
+      "translations": {
+       "en_brahmali": "Those monks were like turtles.",
+       "ru_o": "Те монахи были подобны черепахам."
+      },
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   }
+  },
+  "wordReport": [
+   {
+    "word": "kacchapasadisā",
+    "textCount": 1,
+    "matchCount": 1,
+    "links": [
+     {
+      "sutta_id": "pli-tv-bu-vb-pj1",
+      "segment": "pli-tv-bu-vb-pj1:1.2"
+     }
+    ]
+   }
+  ],
+  "variantSegments": [
+   {
+    "sutta_id": "dn22",
+    "segment": "dn22:1.3",
+    "text": "kacchapo → kacchapa"
+   }
+  ]
+ }
+}
