@@ -44,6 +44,8 @@ on:
 env:
   REPOS_ROOT: ${{ github.workspace }}/repos
   DG_NODE_PATH: /var/www/html/nodejs
+  # Port dg-light.js is started on for the TOC snapshot — see that step for why it is pinned.
+  DG_SERVER_PORT: '3000'
 
 jobs:
   build:
@@ -245,25 +247,36 @@ jobs:
       # file in that sequence — doesn't land until ~36s. Killing the server before then froze
       # initServer() mid-way and left "Build assets" with permanently missing inputs. Waiting on
       # translator-catalog.json, not just /api/toc, closes that window.
+      #
+      # PORT is set explicitly rather than relying on dg-light.js's default: that default has
+      # already moved (3000 -> 3001, with dg-fastify.js now on 3000), and a hardcoded 3000 here
+      # is what made this step time out — the server was up the whole time, just on another port.
+      # dg-light.js reads process.env.PORT, so pinning it makes the two agree by construction.
+      #
+      # Still dg-light.js and not dg-fastify.js: Fastify serves from dg.db, which this build has
+      # no reason to produce (the app ships its own database). The grep server needs only the
+      # corpus checkouts above, and both answer /api/toc identically.
       - name: Start dg-light.js (for the TOC snapshot and the generated settings files)
         working-directory: /var/www/html/nodejs
+        env:
+          PORT: ${{ env.DG_SERVER_PORT }}
         run: |
           npm start > /tmp/dg-light.log 2>&1 &
           echo $! > /tmp/dg-light.pid
           for i in $(seq 1 45); do
-            if curl -sf http://localhost:3000/api/toc > /dev/null 2>&1 && [ -f settings/translator-catalog.json ]; then
-              echo "dg-light.js is up and fully initialized on attempt $i."
+            if curl -sf "http://localhost:$PORT/api/toc" > /dev/null 2>&1 && [ -f settings/translator-catalog.json ]; then
+              echo "dg-light.js is up on port $PORT and fully initialized (attempt $i)."
               exit 0
             fi
             echo "Attempt $i/45..."
             sleep 2
           done
-          echo "::error::dg-light.js did not become fully ready within 90s"
+          echo "::error::dg-light.js did not become fully ready within 90s on port $PORT"
           cat /tmp/dg-light.log
           exit 1
 
       - name: Build TOC snapshot
-        run: npm run build-toc-snapshot
+        run: npm run build-toc-snapshot -- --base=http://localhost:${{ env.DG_SERVER_PORT }}
 
       - name: Stop dg-light.js
         if: always()
