@@ -129,6 +129,11 @@ is pinned in **`DG_NODE_REF`** (a branch name or tag); a `workflow_dispatch` run
   temporary copy is deleted. The streaming path that went straight into OPFS still exists and is
   what runs in a browser; it costs half the disk and cannot survive the app being backgrounded,
   which is why it is the fallback rather than the default.
+- **Some OEM builds never run the DownloadManager request at all** — seen on a MIUI device: the
+  download sits at `STATUS_PENDING` forever, with no error DownloadManager will ever raise. app.js
+  now gives up on the system downloader after `NATIVE_STALL_MS` (20s) stuck outside `running` and
+  falls back to the direct-streaming path, same as when the plugin is absent. That device loses
+  the "survives backgrounding" property but still ends up with a database.
 - **Updates are whole-file, not incremental.** Every published database now records what it
   contains — a `meta` table with a `build_id`, and a `chunks` table hashing each
   (sutta, kind, lang, translator) — and `db-manifest.json` is published beside it, so a device asks

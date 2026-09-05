@@ -135,6 +135,14 @@ function nativeDownloader() {
 
 const DOWNLOAD_ID_KEY = 'dg.offline.downloadId';
 
+// Some OEM builds (seen: MIUI and similar aggressive-battery-management ROMs) never actually run
+// a DownloadManager request at all — it sits at STATUS_PENDING forever, with no error and no
+// reason DownloadManager will give up. There is nothing this app can do to make the system's own
+// queue move, so past this many milliseconds stuck outside 'running' the attempt is abandoned and
+// openWithDownload() falls back to streaming the file itself, the same path used when the plugin
+// is absent entirely.
+const NATIVE_STALL_MS = 20000;
+
 // Polls until the system is done, feeding the same progress event the in-app card already draws,
 // so the reader sees one bar whether or not the download is native. The id is remembered, so a
 // launch that lands while a download is still running rejoins it instead of starting a second.
@@ -184,6 +192,16 @@ async function runNativeDownload(downloader, url, ru) {
             await downloader.clear({ id }).catch(() => {});
             throw new Error(status.reason || 'the system download did not complete');
         }
+        if (status.state !== 'running' && Date.now() - stateSince > NATIVE_STALL_MS) {
+            console.log('[dg-download] id=' + id + ' stalled in state=' + status.state + ' for over ' +
+                NATIVE_STALL_MS + 'ms, abandoning the system downloader');
+            try { localStorage.removeItem(DOWNLOAD_ID_KEY); } catch (e) { /* ignore */ }
+            await downloader.clear({ id }).catch(() => {});
+            const err = new Error('the system downloader stalled in state ' + status.state +
+                (status.reason ? ' (' + status.reason + ')' : ''));
+            err.nativeStalled = true;
+            throw err;
+        }
         window.dispatchEvent(new CustomEvent('dg:dl-progress', {
             detail: {
                 loaded: status.loaded || 0, total: status.total || 0,
@@ -216,7 +234,18 @@ async function openWithDownload(op = 'open') {
     if (!downloader) return call(op, { distBase: DIST_BASE });
 
     const ru = (localStorage.getItem('dhammaLanguage') || localStorage.getItem('siteLanguage') || 'en') === 'ru';
-    const { id, path } = await runNativeDownload(downloader, `${DIST_BASE}/dg-mobile.db`, ru);
+    let id, path;
+    try {
+        ({ id, path } = await runNativeDownload(downloader, `${DIST_BASE}/dg-mobile.db`, ru));
+    } catch (e) {
+        // The system downloader never got going on this device (see NATIVE_STALL_MS) — the app
+        // still has to end up with a database, so it falls back to fetching the file itself
+        // exactly as it would if DgDownloader were absent. Costs the "survives backgrounding"
+        // property, but a slower working download beats a fast one that never finishes.
+        if (!e.nativeStalled) throw e;
+        console.log('[dg-download] ' + e.message + ' — falling back to a direct download');
+        return call(op, { distBase: DIST_BASE });
+    }
     const sourceUrl = window.Capacitor.convertFileSrc(path);
     try {
         return await call(op, { distBase: DIST_BASE, sourceUrl });
