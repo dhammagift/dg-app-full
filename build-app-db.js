@@ -58,10 +58,39 @@ const UNINDEXED_TRANSLATORS = ['ai'];
 //   none               — no index. Search does not work; useful only to see what the index costs
 //                        and to price building it on the device instead of shipping it.
 const FTS_MODES = {
-    trigram: "tokenize='trigram remove_diacritics 1'",
+    trigram: "tokenize='trigram'",
     prefix:  "tokenize='unicode61 remove_diacritics 2', prefix='2 3 4'",
     none:    null,
 };
+
+// dg.db's own index is tokenize='trigram remove_diacritics 1'. The app cannot use that option:
+// @capacitor-community/sqlite talks to SQLCipher for Android (net.zetetic:android-database-
+// sqlcipher:4.5.3, SQLite ~3.39), and remove_diacritics was only added to the TRIGRAM tokenizer in
+// SQLite 3.45 — the trigram tokenizer itself has been there since 3.34, it is just that option
+// that is newer. Rather than depend on which SQLite a given device ships, the slice folds the text
+// itself before indexing and uses a plain trigram tokenizer, which works on every version that has
+// trigram at all.
+//
+// This is the same trick build-search-db.js already uses for ё (the tokenizer will not fold that
+// one either, being a Cyrillic letter in its own right) — just extended to every mark. The fold is
+// length-preserving, matching dg-fastify.js's foldText(), so an offset found in folded text still
+// slices the real word form ("kacchapānaṁ", not "kacchapanam") out of the original.
+const foldCharCache = new Map();
+function foldChar(ch) {
+    let folded = foldCharCache.get(ch);
+    if (folded === undefined) {
+        const stripped = ch.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+        folded = stripped.length === 1 ? stripped : ch.toLowerCase();
+        if (folded.length !== 1) folded = ch;
+        if (folded === 'ё') folded = 'е';
+        foldCharCache.set(ch, folded);
+    }
+    return folded;
+}
+const FOLDABLE_CHARS = /[A-Z\u0080-\uFFFF]/g;
+function foldText(text) {
+    return typeof text === 'string' ? text.replace(FOLDABLE_CHARS, foldChar) : text;
+}
 
 function parseArgs() {
     const args = { from: null, langs: null, out: null, fts: 'trigram' };
@@ -187,9 +216,12 @@ function main() {
                 ${FTS_MODES[args.fts]});
         `);
         const ph = UNINDEXED_TRANSLATORS.map(() => '?').join(',');
+        // Folding happens inside SQLite through a user-defined function, so this stays one
+        // set-based insert over ~1.4M rows instead of a round trip per row.
+        db.function('dg_fold', { deterministic: true }, foldText);
         db.prepare(
             `INSERT INTO fts(rowid, txt)
-             SELECT rowid, replace(replace(txt, 'ё', 'е'), 'Ё', 'Е') FROM texts
+             SELECT rowid, dg_fold(txt) FROM texts
              WHERE translator IS NULL OR translator NOT IN (${ph})`
         ).run(...UNINDEXED_TRANSLATORS);
         console.log(`fts index, ${args.fts} (${Date.now() - t}ms)`);
