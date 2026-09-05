@@ -98,14 +98,18 @@ function call(op, args) {
 // proceeds immediately (just the progress banner); anything else (cellular/unknown/no plugin
 // info) asks first through a UI-owned dialog, wired by a plain event so this file needs no DOM
 // code (offline-status.js listens for 'dg:need-consent' and calls the carried resolve).
-async function hasNetworkConsent() {
+async function hasNetworkConsent(info) {
     const Network = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Network;
     if (!Network) return true;
     let status;
     try { status = await Network.getStatus(); } catch (e) { return true; }
     if (status.connectionType === 'wifi') return true;
     return new Promise(resolve => {
-        window.dispatchEvent(new CustomEvent('dg:need-consent', { detail: { resolve } }));
+        // bytes comes from the published manifest, so the question names the size of the file that
+        // is actually about to be transferred rather than a figure baked into the app.
+        window.dispatchEvent(new CustomEvent('dg:need-consent', {
+            detail: { resolve, bytes: info && info.bytes, langs: info && info.langs },
+        }));
     });
 }
 
@@ -116,8 +120,8 @@ async function loadData() {
     // already in OPFS must stay fully offline-capable and never wait on a network status call
     // that could itself hang — so the worker is asked whether the file is there first, and only a
     // missing one leads to a question. The dialog lives on this side because a worker has no DOM.
-    const status = await call('status', {});
-    if (!status.present && !(await hasNetworkConsent())) {
+    const status = await call('status', { distBase: DIST_BASE });
+    if (!status.present && !(await hasNetworkConsent(status))) {
         throw new Error('offline-data-download-declined');
     }
     return call('open', { distBase: DIST_BASE });
@@ -228,3 +232,66 @@ window.dgRetryOfflineDownload = function () {
     ready.catch(() => {});
     return ready;
 };
+
+// A copy in OPFS is used forever unless something asks whether it is still the current one — which
+// is why a rebuilt database never used to reach an installed app at all. The manifest makes the
+// question cheap (a few hundred bytes against 170MB), so it is asked once per launch, after the
+// reader already has a working database, and it only ever REPORTS: replacing the file is a large
+// download and stays the reader's decision, taken through the same consent path as the first one.
+window.dgCheckOfflineUpdate = async function () {
+    try {
+        await ready;
+        const status = await call('check', { distBase: DIST_BASE });
+        if (!status || status.unknown || status.current) return status;
+        if (!status.schema_supported) {
+            // A newer database than this build of the app understands. Downloading it would only
+            // replace a working reader with a broken one.
+            window.dispatchEvent(new CustomEvent('dg:update-blocked', { detail: status }));
+            return status;
+        }
+        window.dispatchEvent(new CustomEvent('dg:update-available', { detail: status }));
+        return status;
+    } catch (e) { return null; }
+};
+
+// Runs on the reader's say-so, never on the check above.
+window.dgUpdateOfflineData = async function (info) {
+    if (!(await hasNetworkConsent(info))) throw new Error('offline-data-download-declined');
+    return call('update', { distBase: DIST_BASE });
+};
+
+// Settings is a separate page and a separate JS realm — it cannot reach the worker, and probing
+// OPFS from there would mean installing the SAH pool a second time while this page holds it. So
+// the state it needs is left in localStorage, which both pages share, and written only from here,
+// where it is actually known.
+const STATE_KEY = 'dg.offline.state';
+const WANT_UPDATE_KEY = 'dg.offline.wantUpdate';
+
+function rememberState(patch) {
+    try {
+        const previous = JSON.parse(localStorage.getItem(STATE_KEY) || '{}');
+        localStorage.setItem(STATE_KEY, JSON.stringify({ ...previous, ...patch, at: Date.now() }));
+    } catch (e) { /* private mode, quota — the row degrades to "unknown", nothing breaks */ }
+}
+
+ready.then(async (opened) => {
+    rememberState({ present: true, build_id: opened && opened.build_id, update: null });
+
+    // Settings' button cannot start a 170MB download itself (wrong realm), so it records the
+    // intent and sends the reader here, the same navigation the row already used.
+    let wanted = false;
+    try { wanted = localStorage.getItem(WANT_UPDATE_KEY) === '1'; localStorage.removeItem(WANT_UPDATE_KEY); }
+    catch (e) { /* ignore */ }
+    if (wanted) {
+        try {
+            const result = await window.dgUpdateOfflineData();
+            rememberState({ build_id: result.build_id, update: null });
+            return;
+        } catch (e) { /* fall through to the ordinary check below */ }
+    }
+
+    const status = await window.dgCheckOfflineUpdate();
+    if (status && !status.unknown && !status.current) {
+        rememberState({ update: { build_id: status.build_id, bytes: status.bytes, built_at: status.built_at } });
+    }
+}, () => {});

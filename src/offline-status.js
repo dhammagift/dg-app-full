@@ -136,29 +136,31 @@
     // app.js dispatches this (and awaits the resolve it carries) only when a download is
     // actually needed AND the connection isn't Wi-Fi — never on a fully-cached return visit.
     //
-    // Owner (round 2): the previous single "~275MB, that's also what gets downloaded" number was
-    // wrong — dg-light.js's compression() gzips these responses (see CLAUDE.md/TODO.md), so the
-    // ACTUAL network transfer is much smaller than the on-disk/IndexedDB size fetch() ends up
-    // storing (measured 2026-09-02 against the live mobile-data endpoint: core+ru+en gzip to
-    // ~60MB total vs ~260MB decompressed). Mobile-data cost cares about the wire number, free-
-    // space cares about the storage number — showing only one of them is misleading either way.
-    // Not computed at runtime (would need an upfront HEAD pass, see fetchDbBytes's own comment on
-    // why that's avoided) — re-measure and update these if the corpus is rebuilt and grows.
-    const DOWNLOAD_MB = 60;
-    const STORAGE_MB = 260;
+    // The figure comes from the published manifest, which app.js fetches before asking — so the
+    // dialog states the file that is actually about to cross the connection, not a number compiled
+    // in months ago.
+    //
+    // It used to quote two: "~60MB downloaded, ~260MB stored", from when the library was three
+    // files and dg-light.js's gzip made the wire cost a fraction of the stored size. Neither half
+    // survives. It is one file now, and its bulk is the trigram index, which is high-entropy and
+    // does not compress — measured on a comparable slice, gzip turned 168MB into 177MB, i.e. made
+    // it bigger. Wire cost and storage cost are therefore the same number, and promising 60MB
+    // before pulling 168MB over someone's mobile data is precisely what this dialog exists to
+    // prevent. FALLBACK_MB is only for a server old enough to publish no manifest.
+    const FALLBACK_MB = 170;
+    function sizeMb(bytes) { return bytes ? Math.round(bytes / 1048576) : FALLBACK_MB; }
     window.addEventListener('dg:need-consent', function (e) {
-        const ru = isRuLang();
-        const msg = ru
-            ? `Скачается ~${DOWNLOAD_MB}МБ трафика (сжато), а после распаковки офлайн-библиотека займёт ~${STORAGE_MB}МБ места на телефоне. Сейчас не Wi-Fi — продолжить по мобильному интернету?`
-            : `~${DOWNLOAD_MB}MB will be downloaded (compressed); unpacked, the offline library needs ~${STORAGE_MB}MB of storage on your phone. You are not on Wi-Fi — continue on mobile data?`;
-        e.detail.resolve(askConsent(ru));
+        e.detail.resolve(askConsent(isRuLang(), e.detail));
     });
 
     // Returns a Promise<boolean>, which is what app.js's hasNetworkConsent() awaits — the same
     // contract window.confirm() had, minus the blocking. Anything that dismisses without
     // choosing (Esc, tapping outside) counts as "not now": declining is recoverable from
-    // Settings, while starting a ~60MB transfer nobody asked for is not.
-    function askConsent(ru) {
+    // Settings, while starting a ~170MB transfer nobody asked for is not.
+    function askConsent(ru, detail) {
+        var mb = sizeMb(detail && detail.bytes);
+        var approx = (detail && detail.bytes) ? '' : '~';
+        var langs = (detail && detail.langs) || 'ru,en';
         return new Promise(function (resolve) {
             var previouslyFocused = document.activeElement;
             var overlay = document.createElement('div');
@@ -171,14 +173,14 @@
                     (ru ? 'Скачать тексты для работы без сети?' : 'Download the texts for offline use?') +
                   '</p>' +
                   '<p class="dgc-body" id="dgConsentBody">' +
-                    (ru ? 'Сейчас соединение не через Wi-Fi. Загрузку можно отложить и запустить позже в Настройках.'
-                        : 'You are not on Wi-Fi right now. You can postpone this and start it later from Settings.') +
+                    (ru ? 'Это один файл — столько же скачается, столько же займёт на устройстве: он почти не сжимается. Сейчас соединение не через Wi-Fi; загрузку можно отложить и запустить позже в Настройках.'
+                        : 'It is a single file, so that is both what downloads and what it occupies — it barely compresses. You are not on Wi-Fi right now; you can postpone this and start it later from Settings.') +
                   '</p>' +
                   '<dl class="dgc-figures">' +
-                    '<div class="dgc-fig"><dt>' + (ru ? 'Трафик' : 'Download') + '</dt>' +
-                      '<dd>~' + DOWNLOAD_MB + '<span>' + (ru ? 'МБ' : 'MB') + '</span></dd></div>' +
-                    '<div class="dgc-fig"><dt>' + (ru ? 'На устройстве' : 'On device') + '</dt>' +
-                      '<dd>~' + STORAGE_MB + '<span>' + (ru ? 'МБ' : 'MB') + '</span></dd></div>' +
+                    '<div class="dgc-fig"><dt>' + (ru ? 'Размер' : 'Size') + '</dt>' +
+                      '<dd>' + approx + mb + '<span>' + (ru ? 'МБ' : 'MB') + '</span></dd></div>' +
+                    '<div class="dgc-fig"><dt>' + (ru ? 'Языки' : 'Languages') + '</dt>' +
+                      '<dd>' + langs.split(',').join('+').toUpperCase() + '</dd></div>' +
                   '</dl>' +
                   '<div class="dgc-actions">' +
                     '<button type="button" class="dgc-ghost">' + (ru ? 'Не сейчас' : 'Not now') + '</button>' +

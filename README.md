@@ -124,9 +124,13 @@ is pinned in **`DG_NODE_REF`** (a branch name or tag); a `workflow_dispatch` run
 - **`build-assets.js`'s asset list is hand-maintained** — a new `<script>` on the site must be
   added there too. Planned replacement: crawl a running dg-light.js and save every 200 response at
   its own URL path. The page itself no longer has this problem (`build-page.js` generates it).
-- **No cache versioning:** an updated database on the server will never re-download on a device
-  that already has one. Wanted: a small manifest next to the file, with a version and a hash the
-  app compares on launch.
+- **Updates are whole-file, not incremental.** Every published database now records what it
+  contains — a `meta` table with a `build_id`, and a `chunks` table hashing each
+  (sutta, kind, lang, translator) — and `db-manifest.json` is published beside it, so a device asks
+  "is there anything new for me?" for a few hundred bytes and is offered the current build through
+  Settings. What it cannot yet do is take just the difference: the `chunks` tables of two builds
+  are exactly the patch, and computing one needs neither the old 170MB file nor the corpus, but
+  nothing builds or applies them yet. `manifest.patches` is the empty list they will arrive in.
 - **`filterPreferredTranslators` still decides by file path**, so the core synthesises one from
   `DG_OFFLINE` and the bundle has to shim `path.join`. It should decide on the `source` column the
   database already carries.

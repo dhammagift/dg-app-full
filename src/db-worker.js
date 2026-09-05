@@ -16,8 +16,26 @@ import core from './core-bundle.mjs';
 
 // dg-mobile.db, not dg.db: the server's own database is dg.db and lives on the same box, so
 // sharing the name is how a symlink ends up pointing 600MB of every language at a phone.
-const DB_NAME = '/dg-mobile.db';
+//
+// A downloaded copy is stored under its own build id — /dg-mobile.<build_id>.db — for one
+// reason: the SAH pool can import and unlink files but cannot rename one, so replacing a database
+// in place would mean destroying the working copy before knowing the new one arrived. Naming by
+// build instead lets the new file land alongside the old, and the old one is unlinked only once
+// the new one opens. It also makes a half-finished download self-identifying: its meta either
+// cannot be read or does not carry the build its name claims.
+//
+// LEGACY_DB_NAME is the unversioned name shipped before this, still on devices that installed
+// early. It is read as a valid current copy and replaced by a named one at the first update.
+const LEGACY_DB_NAME = '/dg-mobile.db';
+const DB_PREFIX = '/dg-mobile.';
 const POOL_NAME = 'dg-offline';
+
+// The shape this worker is written against. A file declaring anything else is not opened: the
+// alternative is queries that almost fit, answering almost-right.
+const SCHEMA_VERSION = 1;
+
+function dbNameFor(buildId) { return `${DB_PREFIX}${buildId}.db`; }
+function nameToBuild(name) { return name.slice(DB_PREFIX.length, -'.db'.length); }
 
 let db = null;
 let ready = null;
@@ -48,14 +66,14 @@ function nodeSqliteShim(oo1db) {
 // Streams the database straight into OPFS. The pool's importDb() takes a callback and writes each
 // chunk as it arrives, so the file never exists as one 170MB buffer — which is the difference
 // between working on a phone and not.
-async function downloadInto(pool, url) {
+async function downloadInto(pool, url, name) {
     const response = await fetch(url);
     if (!response.ok) throw new Error(`dg-mobile.db: HTTP ${response.status}`);
     const total = Number(response.headers.get('Content-Length')) || 0;
     const reader = response.body.getReader();
     let loaded = 0, lastReport = 0;
 
-    await pool.importDb(DB_NAME, async () => {
+    await pool.importDb(name, async () => {
         const { done, value } = await reader.read();
         if (done) return undefined;
         loaded += value.byteLength;
@@ -82,15 +100,53 @@ function getPool() {
     return poolPromise;
 }
 
-async function open(distBase) {
-    const pool = await getPool();
-    const present = pool.getFileNames().includes(DB_NAME);
-    if (!present) {
-        post({ type: 'downloading' });
-        await downloadInto(pool, `${distBase}/dg-mobile.db`);
-    }
+// Every dg-mobile file the pool holds, newest naming first. More than one means an update was
+// interrupted between importing the new file and unlinking the old — normal, and resolved by
+// opening them in turn until one proves sound.
+function storedDatabases(pool) {
+    return pool.getFileNames()
+        .filter(n => n === LEGACY_DB_NAME || (n.startsWith(DB_PREFIX) && n.endsWith('.db')))
+        .sort((a, b) => (a === LEGACY_DB_NAME ? 1 : 0) - (b === LEGACY_DB_NAME ? 1 : 0));
+}
 
-    db = new pool.OpfsSAHPoolDb(DB_NAME);
+// What makes a stored file usable is that the reader can read from it — everything else is
+// bookkeeping. A truncated import fails the first query here, which is where that should surface,
+// rather than as a blank reader later.
+//
+// Missing provenance is deliberately NOT a rejection. Copies published before meta existed are
+// already on devices; they read perfectly well and simply cannot say which build they are, so they
+// are kept and treated as out of date. Their owner is then offered the current build instead of
+// silently losing the 170MB they already downloaded.
+function inspect(pool, name) {
+    let handle = null;
+    try {
+        handle = new pool.OpfsSAHPoolDb(name);
+        handle.selectObject('SELECT count(*) c FROM suttas');
+
+        let meta = {};
+        try {
+            for (const row of handle.selectObjects('SELECT key, value FROM meta')) meta[row.key] = row.value;
+        } catch (e) { meta = {}; }
+
+        if (meta.schema_version && Number(meta.schema_version) !== SCHEMA_VERSION) {
+            handle.close();
+            return { name, ok: false, reason: `schema ${meta.schema_version} != ${SCHEMA_VERSION}` };
+        }
+        // A file saved under a build id it does not carry is a download that stopped partway and
+        // happened to leave valid pages behind.
+        if (name !== LEGACY_DB_NAME && meta.build_id !== nameToBuild(name)) {
+            handle.close();
+            return { name, ok: false, reason: 'incomplete download' };
+        }
+        return { name, ok: true, meta, handle };
+    } catch (e) {
+        if (handle) { try { handle.close(); } catch (_) {} }
+        return { name, ok: false, reason: e.message };
+    }
+}
+
+function adopt(candidate) {
+    db = candidate.handle;
     core.init({ searchDb: nodeSqliteShim(db), DG_OFFLINE: '/offline-data/dhammagift' });
 
     // The same in-memory sutta index initServer() builds on the server, from the same query.
@@ -99,7 +155,58 @@ async function open(distBase) {
         skeleton[row.id] = { category: row.category, dir_path: row.dir_path, title: row.title, mr: row.mr };
     }
     core.setSkeleton(skeleton);
-    return { suttas: Object.keys(skeleton).length, downloaded: !present };
+    return Object.keys(skeleton).length;
+}
+
+// Downloads the current build and adopts it, leaving whatever was open until the new file is
+// proven — a failed update must cost a reader nothing, and a reader who is mid-download is still
+// reading from the old copy. Peak storage is two databases; the alternative is losing the only one.
+async function fetchCurrent(pool, distBase) {
+    const manifest = await fetchManifest(distBase);
+    if (manifest && Number(manifest.schema_version) !== SCHEMA_VERSION) {
+        throw new Error(
+            `published database is schema ${manifest.schema_version}, this app reads ${SCHEMA_VERSION}` +
+            ` — update the app`);
+    }
+    // Without a manifest the build id is unknown until the file is here, so it lands under the
+    // legacy name. That keeps an older server (one publishing no manifest) working.
+    const target = manifest && manifest.build_id ? dbNameFor(manifest.build_id) : LEGACY_DB_NAME;
+    const stale = storedDatabases(pool).filter(n => n !== target);
+
+    post({ type: 'downloading' });
+    await downloadInto(pool, `${distBase}/${(manifest && manifest.file) || 'dg-mobile.db'}`, target);
+
+    const candidate = inspect(pool, target);
+    if (!candidate.ok) {
+        try { pool.unlink(target); } catch (_) {}
+        throw new Error(`downloaded database unusable: ${candidate.reason}`);
+    }
+    if (db) { try { db.close(); } catch (_) {} db = null; }
+    const suttas = adopt(candidate);
+    for (const name of stale) { try { pool.unlink(name); } catch (_) {} }
+    return { suttas, build_id: candidate.meta.build_id, downloaded: true };
+}
+
+// The manifest is small and its absence is not an error: a device that is offline, or pointed at
+// a server that publishes none, must still open the copy it already has.
+async function fetchManifest(distBase) {
+    try {
+        const response = await fetch(`${distBase}/db-manifest.json`, { cache: 'no-store' });
+        if (!response.ok) return null;
+        return await response.json();
+    } catch (e) { return null; }
+}
+
+async function open(distBase) {
+    const pool = await getPool();
+
+    for (const name of storedDatabases(pool)) {
+        const candidate = inspect(pool, name);
+        if (!candidate.ok) { try { pool.unlink(name); } catch (_) {} continue; }
+        const suttas = adopt(candidate);
+        return { suttas, build_id: candidate.meta.build_id, downloaded: false };
+    }
+    return fetchCurrent(pool, distBase);
 }
 
 // One operation per endpoint the shim intercepts. Each is the few lines dg-fastify.js's route
@@ -204,7 +311,44 @@ self.onmessage = async (event) => {
     if (op === 'status') {
         try {
             const pool = await getPool();
-            post({ id, ok: true, result: { present: pool.getFileNames().includes(DB_NAME) } });
+            const present = storedDatabases(pool).length > 0;
+            // When there is nothing stored, the manifest is fetched before the reader is asked
+            // about the download — a few hundred bytes, so that the question can name the real
+            // size instead of a number compiled in months ago. Its absence is not fatal.
+            const manifest = present ? null : await fetchManifest(args && args.distBase);
+            post({ id, ok: true, result: {
+                present,
+                bytes: manifest ? manifest.bytes : null,
+                build_id: manifest ? manifest.build_id : null,
+                langs: manifest ? manifest.langs : null,
+            } });
+        } catch (e) { post({ id, ok: false, error: e.message }); }
+        return;
+    }
+
+    // "Is there anything new for me?" — one small JSON fetch, compared against the build the open
+    // database records. It only reports; replacing 170MB is the reader's decision, not a
+    // background one, so nothing is downloaded here. Answering false while offline is correct.
+    if (op === 'check') {
+        try {
+            if (!db) throw new Error('database not opened');
+            const local = db.selectObject("SELECT value FROM meta WHERE key = 'build_id'");
+            const manifest = await fetchManifest(args.distBase);
+            post({ id, ok: true, result: manifest ? {
+                current: manifest.build_id === (local && local.value),
+                build_id: manifest.build_id,
+                bytes: manifest.bytes,
+                built_at: manifest.built_at,
+                schema_supported: Number(manifest.schema_version) === SCHEMA_VERSION,
+            } : { unknown: true } });
+        } catch (e) { post({ id, ok: false, error: e.message }); }
+        return;
+    }
+
+    if (op === 'update') {
+        try {
+            const pool = await getPool();
+            post({ id, ok: true, result: await fetchCurrent(pool, args.distBase) });
         } catch (e) { post({ id, ok: false, error: e.message }); }
         return;
     }
