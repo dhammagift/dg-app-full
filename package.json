@@ -12,7 +12,9 @@
     "build-toc-snapshot": "node build-toc-snapshot.js",
     "sync-android": "cap sync android",
     "serve-dist": "node serve-dist.js",
-    "test-parity": "node test/core-parity.mjs"
+    "test-parity": "node test/core-parity.mjs",
+    "test-e2e": "node test/e2e-browser.js",
+    "serve-local": "node test/serve-local.js www dist 8097"
   },
   "dependencies": {
     "@capacitor-community/sqlite": "^6.0.2",

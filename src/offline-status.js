@@ -14,9 +14,9 @@
     }
 
     function labelFor(name, ru) {
-        if (name === 'core.db') return ru ? 'основные тексты' : 'core texts';
-        if (name === 'lang_ru.db') return ru ? 'русский перевод' : 'Russian translations';
-        if (name === 'lang_en.db') return ru ? 'английский перевод' : 'English translations';
+        // One file now: the app reads a language slice of the server's own dg.db rather than the
+        // core/lang split it used to build for itself.
+        if (name === 'dg.db') return ru ? 'тексты и переводы' : 'texts and translations';
         return name;
     }
 

@@ -290,14 +290,22 @@ function injectOfflineLibraryRow() {
 // www/ became generated — nothing produced it, so a fresh checkout silently shipped a page whose
 // app.js loads /vendor/sql-wasm.js and gets a 404 at runtime, offline, on the device.
 function copyVendor() {
-    const from = path.join(__dirname, 'node_modules', 'sql.js', 'dist');
-    const to = path.join(WWW, 'vendor');
+    // @sqlite.org/sqlite-wasm — the official SQLite build. It is what the data worker runs on:
+    // FTS5 with the trigram tokenizer (sql.js has no FTS5 at all), a SYNCHRONOUS API so
+    // dg-node's search core runs unmodified, and the OPFS SAH-pool VFS so a large database is
+    // read from storage instead of being held in memory.
+    const from = path.join(__dirname, 'node_modules', '@sqlite.org', 'sqlite-wasm', 'dist');
+    const to = path.join(WWW, 'vendor', 'sqlite-wasm');
     if (!fs.existsSync(from)) {
-        throw new Error(`sql.js not installed (${from} missing) — run npm install first`);
+        throw new Error(`@sqlite.org/sqlite-wasm not installed (${from} missing) — run npm install first`);
     }
     fs.mkdirSync(to, { recursive: true });
-    for (const name of ['sql-wasm.js', 'sql-wasm.wasm']) {
-        fs.copyFileSync(path.join(from, name), path.join(to, name));
+    // index.mjs is the module the worker imports; the .wasm is what it fetches beside itself; the
+    // async proxy is loaded by the OPFS VFS at runtime, and a missing one fails only on a device.
+    for (const name of ['index.mjs', 'sqlite3.wasm', 'sqlite3-opfs-async-proxy.js']) {
+        const src = path.join(from, name);
+        if (!fs.existsSync(src)) throw new Error(`sqlite-wasm is missing ${name} — package layout changed?`);
+        fs.copyFileSync(src, path.join(to, name));
     }
 }
 

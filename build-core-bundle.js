@@ -14,7 +14,9 @@
 // exercise was meant to end. If the core ever stops being portable, this should fail loudly
 // rather than paper over it — hence the assertions below.
 //
-// Output: www/core-bundle.js, defining self.DG_SEARCH_CORE.
+// Output: www/core-bundle.mjs, default-exporting the core (and also assigning it to self, so a
+// classic script can reach it too). ES module because the worker that loads it must be one —
+// @sqlite.org/sqlite-wasm ships ESM only.
 //
 // Usage: node build-core-bundle.js   (DG_NODE_PATH as everywhere else)
 
@@ -101,14 +103,18 @@ function main() {
 //
 // This is the site's own search core, running in the app. Editing it here would recreate the
 // fork this repository exists to remove — change dg-node and rebuild.
-self.DG_SEARCH_CORE = (function () {
+const DG_SEARCH_CORE = (function () {
 ${PATH_SHIM}
 ${code}
 })();
+
+export default DG_SEARCH_CORE;
+// Also on the global, for anything loading this with a plain <script type=module>.
+if (typeof self !== 'undefined') self.DG_SEARCH_CORE = DG_SEARCH_CORE;
 `;
 
     fs.mkdirSync(WWW, { recursive: true });
-    const dest = path.join(WWW, 'core-bundle.js');
+    const dest = path.join(WWW, 'core-bundle.mjs');
     fs.writeFileSync(dest, out);
     console.log(`core bundle: ${path.relative(process.cwd(), dest)} (${(out.length / 1024).toFixed(1)} KB, ` +
         `configs: ${inlined.length}, reader langs: ${readerLangs.length})`);

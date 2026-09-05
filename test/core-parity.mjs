@@ -17,7 +17,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import sqlite3InitModule from '@sqlite.org/sqlite-wasm';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -41,13 +41,12 @@ function nodeSqliteShim(db) {
     };
 }
 
-function loadBundle() {
-    const src = fs.readFileSync(path.join(REPO, 'www', 'core-bundle.js'), 'utf8');
-    // Exactly how a worker gets it: a script that assigns to `self`, with no module system.
-    const scope = {};
-    new Function('self', src)(scope);
-    if (!scope.DG_SEARCH_CORE) throw new Error('bundle did not define self.DG_SEARCH_CORE');
-    return scope.DG_SEARCH_CORE;
+// Loaded exactly the way the worker loads it: as an ES module.
+async function loadBundle() {
+    const url = pathToFileURL(path.join(REPO, 'www', 'core-bundle.mjs')).href;
+    const mod = await import(url);
+    if (!mod.default) throw new Error('bundle has no default export');
+    return mod.default;
 }
 
 // Same shape searchHandler() builds, minus the HTTP. Kept here rather than in the core because it
@@ -101,7 +100,7 @@ const main = async () => {
         raw.pointer, 'main', ptr, bytes.length, bytes.length,
         sqlite3.capi.SQLITE_DESERIALIZE_FREEONCLOSE | sqlite3.capi.SQLITE_DESERIALIZE_RESIZEABLE);
     if (rc) throw new Error('sqlite3_deserialize failed with rc=' + rc);
-    const core = loadBundle();
+    const core = await loadBundle();
 
     core.init({ searchDb: nodeSqliteShim(raw), DG_OFFLINE: '/var/www/offline-data/dhammagift' });
     const skeleton = {};
