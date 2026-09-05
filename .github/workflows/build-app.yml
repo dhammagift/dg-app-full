@@ -138,17 +138,18 @@ jobs:
 
       - name: Create symlink structure for sc-data/offline-data
         run: |
-          # `mkdir -p` fails with "File exists" on anything that is not a directory, and the
-          # legacy dg repo ships a ROOT-level symlink `suttacentral.net -> ../suttacentral.net/`
-          # — cone-mode sparse-checkout always includes root entries, so it lands in
-          # /var/www/html and is dangling here. Clear any non-directory first. (rm on a symlink
-          # removes the link, never its target.)
-          for d in /var/www/html/suttacentral.net /var/www/suttacentral.net /var/www/offline-data /offline-data; do
-            if [ ! -d "$d" ] || [ -L "$d" ]; then sudo rm -rf "$d"; fi
-            sudo mkdir -p "$d"
-          done
+          # NOTE: /var/www/html/suttacentral.net is deliberately NOT created here. The legacy dg
+          # checkout (previous step) already brought it in as a git-tracked symlink pointing at
+          # ../suttacentral.net — cone-mode sparse-checkout always includes root-level entries,
+          # symlinks included, whatever the sparse dir list says. It therefore already IS an alias
+          # for /var/www/suttacentral.net created below, and `mkdir -p` on it fails with "File
+          # exists" (the directory entry exists even while its target does not). Only the real
+          # target needs creating; the alias resolves through it, so sc-data needs no second
+          # symlink under /var/www/html either.
+          sudo mkdir -p /var/www/suttacentral.net
+          sudo mkdir -p /var/www/offline-data
+          sudo mkdir -p /offline-data
 
-          sudo rm -f /var/www/html/suttacentral.net/sc-data || true
           sudo rm -f /var/www/suttacentral.net/sc-data || true
           sudo rm -f /var/www/offline-data/dhammagift || true
           sudo rm -f /offline-data/dhammagift || true
@@ -158,12 +159,11 @@ jobs:
           # Symlink the CHECKED-OUT sc-data dir itself — not its sc_bilara_data subfolder — one
           # level up so that "sc-data" path segment resolves. Placed under both /var/www/html and
           # /var/www so either relative layout works.
-          sudo ln -s "$REPOS_ROOT/sc-data" /var/www/html/suttacentral.net/sc-data
           sudo ln -s "$REPOS_ROOT/sc-data" /var/www/suttacentral.net/sc-data
           sudo ln -s "$REPOS_ROOT/offline-data/dhammagift" /var/www/offline-data/dhammagift
           sudo ln -s "$REPOS_ROOT/offline-data/dhammagift" /offline-data/dhammagift
 
-          sudo chown -R "$(id -u):$(id -g)" /var/www/suttacentral.net /var/www/offline-data /offline-data /var/www/html/suttacentral.net || true
+          sudo chown -R "$(id -u):$(id -g)" /var/www/suttacentral.net /var/www/offline-data /offline-data || true
 
           # Replace the placeholder files that stand in for relative symlink targets in the
           # checked-out dg-node with real absolute symlinks — the same treatment prod gives
@@ -203,6 +203,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
+      # `cache: gradle` works here but did NOT in dg-node's version of this workflow: setup-java's
+      # gradle-file glob (like hashFiles()) refuses to look outside $GITHUB_WORKSPACE, and there
+      # the Android project lived under /var/www/html/nodejs/mobile — outside it. In this repo
+      # android/ IS the workspace, so the cache is simply available. A small dividend of the split.
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -313,8 +317,21 @@ jobs:
       - name: List build outputs
         run: ls -lah android/app/build/outputs/apk/debug/ || echo "Debug APK directory not found"
 
-      - name: Create Release
+      # Every run publishes the APK as a build artifact, so a workflow_dispatch build is
+      # installable without tagging anything. The release below only happens for tag pushes:
+      # action-gh-release needs a tag to attach to, and on a dispatch run there is none — that
+      # is what failed run #3 after the APK itself had already built fine.
+      - name: Upload APK artifact
         if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-${{ github.run_number }}
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Create Release
+        if: success() && startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           files: |
