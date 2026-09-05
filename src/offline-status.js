@@ -118,16 +118,34 @@
                     isRuLang() ? 'Офлайн-библиотека готова' : 'Offline library ready', 2500, 'success'
                 );
             }
-        }).catch(function () {
+        }).catch(function (err) {
+            // Two very different outcomes used to share one message. Declining the cellular-data
+            // prompt is a CHOICE; a failed request is a FAULT — and telling someone they
+            // postponed a download that never got the chance to start sends them to a retry
+            // button that cannot fix a server with no file to serve. That is exactly how a
+            // missing https://<DIST_BASE>/core.db presented: "download postponed", instantly,
+            // with nothing to retry.
+            //
+            // loadData() marks the choice explicitly ('offline-data-download-declined'), so
+            // anything else is a real failure and now says what went wrong — fetchDbBytes throws
+            // "<file>: HTTP <status>", which points straight at the server rather than the user.
+            var declined = err && err.message === 'offline-data-download-declined';
+            if (!declined) console.error('[dg-offline] database download failed:', err);
+
             // Owner: a permanent banner just sits there forever after declining — a few-second
             // heads-up is enough (same toast the success path already uses below); Settings'
             // own "Offline library" row (offline-library-settings.js) is the persistent, always-
             // visible reminder/retry point, this doesn't need to duplicate that by staying up.
+            // A real error gets longer on screen: unlike a decline, it isn't something the
+            // reader already knows they did.
+            var text = declined
+                ? (isRuLang() ? 'Скачивание отложено — повторите в Настройках'
+                              : 'Download postponed — retry from Settings')
+                : (isRuLang() ? 'Не удалось скачать данные: ' : 'Could not download data: ') +
+                  ((err && err.message) || (isRuLang() ? 'неизвестная ошибка' : 'unknown error'));
+
             if (typeof window.showBubbleNotification === 'function') {
-                window.showBubbleNotification(
-                    isRuLang() ? 'Скачивание отложено — повторите в Настройках' : 'Download postponed — retry from Settings',
-                    4000, 'info'
-                );
+                window.showBubbleNotification(text, declined ? 4000 : 9000, declined ? 'info' : 'error');
             }
         });
     }

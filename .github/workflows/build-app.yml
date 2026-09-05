@@ -243,6 +243,14 @@ jobs:
       - name: Build offline database
         run: npm run build-offline-db
 
+      # These three files ARE the offline library — the app fetches core.db / lang_ru.db /
+      # lang_en.db from DIST_BASE at first launch. Nothing published them: every run built them
+      # into the runner's dist/ and threw them away, so the app's download could only ever 404.
+      # Listing them makes their existence and size visible in the log; the upload below makes
+      # them retrievable.
+      - name: List offline database output
+        run: ls -lah dist/ || { echo "::error::build-offline-db produced no dist/"; exit 1; }
+
       # dg-light.js's app.listen() accepts connections immediately, while its async initServer()
       # (buildSettingsDemoCache — Aksharamukha conversion for every script — then
       # buildScriptListCache/buildLangCountsCache/buildTranslatorCatalogCache) keeps running in
@@ -330,12 +338,27 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      # ~250MB for pali+ru+en. Kept as an artifact rather than committed anywhere, and attached
+      # to the release below on tags so a tagged build is self-contained: APK plus the exact
+      # databases it expects.
+      - name: Upload offline databases
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: offline-db-${{ github.run_number }}
+          path: dist/*.db
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Create Release
         if: success() && startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           files: |
             android/app/build/outputs/apk/debug/app-debug.apk
+            dist/core.db
+            dist/lang_ru.db
+            dist/lang_en.db
           body: |
             UI built from dg-node@${{ steps.pin.outputs.ref }}.
           token: ${{ secrets.GITHUB_TOKEN }}
