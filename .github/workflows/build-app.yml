@@ -235,21 +235,26 @@ jobs:
         run: npm run build-icons
 
       # Skeleton (dg_db_light.json) is gitignored in dg-node — each environment builds its own.
-      # Needed before build-offline-db AND before dg-light.js can boot for the TOC snapshot.
+      # It is build-search-db.js's input, and dg-light.js needs it to boot for the TOC snapshot.
       - name: Build skeleton (dg_db_light.json)
         working-directory: /var/www/html/nodejs
         run: npm run build-db
 
-      - name: Build offline database
-        run: npm run build-offline-db
+      # The app no longer builds a database of its own. dg-node builds dg.db from the corpus —
+      # the same file the site queries — and the app cuts a language slice out of it. That is
+      # what makes the two provably the same data rather than two readings of the same files.
+      - name: Build dg.db (dg-node)
+        working-directory: /var/www/html/nodejs
+        run: npm run build-search-db
 
-      # These three files ARE the offline library — the app fetches core.db / lang_ru.db /
-      # lang_en.db from DIST_BASE at first launch. Nothing published them: every run built them
-      # into the runner's dist/ and threw them away, so the app's download could only ever 404.
-      # Listing them makes their existence and size visible in the log; the upload below makes
-      # them retrievable.
+      - name: Cut the app's language slice
+        run: npm run build-app-db -- --from=/var/www/html/nodejs/dg.db --langs=ru,en --out=dist/dg.db
+
+      # dg.db IS the offline library — the app fetches it from DIST_BASE at first launch and
+      # streams it into OPFS. Listing it makes its size visible in the log; the upload below makes
+      # it retrievable.
       - name: List offline database output
-        run: ls -lah dist/ || { echo "::error::build-offline-db produced no dist/"; exit 1; }
+        run: ls -lah dist/ || { echo "::error::no dist/ — the slice was not produced"; exit 1; }
 
       # dg-light.js's app.listen() accepts connections immediately, while its async initServer()
       # (buildSettingsDemoCache — Aksharamukha conversion for every script — then
@@ -304,8 +309,9 @@ jobs:
       # lang-counts,translator-catalog}.json are gitignored and written by the server at startup,
       # so on a fresh checkout they don't exist until it has run.
       #
-      # `npm run build` = build-page.js (www/index.html from dg-node's search/index.html) then
-      # build-assets.js (every asset that page references, plus src/ and sql.js's WASM).
+      # `npm run build` = build-page.js (www/index.html from dg-node's search/index.html),
+      # build-core-bundle.js (dg-node's search core, made loadable in a WebView), then
+      # build-assets.js (every asset that page references, plus src/ and sqlite-wasm).
       - name: Build web bundle (page + assets)
         run: npm run build
 
@@ -338,10 +344,9 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      # ~250MB for pali+ru+en. Kept as an artifact rather than committed anywhere, and attached
-      # to the release below on tags so a tagged build is self-contained: APK plus the exact
-      # databases it expects.
-      - name: Upload offline databases
+      # Kept as an artifact rather than committed anywhere, and attached to the release below on
+      # tags so a tagged build is self-contained: the APK plus the exact database it expects.
+      - name: Upload offline database
         if: success()
         uses: actions/upload-artifact@v4
         with:
@@ -356,9 +361,7 @@ jobs:
         with:
           files: |
             android/app/build/outputs/apk/debug/app-debug.apk
-            dist/core.db
-            dist/lang_ru.db
-            dist/lang_en.db
+            dist/dg.db
           body: |
             UI built from dg-node@${{ steps.pin.outputs.ref }}.
           token: ${{ secrets.GITHUB_TOKEN }}
