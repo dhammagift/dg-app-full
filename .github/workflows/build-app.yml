@@ -136,10 +136,15 @@ jobs:
 
       - name: Create symlink structure for sc-data/offline-data
         run: |
-          sudo mkdir -p /var/www/html/suttacentral.net
-          sudo mkdir -p /var/www/suttacentral.net
-          sudo mkdir -p /var/www/offline-data
-          sudo mkdir -p /offline-data
+          # `mkdir -p` fails with "File exists" on anything that is not a directory, and the
+          # legacy dg repo ships a ROOT-level symlink `suttacentral.net -> ../suttacentral.net/`
+          # — cone-mode sparse-checkout always includes root entries, so it lands in
+          # /var/www/html and is dangling here. Clear any non-directory first. (rm on a symlink
+          # removes the link, never its target.)
+          for d in /var/www/html/suttacentral.net /var/www/suttacentral.net /var/www/offline-data /offline-data; do
+            if [ ! -d "$d" ] || [ -L "$d" ]; then sudo rm -rf "$d"; fi
+            sudo mkdir -p "$d"
+          done
 
           sudo rm -f /var/www/html/suttacentral.net/sc-data || true
           sudo rm -f /var/www/suttacentral.net/sc-data || true
