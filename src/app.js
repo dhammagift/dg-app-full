@@ -65,10 +65,12 @@ function startWorker() {
         const msg = event.data || {};
         // Unsolicited progress, so the UI can show something during the first download.
         if (msg.type === 'progress') {
+            if (msg.retrying) console.log('[dg-download] stalled, retrying (attempt ' + msg.retrying + ')');
             window.dispatchEvent(new CustomEvent('dg:dl-progress', {
                 detail: {
                     name: 'dg-mobile.db', step: 1, totalSteps: 1,
                     loaded: msg.loaded, total: msg.total, phase: msg.phase || 'download',
+                    reason: msg.retrying ? 'stalled, retrying (attempt ' + msg.retrying + ')' : null,
                 },
             }));
             return;
@@ -116,103 +118,6 @@ async function hasNetworkConsent(info) {
     });
 }
 
-// Android's DownloadManager, through DgDownloader.java, when it is there. The reason it is worth
-// the detour: a WebView that goes to the background gets throttled and then reclaimed, and 170MB
-// of progress goes with it — owner asked to be able to minimise the app and to see progress in
-// the shade, and neither is possible from inside the WebView. Notification permission grants the
-// right to show something, not the right to keep running; only the system's own downloader (or a
-// foreground service of our own, which is far more machinery) actually continues.
-//
-// It also resumes after a dropped connection instead of restarting 170MB, and survives a reboot.
-//
-// Absent — a browser, the dev server — everything below is skipped and the worker streams the
-// file straight from the network into OPFS as before. That path costs less disk (no second copy)
-// and is the right one when there is no app to background.
-function nativeDownloader() {
-    const plugins = window.Capacitor && window.Capacitor.Plugins;
-    return (plugins && plugins.DgDownloader) || null;
-}
-
-const DOWNLOAD_ID_KEY = 'dg.offline.downloadId';
-
-// Some OEM builds (seen: MIUI and similar aggressive-battery-management ROMs) never actually run
-// a DownloadManager request at all — it sits at STATUS_PENDING forever, with no error and no
-// reason DownloadManager will give up. There is nothing this app can do to make the system's own
-// queue move, so past this many milliseconds stuck outside 'running' the attempt is abandoned and
-// openWithDownload() falls back to streaming the file itself, the same path used when the plugin
-// is absent entirely.
-const NATIVE_STALL_MS = 20000;
-
-// Polls until the system is done, feeding the same progress event the in-app card already draws,
-// so the reader sees one bar whether or not the download is native. The id is remembered, so a
-// launch that lands while a download is still running rejoins it instead of starting a second.
-async function runNativeDownload(downloader, url, ru) {
-    let id = null;
-    try { id = Number(localStorage.getItem(DOWNLOAD_ID_KEY)) || null; } catch (e) { /* ignore */ }
-
-    if (id) {
-        const existing = await downloader.status({ id }).catch(() => null);
-        if (!existing || existing.state === 'missing' || existing.state === 'failed') id = null;
-    }
-    if (!id) {
-        const started = await downloader.start({
-            url,
-            title: 'Dhamma.gift',
-            description: ru ? 'Тексты и переводы для работы без сети' : 'Texts and translations for offline use',
-        });
-        id = started && started.id;
-        if (id === undefined || id === null) throw new Error('the system downloader returned no id');
-        try { localStorage.setItem(DOWNLOAD_ID_KEY, String(id)); } catch (e) { /* ignore */ }
-        console.log('[dg-download] started, id=' + id + ' url=' + url);
-    }
-
-    // `adb logcat -s chromium:*` (or chrome://inspect on a plugged-in phone) shows every line
-    // logged here — the console.log is what lets a stuck download be diagnosed from the one
-    // state string the reader can screenshot, without a second build-and-reinstall round trip.
-    let lastState = null;
-    let stateSince = Date.now();
-    for (;;) {
-        const status = await downloader.status({ id });
-        if (status.state !== lastState) {
-            lastState = status.state;
-            stateSince = Date.now();
-        }
-        const stuckFor = Math.round((Date.now() - stateSince) / 1000);
-        console.log('[dg-download] id=' + id + ' state=' + status.state +
-            (status.reason ? ' reason=' + status.reason : '') +
-            ' loaded=' + status.loaded + ' total=' + status.total +
-            ' for=' + stuckFor + 's');
-
-        if (status.state === 'done') {
-            try { localStorage.removeItem(DOWNLOAD_ID_KEY); } catch (e) { /* ignore */ }
-            return { id, path: status.path };
-        }
-        if (status.state === 'failed' || status.state === 'missing') {
-            try { localStorage.removeItem(DOWNLOAD_ID_KEY); } catch (e) { /* ignore */ }
-            await downloader.clear({ id }).catch(() => {});
-            throw new Error(status.reason || 'the system download did not complete');
-        }
-        if (status.state !== 'running' && Date.now() - stateSince > NATIVE_STALL_MS) {
-            console.log('[dg-download] id=' + id + ' stalled in state=' + status.state + ' for over ' +
-                NATIVE_STALL_MS + 'ms, abandoning the system downloader');
-            try { localStorage.removeItem(DOWNLOAD_ID_KEY); } catch (e) { /* ignore */ }
-            await downloader.clear({ id }).catch(() => {});
-            const err = new Error('the system downloader stalled in state ' + status.state +
-                (status.reason ? ' (' + status.reason + ')' : ''));
-            err.nativeStalled = true;
-            throw err;
-        }
-        window.dispatchEvent(new CustomEvent('dg:dl-progress', {
-            detail: {
-                loaded: status.loaded || 0, total: status.total || 0,
-                phase: 'download', native: true, waiting: status.state !== 'running',
-                state: status.state, reason: status.reason, stuckFor,
-            },
-        }));
-        await new Promise(resolve => setTimeout(resolve, 700));
-    }
-}
-
 async function loadData() {
     worker = worker || startWorker();
 
@@ -223,35 +128,13 @@ async function loadData() {
     const status = await call('status', { distBase: DIST_BASE });
     if (status.present) return call('open', { distBase: DIST_BASE });
     if (!(await hasNetworkConsent(status))) throw new Error('offline-data-download-declined');
-    return openWithDownload();
-}
-
-// One path for "there is no database yet, get one": the system downloads it when it can, and the
-// worker imports whatever landed. The temporary file is deleted the moment the import succeeds —
-// otherwise the library is carried twice for the life of the install.
-async function openWithDownload(op = 'open') {
-    const downloader = nativeDownloader();
-    if (!downloader) return call(op, { distBase: DIST_BASE });
-
-    const ru = (localStorage.getItem('dhammaLanguage') || localStorage.getItem('siteLanguage') || 'en') === 'ru';
-    let id, path;
-    try {
-        ({ id, path } = await runNativeDownload(downloader, `${DIST_BASE}/dg-mobile.db`, ru));
-    } catch (e) {
-        // The system downloader never got going on this device (see NATIVE_STALL_MS) — the app
-        // still has to end up with a database, so it falls back to fetching the file itself
-        // exactly as it would if DgDownloader were absent. Costs the "survives backgrounding"
-        // property, but a slower working download beats a fast one that never finishes.
-        if (!e.nativeStalled) throw e;
-        console.log('[dg-download] ' + e.message + ' — falling back to a direct download');
-        return call(op, { distBase: DIST_BASE });
-    }
-    const sourceUrl = window.Capacitor.convertFileSrc(path);
-    try {
-        return await call(op, { distBase: DIST_BASE, sourceUrl });
-    } finally {
-        await downloader.clear({ id }).catch(() => {});
-    }
+    // Used to hand this off to Android's DownloadManager (so it would survive the app being
+    // backgrounded) through a DgDownloader plugin. Dropped: several devices never actually ran
+    // the queued request at all — DownloadManager sat at STATUS_PENDING or STATUS_RUNNING forever,
+    // gave no error, and asked for POST_NOTIFICATIONS before saying so. The worker fetching the
+    // file itself, the same as it does in a browser, is slower to survive backgrounding but is the
+    // one path that has actually finished on a device.
+    return call('open', { distBase: DIST_BASE });
 }
 
 function jsonResponse(obj, status = 200) {

@@ -53,14 +53,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <!-- Without this, DownloadManager cannot read the device's connectivity state and treats the
-         network as unavailable forever — every download sits at PAUSED_WAITING_FOR_NETWORK no
-         matter how good the connection actually is. -->
+    <!-- Read by the Network plugin (hasNetworkConsent in app.js) to tell Wi-Fi from cellular
+         before asking about the library download. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-
-    <!-- Android 13+. The library download runs through DownloadManager so it survives the app
-         being backgrounded; this is what lets the system draw its progress in the shade. Without
-         it the download still runs, just invisibly, so it is requested before the first one
-         rather than required. -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>

@@ -267,7 +267,8 @@
 
         var debugEl = card.querySelector('.dgdl-debug');
         debugEl.textContent = detail.reason
-            ? detail.state + ': ' + detail.reason + (detail.stuckFor ? ' (' + detail.stuckFor + 's)' : '')
+            ? (detail.state ? detail.state + ': ' : '') + detail.reason +
+              (detail.stuckFor ? ' (' + detail.stuckFor + 's)' : '')
             : '';
         debugEl.hidden = !debugEl.textContent;
 

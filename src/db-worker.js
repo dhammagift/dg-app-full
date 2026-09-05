@@ -70,30 +70,63 @@ function nodeSqliteShim(oo1db) {
 // Streams the database straight into OPFS. The pool's importDb() takes a callback and writes each
 // chunk as it arrives, so the file never exists as one 170MB buffer — which is the difference
 // between working on a phone and not.
+// fetch()/ReadableStream have no built-in timeout: a mobile network that drops a connection
+// without sending so much as a RST (common on cellular, and on Wi-Fi<->cellular handoff) leaves
+// reader.read() awaiting a chunk that will never arrive — no error, nothing to catch, just a
+// download that silently stops moving forever. STALL_MS bounds how long any single read may take;
+// past it the fetch is aborted and the whole thing is retried rather than left hanging.
+const STALL_MS = 15000;
+const MAX_ATTEMPTS = 4;
+
 async function downloadInto(pool, url, name) {
     // Reading a file the system already fetched is not a download and should not be described as
     // one — it is fast, local, and the reader is watching a second bar move for reasons they did
     // not ask about unless it is named.
     const phase = /^https?:\/\//.test(url) && !url.includes('_capacitor_file_') ? 'download' : 'import';
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`dg-mobile.db: HTTP ${response.status}`);
-    const total = Number(response.headers.get('Content-Length')) || 0;
-    const reader = response.body.getReader();
-    let loaded = 0, lastReport = 0;
 
-    await pool.importDb(name, async () => {
-        const { done, value } = await reader.read();
-        if (done) return undefined;
-        loaded += value.byteLength;
-        const now = Date.now();
-        if (now - lastReport > 200) {
-            lastReport = now;
+    for (let attempt = 1; ; attempt++) {
+        const controller = new AbortController();
+        let lastByteAt = Date.now();
+        const watchdog = setInterval(() => {
+            if (Date.now() - lastByteAt > STALL_MS) controller.abort();
+        }, 1000);
+
+        try {
+            const response = await fetch(url, { signal: controller.signal });
+            if (!response.ok) throw new Error(`dg-mobile.db: HTTP ${response.status}`);
+            const total = Number(response.headers.get('Content-Length')) || 0;
+            const reader = response.body.getReader();
+            let loaded = 0, lastReport = 0;
+
+            const loadedBytes = await pool.importDb(name, async () => {
+                const { done, value } = await reader.read();
+                lastByteAt = Date.now();
+                if (done) return undefined;
+                loaded += value.byteLength;
+                const now = Date.now();
+                if (now - lastReport > 200) {
+                    lastReport = now;
+                    post({ type: 'progress', loaded, total, phase });
+                }
+                return value;
+            });
             post({ type: 'progress', loaded, total, phase });
+            return loadedBytes;
+        } catch (e) {
+            const stalled = e && e.name === 'AbortError';
+            if (attempt >= MAX_ATTEMPTS) {
+                throw stalled
+                    ? new Error(`dg-mobile.db: stalled (no data for ${STALL_MS / 1000}s), ` +
+                        `gave up after ${MAX_ATTEMPTS} attempts`)
+                    : e;
+            }
+            // importDbChunked() (sqlite-wasm) already removes the partial file on the exception
+            // this abort caused, so the next attempt starts clean — nothing to unlink here.
+            post({ type: 'progress', loaded: 0, total: 0, phase, retrying: attempt + 1 });
+        } finally {
+            clearInterval(watchdog);
         }
-        return value;
-    });
-    post({ type: 'progress', loaded, total, phase });
-    return loaded;
+    }
 }
 
 // Installing the VFS is cheap and idempotent per worker, and both status and open need it —

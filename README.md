@@ -124,16 +124,13 @@ is pinned in **`DG_NODE_REF`** (a branch name or tag); a `workflow_dispatch` run
 - **`build-assets.js`'s asset list is hand-maintained** — a new `<script>` on the site must be
   added there too. Planned replacement: crawl a running dg-light.js and save every 200 response at
   its own URL path. The page itself no longer has this problem (`build-page.js` generates it).
-- **First install now needs room for two copies.** The download lands as a file (Android's
-  DownloadManager writes it) and is then imported into OPFS, so the peak is ~340MB before the
-  temporary copy is deleted. The streaming path that went straight into OPFS still exists and is
-  what runs in a browser; it costs half the disk and cannot survive the app being backgrounded,
-  which is why it is the fallback rather than the default.
-- **Some OEM builds never run the DownloadManager request at all** — seen on a MIUI device: the
-  download sits at `STATUS_PENDING` forever, with no error DownloadManager will ever raise. app.js
-  now gives up on the system downloader after `NATIVE_STALL_MS` (20s) stuck outside `running` and
-  falls back to the direct-streaming path, same as when the plugin is absent. That device loses
-  the "survives backgrounding" property but still ends up with a database.
+- **The download does not survive the app being backgrounded.** It used to run through a
+  DgDownloader plugin over Android's own DownloadManager for exactly that reason, but on real
+  devices DownloadManager itself proved unreliable — seen: `STATUS_PENDING` forever with no error
+  on one MIUI-class ROM, and a stall mid-transfer on another with no way to tell the two apart from
+  the outside. Reverted: the worker fetches the file itself, the same code path a browser runs,
+  now hardened against a network that goes silent mid-stream (see `STALL_MS` in `db-worker.js`) —
+  a working download that cannot survive backgrounding beats an unreliable one that can.
 - **Updates are whole-file, not incremental.** Every published database now records what it
   contains — a `meta` table with a `build_id`, and a `chunks` table hashing each
   (sutta, kind, lang, translator) — and `db-manifest.json` is published beside it, so a device asks

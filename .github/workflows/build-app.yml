@@ -361,14 +361,6 @@ jobs:
           DG_CHROMIUM: /usr/bin/google-chrome
         run: node test/e2e-browser.js
 
-      # The JavaScript half of the DownloadManager path, with the Java stubbed: polling to
-      # completion, handing the file to the worker, and deleting the temporary copy.
-      - name: Check the native download path
-        env:
-          DG_PLAYWRIGHT: ${{ github.workspace }}/node_modules/playwright-core
-          DG_CHROMIUM: /usr/bin/google-chrome
-        run: node test/native-download.js
-
       - name: Sync Capacitor
         run: npx cap sync android
 
