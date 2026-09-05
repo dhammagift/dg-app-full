@@ -16,29 +16,49 @@
 //
 // Usage:
 //   node build-app-db.js --from=/var/www/html/nodejs/dg.db --langs=ru,en
-//   node build-app-db.js --langs=ru            # --from defaults to $DG_NODE_PATH/dg.db
+//   node build-app-db.js --langs=ru            # --from/--out default to the repo layout
+//
+// Runs standalone too — one file, nothing to install (node:sqlite is built in):
+//   curl -O https://raw.githubusercontent.com/dhammagift/dg-app-full/main/build-app-db.js
+//   node build-app-db.js --from=/var/www/html/nodejs/dg.db --langs=ru,en --out=/var/www/dg-ru-en.db
 //   node build-app-db.js --langs=all           # everything, i.e. a plain copy
 //
 // Output: dist/dg.db
 
 const fs = require('fs');
 const path = require('path');
-const Database = require('better-sqlite3');
-const { DIST, f } = require('./paths');
+// node:sqlite, not better-sqlite3, even though this repo depends on the latter: that keeps the
+// file runnable on its own. The database being sliced lives on the prod server, which has
+// dg-node but no checkout of this repo and no reason to gain one — so this has to work as a
+// single downloaded file with nothing installed. dg-fastify.js already runs on node:sqlite
+// there, which also settles the only real question: that build has FTS5 with the trigram
+// tokenizer, since build-search-db.js creates exactly that index with it.
+const { DatabaseSync } = require('node:sqlite');
+
+// Only needed for the --from / --out defaults, and paths.js is part of the repo — so a
+// standalone copy still works as long as both are given explicitly.
+let repoPaths = null;
+try { repoPaths = require('./paths'); } catch (e) { /* running as a single file */ }
 
 // Mirrors build-search-db.js: the AI translation is stored so the reader can show it, but stays
 // out of the search index. Kept in sync by hand — if that set grows there, it grows here.
 const UNINDEXED_TRANSLATORS = ['ai'];
 
 function parseArgs() {
-    const args = { from: null, langs: null, out: path.join(DIST, 'dg.db') };
+    const args = { from: null, langs: null, out: null };
     for (const arg of process.argv.slice(2)) {
         const [key, value] = arg.replace(/^--/, '').split('=');
         if (key === 'from') args.from = value;
         if (key === 'out') args.out = value;
         if (key === 'langs') args.langs = value === 'all' ? 'all' : value.split(',').map(s => s.trim()).filter(Boolean);
     }
-    if (!args.from) args.from = f('dg.db');
+    if (!args.from) {
+        if (!repoPaths) {
+            console.error('--from is required when running this file outside the repo');
+            process.exit(1);
+        }
+        args.from = repoPaths.f('dg.db');
+    }
     if (!args.langs) {
         console.error('--langs is required (e.g. --langs=ru,en, or --langs=all for no filtering)');
         process.exit(1);
@@ -57,15 +77,22 @@ function main() {
             `Build it in dg-node first ("npm run build-search-db"), or pass --from=<path>.`
         );
     }
+    if (!args.out) {
+        if (!repoPaths) {
+            console.error('--out is required when running this file outside the repo');
+            process.exit(1);
+        }
+        args.out = path.join(repoPaths.DIST, 'dg.db');
+    }
     fs.mkdirSync(path.dirname(args.out), { recursive: true });
     for (const suffix of ['', '-wal', '-shm']) fs.rmSync(`${args.out}${suffix}`, { force: true });
 
     const started = Date.now();
-    const db = new Database(args.out);
+    const db = new DatabaseSync(args.out);
     // Same throwaway-output settings build-search-db.js uses: nothing here is worth recovering,
     // the file is rebuilt from scratch on failure.
-    db.pragma('journal_mode = OFF');
-    db.pragma('synchronous = OFF');
+    db.exec('PRAGMA journal_mode = OFF');
+    db.exec('PRAGMA synchronous = OFF');
     db.exec(`ATTACH DATABASE '${args.from.replace(/'/g, "''")}' AS src`);
 
     // Schema copied verbatim from build-search-db.js. Not read back from src's sqlite_master on
