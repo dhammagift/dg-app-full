@@ -71,6 +71,33 @@ public class DgDownloader extends Plugin {
         return null;
     }
 
+    /** DownloadManager.PAUSED_* constants have no name lookup of their own. */
+    private static String pausedReasonName(int reason) {
+        switch (reason) {
+            case DownloadManager.PAUSED_WAITING_TO_RETRY: return "waiting to retry after an error";
+            case DownloadManager.PAUSED_WAITING_FOR_NETWORK: return "waiting for network";
+            case DownloadManager.PAUSED_QUEUED_FOR_WIFI: return "queued for Wi-Fi";
+            case DownloadManager.PAUSED_UNKNOWN: return "unknown";
+            default: return "code " + reason;
+        }
+    }
+
+    /** DownloadManager.ERROR_* constants have no name lookup of their own. */
+    private static String failureReasonName(int reason) {
+        switch (reason) {
+            case DownloadManager.ERROR_CANNOT_RESUME: return "cannot resume";
+            case DownloadManager.ERROR_DEVICE_NOT_FOUND: return "no storage found";
+            case DownloadManager.ERROR_FILE_ALREADY_EXISTS: return "file already exists";
+            case DownloadManager.ERROR_FILE_ERROR: return "file error";
+            case DownloadManager.ERROR_HTTP_DATA_ERROR: return "HTTP data error";
+            case DownloadManager.ERROR_INSUFFICIENT_SPACE: return "not enough storage space";
+            case DownloadManager.ERROR_TOO_MANY_REDIRECTS: return "too many redirects";
+            case DownloadManager.ERROR_UNHANDLED_HTTP_CODE: return "unhandled HTTP code";
+            case DownloadManager.ERROR_UNKNOWN: return "unknown";
+            default: return "HTTP " + reason;
+        }
+    }
+
     private DownloadManager manager() {
         return (DownloadManager) getContext().getSystemService(Context.DOWNLOAD_SERVICE);
     }
@@ -184,17 +211,18 @@ public class DgDownloader extends Plugin {
                 case DownloadManager.STATUS_FAILED: {
                     result.put("state", "failed");
                     int reason = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON));
-                    result.put("reason", "DownloadManager error " + reason);
+                    result.put("reason", "DownloadManager error " + reason + " (" + failureReasonName(reason) + ")");
                     break;
                 }
                 case DownloadManager.STATUS_PAUSED: {
                     result.put("state", "paused");
                     int reason = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON));
-                    result.put("reason", "waiting (" + reason + ")");
+                    result.put("reason", "paused: " + pausedReasonName(reason) + " (" + reason + ")");
                     break;
                 }
                 case DownloadManager.STATUS_PENDING:
                     result.put("state", "pending");
+                    result.put("reason", "queued, not started yet");
                     break;
                 default:
                     result.put("state", "running");

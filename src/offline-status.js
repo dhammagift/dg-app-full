@@ -188,6 +188,12 @@
             font-size: 11.5px; line-height: 1.4; color: var(--dgc-faint);
             border-top: 1px solid var(--dgc-rule); padding-top: 8px; margin-top: 1px;
         }
+        /* Raw DownloadManager state, shown while the system downloader isn't actually
+           transferring bytes — the one thing worth screenshotting instead of pulling logcat. */
+        #dgDlCard .dgdl-debug {
+            font-size: 10.5px; font-family: monospace; color: var(--dgc-faint); opacity: 0.8;
+            margin-top: 4px;
+        }
         @media (prefers-reduced-motion: reduce) {
             #dgConsent, #dgConsentSheet, #dgDlCard, #dgDlCard .dgdl-fill { transition: none; }
             #dgDlCard.indeterminate .dgdl-fill { animation: none; }
@@ -219,7 +225,8 @@
             '<div class="dgdl-head"><span class="dgdl-title"></span><span class="dgdl-pct"></span></div>' +
             '<div class="dgdl-track"><div class="dgdl-fill"></div></div>' +
             '<div class="dgdl-sub"></div>' +
-            '<div class="dgdl-hint" hidden></div>';
+            '<div class="dgdl-hint" hidden></div>' +
+            '<div class="dgdl-debug" hidden></div>';
         document.body.appendChild(dlCard);
         return dlCard;
     }
@@ -257,6 +264,13 @@
                   : 'You can leave the app — the download continues, with progress in the shade.')
             : '';
         hint.hidden = !hint.textContent;
+
+        var debugEl = card.querySelector('.dgdl-debug');
+        debugEl.textContent = detail.reason
+            ? detail.state + ': ' + detail.reason + (detail.stuckFor ? ' (' + detail.stuckFor + 's)' : '')
+            : '';
+        debugEl.hidden = !debugEl.textContent;
+
         card.classList.add('show');
 
         // The last progress event arrives when the stream ends, so completion is visible here

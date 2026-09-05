@@ -155,10 +155,26 @@ async function runNativeDownload(downloader, url, ru) {
         id = started && started.id;
         if (id === undefined || id === null) throw new Error('the system downloader returned no id');
         try { localStorage.setItem(DOWNLOAD_ID_KEY, String(id)); } catch (e) { /* ignore */ }
+        console.log('[dg-download] started, id=' + id + ' url=' + url);
     }
 
+    // `adb logcat -s chromium:*` (or chrome://inspect on a plugged-in phone) shows every line
+    // logged here — the console.log is what lets a stuck download be diagnosed from the one
+    // state string the reader can screenshot, without a second build-and-reinstall round trip.
+    let lastState = null;
+    let stateSince = Date.now();
     for (;;) {
         const status = await downloader.status({ id });
+        if (status.state !== lastState) {
+            lastState = status.state;
+            stateSince = Date.now();
+        }
+        const stuckFor = Math.round((Date.now() - stateSince) / 1000);
+        console.log('[dg-download] id=' + id + ' state=' + status.state +
+            (status.reason ? ' reason=' + status.reason : '') +
+            ' loaded=' + status.loaded + ' total=' + status.total +
+            ' for=' + stuckFor + 's');
+
         if (status.state === 'done') {
             try { localStorage.removeItem(DOWNLOAD_ID_KEY); } catch (e) { /* ignore */ }
             return { id, path: status.path };
@@ -172,6 +188,7 @@ async function runNativeDownload(downloader, url, ru) {
             detail: {
                 loaded: status.loaded || 0, total: status.total || 0,
                 phase: 'download', native: true, waiting: status.state !== 'running',
+                state: status.state, reason: status.reason, stuckFor,
             },
         }));
         await new Promise(resolve => setTimeout(resolve, 700));
