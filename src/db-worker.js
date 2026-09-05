@@ -14,7 +14,9 @@
 import sqlite3InitModule from './vendor/sqlite-wasm/index.mjs';
 import core from './core-bundle.mjs';
 
-const DB_NAME = '/dg.db';
+// dg-mobile.db, not dg.db: the server's own database is dg.db and lives on the same box, so
+// sharing the name is how a symlink ends up pointing 600MB of every language at a phone.
+const DB_NAME = '/dg-mobile.db';
 const POOL_NAME = 'dg-offline';
 
 let db = null;
@@ -48,7 +50,7 @@ function nodeSqliteShim(oo1db) {
 // between working on a phone and not.
 async function downloadInto(pool, url) {
     const response = await fetch(url);
-    if (!response.ok) throw new Error(`dg.db: HTTP ${response.status}`);
+    if (!response.ok) throw new Error(`dg-mobile.db: HTTP ${response.status}`);
     const total = Number(response.headers.get('Content-Length')) || 0;
     const reader = response.body.getReader();
     let loaded = 0, lastReport = 0;
@@ -85,7 +87,7 @@ async function open(distBase) {
     const present = pool.getFileNames().includes(DB_NAME);
     if (!present) {
         post({ type: 'downloading' });
-        await downloadInto(pool, `${distBase}/dg.db`);
+        await downloadInto(pool, `${distBase}/dg-mobile.db`);
     }
 
     db = new pool.OpfsSAHPoolDb(DB_NAME);

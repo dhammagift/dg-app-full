@@ -15,17 +15,17 @@
 // they are language-independent and the reader needs all of them. Only translations are filtered.
 //
 // Usage:
-//   node build-app-db.js --from=/var/www/html/nodejs/dg.db --langs=ru,en
+//   node build-app-db.js --from=/var/www/html/nodejs/dg.db --langs=ru,en   # -> dist/dg-mobile.db
 //   node build-app-db.js --langs=ru            # --from/--out default to the repo layout
 //
 // Runs standalone too — one file, nothing to install (node:sqlite is built in):
 //   curl -O https://raw.githubusercontent.com/dhammagift/dg-app-full/main/build-app-db.js
-//   node build-app-db.js --from=/var/www/html/nodejs/dg.db --langs=ru,en --out=/var/www/dg-ru-en.db
+//   node build-app-db.js --from=/var/www/html/nodejs/dg.db --langs=ru,en --out=/var/www/dg-mobile.db
 //   node build-app-db.js --langs=all           # everything, i.e. a plain copy
 //   node build-app-db.js --langs=ru,en --fts=prefix   # smaller index, weaker matching (see below)
 //   node build-app-db.js --langs=ru,en --fts=none     # no index at all — for measuring only
 //
-// Output: dist/dg.db
+// Output: dist/dg-mobile.db
 
 const fs = require('fs');
 const path = require('path');
@@ -135,7 +135,7 @@ function main() {
             console.error('--out is required when running this file outside the repo');
             process.exit(1);
         }
-        args.out = path.join(repoPaths.DIST, 'dg.db');
+        args.out = path.join(repoPaths.DIST, 'dg-mobile.db');
     }
     fs.mkdirSync(path.dirname(args.out), { recursive: true });
     for (const suffix of ['', '-wal', '-shm']) fs.rmSync(`${args.out}${suffix}`, { force: true });

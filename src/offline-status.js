@@ -16,7 +16,7 @@
     function labelFor(name, ru) {
         // One file now: the app reads a language slice of the server's own dg.db rather than the
         // core/lang split it used to build for itself.
-        if (name === 'dg.db') return ru ? 'тексты и переводы' : 'texts and translations';
+        if (name === 'dg-mobile.db') return ru ? 'тексты и переводы' : 'texts and translations';
         return name;
     }
 

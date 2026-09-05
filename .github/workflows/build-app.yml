@@ -248,9 +248,9 @@ jobs:
         run: npm run build-search-db
 
       - name: Cut the app's language slice
-        run: npm run build-app-db -- --from=/var/www/html/nodejs/dg.db --langs=ru,en --out=dist/dg.db
+        run: npm run build-app-db -- --from=/var/www/html/nodejs/dg.db --langs=ru,en --out=dist/dg-mobile.db
 
-      # dg.db IS the offline library — the app fetches it from DIST_BASE at first launch and
+      # dg-mobile.db IS the offline library — the app fetches it from DIST_BASE at first launch and
       # streams it into OPFS. Listing it makes its size visible in the log; the upload below makes
       # it retrievable.
       - name: List offline database output
@@ -361,7 +361,7 @@ jobs:
         with:
           files: |
             android/app/build/outputs/apk/debug/app-debug.apk
-            dist/dg.db
+            dist/dg-mobile.db
           body: |
             UI built from dg-node@${{ steps.pin.outputs.ref }}.
           token: ${{ secrets.GITHUB_TOKEN }}

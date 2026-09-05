@@ -43,7 +43,8 @@
 })();
 
 // Where the offline database is published: siteroot/mobile-data in dg-node, served from the live
-// host. One file now — dg.db, a language slice of the server's own, cut by build-app-db.js.
+// host. One file: dg-mobile.db, a language slice of the server's own dg.db, cut by
+// build-app-db.js — named apart from it so the two never get confused on the same machine.
 //
 // Overridable so the app can be pointed at a local copy: the end-to-end test serves the database
 // from the same origin as the page, and a staging build may want a different host. Set
@@ -65,7 +66,7 @@ function startWorker() {
         // Unsolicited progress, so the UI can show something during the first download.
         if (msg.type === 'progress') {
             window.dispatchEvent(new CustomEvent('dg:dl-progress', {
-                detail: { name: 'dg.db', step: 1, totalSteps: 1, loaded: msg.loaded, total: msg.total },
+                detail: { name: 'dg-mobile.db', step: 1, totalSteps: 1, loaded: msg.loaded, total: msg.total },
             }));
             return;
         }
