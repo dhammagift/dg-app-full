@@ -71,6 +71,10 @@ function nodeSqliteShim(oo1db) {
 // chunk as it arrives, so the file never exists as one 170MB buffer — which is the difference
 // between working on a phone and not.
 async function downloadInto(pool, url, name) {
+    // Reading a file the system already fetched is not a download and should not be described as
+    // one — it is fast, local, and the reader is watching a second bar move for reasons they did
+    // not ask about unless it is named.
+    const phase = /^https?:\/\//.test(url) && !url.includes('_capacitor_file_') ? 'download' : 'import';
     const response = await fetch(url);
     if (!response.ok) throw new Error(`dg-mobile.db: HTTP ${response.status}`);
     const total = Number(response.headers.get('Content-Length')) || 0;
@@ -84,11 +88,11 @@ async function downloadInto(pool, url, name) {
         const now = Date.now();
         if (now - lastReport > 200) {
             lastReport = now;
-            post({ type: 'progress', loaded, total });
+            post({ type: 'progress', loaded, total, phase });
         }
         return value;
     });
-    post({ type: 'progress', loaded, total });
+    post({ type: 'progress', loaded, total, phase });
     return loaded;
 }
 
@@ -165,7 +169,7 @@ function adopt(candidate) {
 // Downloads the current build and adopts it, leaving whatever was open until the new file is
 // proven — a failed update must cost a reader nothing, and a reader who is mid-download is still
 // reading from the old copy. Peak storage is two databases; the alternative is losing the only one.
-async function fetchCurrent(pool, distBase) {
+async function fetchCurrent(pool, distBase, sourceUrl) {
     const manifest = await fetchManifest(distBase);
     if (manifest && Number(manifest.schema_version) !== SCHEMA_VERSION) {
         throw new Error(
@@ -177,8 +181,13 @@ async function fetchCurrent(pool, distBase) {
     const target = manifest && manifest.build_id ? dbNameFor(manifest.build_id) : LEGACY_DB_NAME;
     const stale = storedDatabases(pool).filter(n => n !== target);
 
+    // sourceUrl, when the page supplies one, is a file the system already downloaded (see
+    // DgDownloader.java) exposed to the WebView through Capacitor.convertFileSrc. Reading it is
+    // the same fetch-and-stream as reading the server, so nothing below changes — the difference
+    // is only that those bytes crossed the network under Android's control rather than ours, and
+    // therefore survived the reader leaving the app.
     post({ type: 'downloading' });
-    await downloadInto(pool, `${distBase}/${(manifest && manifest.file) || 'dg-mobile.db'}`, target);
+    await downloadInto(pool, sourceUrl || `${distBase}/${(manifest && manifest.file) || 'dg-mobile.db'}`, target);
 
     const candidate = inspect(pool, target);
     if (!candidate.ok) {
@@ -201,7 +210,7 @@ async function fetchManifest(distBase) {
     } catch (e) { return null; }
 }
 
-async function open(distBase) {
+async function open(distBase, sourceUrl) {
     const pool = await getPool();
 
     for (const name of storedDatabases(pool)) {
@@ -210,7 +219,7 @@ async function open(distBase) {
         const suttas = adopt(candidate);
         return { suttas, build_id: candidate.meta.build_id, downloaded: false };
     }
-    return fetchCurrent(pool, distBase);
+    return fetchCurrent(pool, distBase, sourceUrl);
 }
 
 // One operation per endpoint the shim intercepts. Each is the few lines dg-fastify.js's route
@@ -352,13 +361,13 @@ self.onmessage = async (event) => {
     if (op === 'update') {
         try {
             const pool = await getPool();
-            post({ id, ok: true, result: await fetchCurrent(pool, args.distBase) });
+            post({ id, ok: true, result: await fetchCurrent(pool, args.distBase, args.sourceUrl) });
         } catch (e) { post({ id, ok: false, error: e.message }); }
         return;
     }
 
     if (op === 'open') {
-        ready = ready || open(args.distBase);
+        ready = ready || open(args.distBase, args.sourceUrl);
         try { post({ id, ok: true, result: await ready }); }
         catch (e) { ready = null; post({ id, ok: false, error: e.message }); }
         return;

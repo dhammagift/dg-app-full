@@ -124,6 +124,11 @@ is pinned in **`DG_NODE_REF`** (a branch name or tag); a `workflow_dispatch` run
 - **`build-assets.js`'s asset list is hand-maintained** — a new `<script>` on the site must be
   added there too. Planned replacement: crawl a running dg-light.js and save every 200 response at
   its own URL path. The page itself no longer has this problem (`build-page.js` generates it).
+- **First install now needs room for two copies.** The download lands as a file (Android's
+  DownloadManager writes it) and is then imported into OPFS, so the peak is ~340MB before the
+  temporary copy is deleted. The streaming path that went straight into OPFS still exists and is
+  what runs in a browser; it costs half the disk and cannot survive the app being backgrounded,
+  which is why it is the fallback rather than the default.
 - **Updates are whole-file, not incremental.** Every published database now records what it
   contains — a `meta` table with a `build_id`, and a `chunks` table hashing each
   (sutta, kind, lang, translator) — and `db-manifest.json` is published beside it, so a device asks

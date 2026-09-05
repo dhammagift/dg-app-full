@@ -52,4 +52,10 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Android 13+. The library download runs through DownloadManager so it survives the app
+         being backgrounded; this is what lets the system draw its progress in the shade. Without
+         it the download still runs, just invisibly, so it is requested before the first one
+         rather than required. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>

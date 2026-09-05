@@ -326,6 +326,49 @@ jobs:
       - name: Build web bundle (page + assets)
         run: npm run build
 
+      # The checks that run against the BUILT page in a real browser. They belong here and not
+      # only on a workstation: the app once shipped with its data worker dead — every search and
+      # every reader request failing on the device — because these ran in one place and CI ran
+      # none of them. test/serve-local.js is deliberately no more permissive about MIME types than
+      # Capacitor's asset server, so a module that would not load on a phone does not load here.
+      - name: Install a browser driver for the end-to-end checks
+        run: npm install --no-save playwright-core@1.49.1
+
+      # A FIXTURE, not dist/. The snapshots these checks diff against were captured from a server
+      # running on this same fixture, so serving the real 170MB slice here would fail on the
+      # difference in corpus rather than on anything being wrong. make-fixture-db.js is
+      # deterministic — the file it writes is byte-identical to the one the snapshots came from.
+      - name: Build the fixture database the snapshots were captured from
+        run: |
+          node test/make-fixture-db.js test/fixture.db
+          node build-app-db.js --from=test/fixture.db --langs=ru,en --out=test-dist/dg-mobile.db
+
+      - name: Serve the built app and its database
+        run: |
+          node test/serve-local.js www test-dist 8097 &
+          for i in $(seq 1 20); do
+            curl -sf http://localhost:8097/ >/dev/null && break
+            sleep 0.5
+          done
+          curl -sf http://localhost:8097/ >/dev/null || { echo "::error::the local test server never came up"; exit 1; }
+
+      # Every /search, /api/text and /api/nav answer diffed against the snapshots captured from
+      # the live site, plus the guard that the gear opens Settings rather than searching for the
+      # word "settings".
+      - name: Check the app answers exactly like the site
+        env:
+          DG_PLAYWRIGHT: ${{ github.workspace }}/node_modules/playwright-core
+          DG_CHROMIUM: /usr/bin/google-chrome
+        run: node test/e2e-browser.js
+
+      # The JavaScript half of the DownloadManager path, with the Java stubbed: polling to
+      # completion, handing the file to the worker, and deleting the temporary copy.
+      - name: Check the native download path
+        env:
+          DG_PLAYWRIGHT: ${{ github.workspace }}/node_modules/playwright-core
+          DG_CHROMIUM: /usr/bin/google-chrome
+        run: node test/native-download.js
+
       - name: Sync Capacitor
         run: npx cap sync android
 

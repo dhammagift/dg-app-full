@@ -16,6 +16,10 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // Before super.onCreate(), which is where the bridge is built and reads its plugin list.
+        // DgDownloader hands the 170MB library download to Android's DownloadManager so it
+        // survives the app being backgrounded and draws progress in the notification shade.
+        registerPlugin(DgDownloader.class);
         super.onCreate(savedInstanceState);
         // Deliberately no handleIntent() here — see handledIntent above.
     }

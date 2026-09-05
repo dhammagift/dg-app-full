@@ -1,12 +1,21 @@
 // End-to-end: load the real built page in a real browser, let it download the database into OPFS
 // through its own worker, and then compare what window.fetch('/search?...') returns against the
 // snapshots captured from the live site.
-const { chromium } = require('/home/user/dg-node/node_modules/playwright-core');
+// Both the driver and the browser are found rather than hardcoded, so this runs on CI as well as
+// on a workstation. That matters more than it sounds: this file is the check that would have
+// caught the .mjs MIME failure, and it was not running anywhere but one machine when the app
+// shipped broken.
 const fs = require('fs');
 const path = require('path');
 
-const SNAPSHOTS = '/home/user/dg-app-full/test/snapshots/site';
-const BASE = 'http://localhost:8097';
+const PLAYWRIGHT = process.env.DG_PLAYWRIGHT || '/home/user/dg-node/node_modules/playwright-core';
+const { chromium } = require(PLAYWRIGHT);
+// Falls back to whatever the runner has: ubuntu-latest ships Chrome at this path.
+const BROWSER = process.env.DG_CHROMIUM
+    || (fs.existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : '/usr/bin/google-chrome');
+
+const SNAPSHOTS = path.join(__dirname, 'snapshots', 'site');
+const BASE = process.env.DG_BASE_URL || 'http://localhost:8097';
 
 // The same request matrix capture.js uses, minus the ones served from static snapshots.
 const CASES = [
@@ -37,7 +46,7 @@ const CASES = [
 ];
 
 (async () => {
-    const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
+    const browser = await chromium.launch({ executablePath: BROWSER, args: ['--no-sandbox'] });
     const page = await browser.newPage();
     // Point the app at this server's own /mobile-data instead of the live host.
     await page.addInitScript(() => { window.DG_DIST_BASE = '/mobile-data'; });

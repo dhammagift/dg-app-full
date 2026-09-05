@@ -184,6 +184,10 @@
         #dgDlCard .dgdl-sub {
             font-size: 11.5px; color: var(--dgc-muted); font-variant-numeric: tabular-nums;
         }
+        #dgDlCard .dgdl-hint {
+            font-size: 11.5px; line-height: 1.4; color: var(--dgc-faint);
+            border-top: 1px solid var(--dgc-rule); padding-top: 8px; margin-top: 1px;
+        }
         @media (prefers-reduced-motion: reduce) {
             #dgConsent, #dgConsentSheet, #dgDlCard, #dgDlCard .dgdl-fill { transition: none; }
             #dgDlCard.indeterminate .dgdl-fill { animation: none; }
@@ -214,7 +218,8 @@
         dlCard.innerHTML =
             '<div class="dgdl-head"><span class="dgdl-title"></span><span class="dgdl-pct"></span></div>' +
             '<div class="dgdl-track"><div class="dgdl-fill"></div></div>' +
-            '<div class="dgdl-sub"></div>';
+            '<div class="dgdl-sub"></div>' +
+            '<div class="dgdl-hint" hidden></div>';
         document.body.appendChild(dlCard);
         return dlCard;
     }
@@ -228,8 +233,17 @@
         var card = ensureDlCard();
         var pct = total ? Math.min(100, Math.round((loaded / total) * 100)) : null;
 
-        card.querySelector('.dgdl-title').textContent = ru
-            ? 'Загрузка офлайн-библиотеки' : 'Downloading the offline library';
+        // Two phases now, and they deserve different words: Android's DownloadManager brings the
+        // file over the network (backgroundable, resumable, its own notification), then the worker
+        // reads it into OPFS. The second is fast and local, and a reader watching a bar restart
+        // from zero without being told why would reasonably think something went wrong.
+        var importing = detail.phase === 'import';
+        var title = importing
+            ? (ru ? 'Подготовка библиотеки' : 'Preparing the library')
+            : (ru ? 'Загрузка офлайн-библиотеки' : 'Downloading the offline library');
+        // DownloadManager queues before it runs, and pauses to wait for a connection.
+        if (detail.waiting && !importing) title = ru ? 'Ожидание сети' : 'Waiting for the network';
+        card.querySelector('.dgdl-title').textContent = title;
         card.querySelector('.dgdl-pct').textContent = pct === null ? '' : pct + '%';
         card.classList.toggle('indeterminate', pct === null);
         if (pct !== null) card.querySelector('.dgdl-fill').style.width = pct + '%';
@@ -237,13 +251,21 @@
             ? (ru ? formatMb(loaded) + ' МБ из ' + formatMb(total) + ' МБ'
                   : formatMb(loaded) + ' MB of ' + formatMb(total) + ' MB')
             : (ru ? formatMb(loaded) + ' МБ' : formatMb(loaded) + ' MB');
+        var hint = card.querySelector('.dgdl-hint');
+        hint.textContent = (detail.native && !importing)
+            ? (ru ? 'Можно свернуть приложение — загрузка продолжится, прогресс виден в шторке.'
+                  : 'You can leave the app — the download continues, with progress in the shade.')
+            : '';
+        hint.hidden = !hint.textContent;
         card.classList.add('show');
 
         // The last progress event arrives when the stream ends, so completion is visible here
         // rather than needing its own signal from the worker.
         clearTimeout(dlHideTimer);
-        if (total && loaded >= total) {
-            card.querySelector('.dgdl-title').textContent = ru ? 'Библиотека загружена' : 'Library downloaded';
+        // Only the import phase finishing means the library is usable; the download finishing is
+        // the halfway point, and saying "done" there would be a lie the next bar contradicts.
+        if (total && loaded >= total && (importing || !detail.native)) {
+            card.querySelector('.dgdl-title').textContent = ru ? 'Библиотека готова' : 'Library ready';
             dlHideTimer = setTimeout(function () { card.classList.remove('show'); }, 2500);
         }
     });
