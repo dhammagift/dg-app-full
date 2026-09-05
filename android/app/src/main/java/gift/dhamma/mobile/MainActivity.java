@@ -6,16 +6,29 @@ import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
+    // Guards against handling the same launch twice. BridgeActivity.load() — called from its
+    // onCreate — ends with `this.onNewIntent(getIntent())`, which lands in the override below.
+    // So the launch intent already reaches handleIntent without onCreate doing anything, and the
+    // explicit handleIntent(getIntent()) that used to live in onCreate made it run TWICE on every
+    // cold start: two loadUrl() calls for one shortcut tap, the second restarting a navigation the
+    // first had already begun, racing the bridge's own initial load of the start page.
+    private Intent handledIntent;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        handleIntent(getIntent());
+        // Deliberately no handleIntent() here — see handledIntent above.
     }
 
     @Override
     public void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
+        // Identity check, not equals(): the point is "this exact delivery was already handled",
+        // and two separate taps on the same shortcut produce equal-but-distinct Intents that both
+        // must work.
+        if (intent == handledIntent) return;
+        handledIntent = intent;
         handleIntent(intent);
     }
 
