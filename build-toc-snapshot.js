@@ -17,8 +17,13 @@
 const fs = require('fs');
 const path = require('path');
 
-const TOC_BOOKS = require('../configs/reader/toc-books.json');
-const OUT_DIR = path.join(__dirname, 'www', 'api-snapshots');
+const { WWW, requireNodeRoot, f } = require('./paths');
+
+// Checked here, at module load, because the require() below already reaches into dg-node.
+requireNodeRoot();
+
+const TOC_BOOKS = require(f('configs/reader/toc-books.json'));
+const OUT_DIR = path.join(WWW, 'api-snapshots');
 
 function parseArgs() {
     const args = { base: 'http://localhost:3000', langs: 'ru,en' };

@@ -1,0 +1,24 @@
+node_modules/
+
+# www/ is BUILD OUTPUT, not source — this is the whole point of the repository split.
+#
+# It used to be 215 committed files inside dg-node (mobile/www/): copies of the site's frontend
+# that had to be re-copied by hand on every change, and index.html that had no build script at
+# all and drifted 147 lines behind search/index.html. Now every file in here is produced by
+# `npm run build`:
+#   build-page.js         -> www/index.html          (from dg-node's search/index.html)
+#   build-assets.js       -> www/assets, www/reader, www/nodejs, www/settings, www/spa, ...
+#                            and www/*.js            (from src/, the app's own web files)
+#   build-toc-snapshot.js -> www/api-snapshots/*.json (from a running dg-light.js)
+#   npm i                 -> www/vendor/sql-wasm.*    (from node_modules/sql.js)
+# The app's OWN web sources live in src/ and ARE committed.
+www/
+
+# Offline SQLite databases (build-offline-db.js). Hundreds of MB, rebuilt per environment.
+dist/
+*.db
+*.db-wal
+*.db-shm
+
+# `npx cap add ios` output — not created yet (Android only so far).
+ios/

@@ -2,8 +2,8 @@
 // live grep search, which needs an OS `grep` process a WebView can't spawn (see
 // /root/.claude/plans/vast-questing-russell.md for the full "why").
 //
-// Deliberately standalone: does not require anything from dg-light.js, and dg-light.js does not
-// require anything from here — the web server and the mobile app build must stay decoupled.
+// Reads dg-node's corpus and skeleton (see paths.js) but never requires dg-light.js: the server
+// process and this build stay decoupled even though they now live in separate repositories.
 //
 // Output:
 //   mobile/dist/core.db      — pali root + variant + html, mandatory, ships with the app
@@ -27,8 +27,11 @@ const {
     SC_BILARA, buildTranslationIndex,
 } = require('./lib/translation-sources');
 
-const SKELETON_PATH = path.join(__dirname, '..', 'dg_db_light.json');
-const OUT_DIR = path.join(__dirname, 'dist');
+const { DIST, requireNodeRoot, f } = require('./paths');
+
+// dg-node builds the skeleton (its `npm run build-db`); we read it, we never build it.
+const SKELETON_PATH = f('dg_db_light.json');
+const OUT_DIR = DIST;
 
 function parseArgs() {
     const args = { langs: ['ru', 'en'] };
@@ -150,6 +153,7 @@ async function buildLangDb(lang, suttaIds) {
 }
 
 async function main() {
+    requireNodeRoot();
     const args = parseArgs();
     const skeleton = JSON.parse(await fs.readFile(SKELETON_PATH, 'utf8'));
     const suttaIds = args.suttas || Object.keys(skeleton);

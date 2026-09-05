@@ -17,7 +17,7 @@
 from PIL import Image, ImageDraw
 import os
 
-SRC = '/var/www/html/assets/img/pwa-bold-monocolor-512.png'
+SRC = os.environ.get('DG_LEGACY_ASSETS', '/var/www/html/assets') + '/img/pwa-bold-monocolor-512.png'
 OUT = os.path.join(os.path.dirname(__file__), 'android', 'app', 'src', 'main', 'res')
 BG_COLOR = (46, 62, 80, 255)  # #2E3E50
 

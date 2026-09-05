@@ -1,13 +1,19 @@
 // Resolves every real asset search/index.html references — the static <script>/<link> tags plus
 // everything ensureSearchAssets()/ensureReaderAssets()/ensureTocAssets() lazily inject inside that
-// file's own inline SPA engine — and copies each one into mobile/www/ at the IDENTICAL relative
-// URL path production serves it at. That's the whole point: the copied index.html (see
-// build-page.js) needs zero path edits, because every /assets/..., /reader/..., /nodejs/res/...
-// URL it requests already resolves on disk exactly the way dg-light.js's static mounts resolve it.
+// file's own inline SPA engine — and copies each one into www/ at the IDENTICAL relative URL path
+// production serves it at. That's the whole point: the generated index.html (build-page.js) needs
+// zero path edits, because every /assets/..., /reader/..., /nodejs/res/... URL it requests already
+// resolves on disk exactly the way dg-light.js's static mounts resolve it.
 //
-// Mirrors dg-light.js's override-then-legacy resolution order (public/overrides/... wins,
-// /var/www/html/assets/... is the fallback) WITHOUT requiring anything from dg-light.js — mobile/
-// stays isolated from the live server (see CLAUDE.md, project memory: never require() either way).
+// Mirrors dg-light.js's override-then-legacy resolution order (public/overrides/... wins, the
+// legacy asset tree is the fallback) — see paths.js for where those two roots come from.
+//
+// ponytail: the ASSETS list below is hand-maintained, so a NEW <script> added to the site has to
+// be added here too — exactly the manual syncing this repo split is meant to end. The planned
+// replacement is a Playwright crawl of a running dg-light.js that saves every 200 response at its
+// own URL path, which also makes buildScriptBundles()/buildModeTable() below unnecessary (the
+// server already serves both). Kept as-is for now so the split lands without also changing how
+// the app is built.
 //
 // Also regenerates the two script bundles dg-light.js's buildScriptBundle() builds at server
 // startup (there's no server here to do that for us), plus reader/mode-table.json's
@@ -18,10 +24,7 @@
 
 const fs = require('fs');
 const path = require('path');
-
-const NODEJS_ROOT = path.join(__dirname, '..');
-const LEGACY_ASSETS = '/var/www/html/assets';
-const WWW = path.join(__dirname, 'www');
+const { NODEJS_ROOT, LEGACY_ASSETS, WWW, SRC, requireNodeRoot, f, l } = require('./paths');
 
 function parseArgs() {
     const args = { langs: ['ru', 'en'] };
@@ -94,6 +97,9 @@ const ASSETS = [
     // ---- ensureReaderAssets() (lazy, idle-prefetched) ----
     { url: '/reader/css/index.css', sources: [f('reader/css/index.css')] },
     { url: '/reader/css/rus-multi.css', sources: [f('reader/css/rus-multi.css')] },
+    // @font-face src in both reader CSS files above — a url() inside a stylesheet, so no
+    // <link>/<script> tag points at it and nothing but this entry pulls it in.
+    { url: '/reader/css/roboto-lightest.woff', sources: [f('reader/css/roboto-lightest.woff'), l('../read/css/roboto-lightest.woff')] },
     { url: '/reader/css/uiextra.css', sources: [f('reader/css/uiextra.css')] },
     { url: '/assets/js/copyToClipboard.js', sources: [f('public/overrides/js/copyToClipboard.js')] },
     { url: '/assets/js/linksdpr.js', sources: [l('js/linksdpr.js')] },
@@ -153,8 +159,6 @@ const ASSETS = [
     { url: '/assets/img/read/favicon-black.png', sources: [l('img/read/favicon-black.png')] },
 ];
 
-function f(rel) { return path.join(NODEJS_ROOT, rel); }
-function l(rel) { return path.join(LEGACY_ASSETS, rel); }
 
 function copyAsset({ url, sources }) {
     const src = sources.find(p => fs.existsSync(p));
@@ -282,19 +286,49 @@ function injectOfflineLibraryRow() {
 // feature (packaging+extracting a whole static site tree at runtime, not a single blob like the
 // DBs) — worth doing if actually wanted, not implemented here.
 
+// sql.js's WASM build, straight out of node_modules. Was hand-copied into www/vendor/ before
+// www/ became generated — nothing produced it, so a fresh checkout silently shipped a page whose
+// app.js loads /vendor/sql-wasm.js and gets a 404 at runtime, offline, on the device.
+function copyVendor() {
+    const from = path.join(__dirname, 'node_modules', 'sql.js', 'dist');
+    const to = path.join(WWW, 'vendor');
+    if (!fs.existsSync(from)) {
+        throw new Error(`sql.js not installed (${from} missing) — run npm install first`);
+    }
+    fs.mkdirSync(to, { recursive: true });
+    for (const name of ['sql-wasm.js', 'sql-wasm.wasm']) {
+        fs.copyFileSync(path.join(from, name), path.join(to, name));
+    }
+}
+
+// The app's own web files (fetch shim, native bridge, offline UI). They live in src/ rather than
+// in www/ because www/ is entirely generated and gitignored — everything in it is either copied
+// from dg-node, copied from here, or produced by a build script.
+function copySrcFiles() {
+    for (const name of fs.readdirSync(SRC)) {
+        fs.copyFileSync(path.join(SRC, name), path.join(WWW, name));
+    }
+    return fs.readdirSync(SRC).length;
+}
+
 function main() {
+    requireNodeRoot();
     const args = parseArgs();
+    fs.mkdirSync(WWW, { recursive: true });
     let ok = 0, missing = 0;
     for (const asset of ASSETS) {
         if (copyAsset(asset)) ok++; else missing++;
     }
+    const srcCount = copySrcFiles();
+    copyVendor();
     buildScriptBundles();
     buildModeTable(args.langs);
     const svgCount = copySvgIcons();
     copyReaderImages();
     injectNativeBridge();
     injectOfflineLibraryRow();
-    console.log(`Assets: ${ok} copied, ${missing} missing. +${svgCount} svg icons, reader/images/, 2 generated bundles, mode-table.json (langs=${args.langs.join(',')}).`);
+    console.log(`Assets: ${ok} copied, ${missing} missing. +${srcCount} app files from src/, +${svgCount} svg icons, reader/images/, 2 generated bundles, mode-table.json (langs=${args.langs.join(',')}).`);
+    console.log(`  dg-node: ${NODEJS_ROOT}\n  legacy assets: ${LEGACY_ASSETS}`);
     if (missing > 0) process.exitCode = 1;
 }
 

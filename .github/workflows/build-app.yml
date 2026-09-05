@@ -1,0 +1,306 @@
+name: Build App
+
+# Builds the offline SQLite databases + the Android APK entirely on GitHub's runner — the prod
+# server has no disk headroom for this (core.db+lang_ru.db+lang_en.db alone are ~260MB, plus
+# Gradle/Android SDK caches).
+#
+# THE UI IS NOT IN THIS REPOSITORY. It is generated at build time from a dg-node checkout:
+# build-page.js turns dg-node's search/index.html into www/index.html, build-assets.js copies
+# every asset that page references, build-toc-snapshot.js snapshots a running dg-light.js.
+# Which dg-node commit is used is pinned by the DG_NODE_REF file at this repo's root (a branch
+# name or tag), overridable per-run via the workflow_dispatch input below.
+#
+# dg-node has many git-tracked RELATIVE symlinks (reader/images/*.png, reader/css/index.css,
+# siteroot/*, ...) that assume the exact prod directory depth:
+#   /var/www/html/                    <- dhammagift/dg      (legacy PHP repo)
+#   /var/www/html/nodejs/             <- dhammagift/dg-node (the website)
+# A relative symlink resolves against the REAL (kernel-canonicalized) path, not any alias on top
+# of it — so checking dg-node out somewhere else and symlink-ALIASING /var/www/html/nodejs to it
+# does NOT make those symlinks resolve: Node's readdirSync/copyFileSync/__dirname all see the real
+# underlying path. Both repos therefore land at their real absolute prod paths below, and
+# DG_NODE_PATH points this repo's build scripts at that location (see paths.js).
+#
+# sc-data and offline-data don't have this problem: they're referenced only through
+# nodejs/siteroot/data/{suttacentral.net,dhammagift}, which this workflow force-replaces with
+# hand-made ABSOLUTE symlinks anyway — independent of checkout path depth, so they stay under the
+# workspace-relative repos/ for simplicity.
+#
+# Checkout order matters: dg (legacy) MUST land first, since dg-node's target is nested inside it
+# (/var/www/html/nodejs) — git clean would otherwise wipe a sibling checkout that arrived first.
+#
+# All repos are public, so no token needed for the checkouts.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      dg_node_ref:
+        description: 'dg-node branch or tag to build the UI from (default: contents of DG_NODE_REF)'
+        required: false
+        type: string
+
+env:
+  REPOS_ROOT: ${{ github.workspace }}/repos
+  DG_NODE_PATH: /var/www/html/nodejs
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout this repo (the app)
+        uses: actions/checkout@v4
+
+      # The pin lives in a committed file rather than only in this workflow so a dg-node upgrade
+      # is a reviewable one-line diff, and so local builds can read the same value.
+      - name: Resolve dg-node ref
+        id: pin
+        run: |
+          REF="${{ inputs.dg_node_ref }}"
+          if [ -z "$REF" ]; then REF="$(tr -d '[:space:]' < DG_NODE_REF)"; fi
+          if [ -z "$REF" ]; then echo "::error::DG_NODE_REF is empty and no dg_node_ref input given"; exit 1; fi
+          echo "ref=$REF" >> "$GITHUB_OUTPUT"
+          echo "Building UI from dg-node@$REF"
+
+      - name: Prepare workspace layout
+        run: |
+          sudo mkdir -p /var/www/html
+          sudo chown -R "$(id -u):$(id -g)" /var/www/html
+          mkdir -p "$REPOS_ROOT/sc-data"
+          mkdir -p "$REPOS_ROOT/offline-data"
+
+      - name: Configure git safe directories
+        run: |
+          git config --global --add safe.directory /var/www/html
+          git config --global --add safe.directory /var/www/html/nodejs
+          git config --global --add safe.directory "$REPOS_ROOT/sc-data"
+          git config --global --add safe.directory "$REPOS_ROOT/offline-data"
+
+      # actions/checkout@v4 REFUSES any `path:` outside $GITHUB_WORKSPACE ("Repository path
+      # '/var/www/html' is not under ...") with no supported override, and these two must land at
+      # the real prod paths (see header). Plain git has no such restriction.
+      #
+      # "read" is checked out alongside assets/* — reader/css/index.css's relative symlink needs
+      # /var/www/html/read/css/index.css to exist.
+      - name: Checkout legacy dg (assets + read only)
+        working-directory: /var/www/html
+        run: |
+          git init -q
+          git remote add origin https://github.com/dhammagift/dg.git
+          git config core.sparseCheckout true
+          git sparse-checkout init --cone
+          git sparse-checkout set assets/img assets/css assets/js assets/svg assets/texts read
+          git fetch --depth 1 origin main -q
+          git checkout -q FETCH_HEAD
+
+      # Anonymous `git fetch origin <full-sha>` returns HTTP 401 for these repos (GitHub's
+      # allowReachableSHA1InWant extension isn't enabled) — fetch by ref name, which is always in
+      # the standard ref advertisement, and report the resolved commit for the build log.
+      - name: Checkout dg-node (the website — source of the UI)
+        run: |
+          mkdir -p "$DG_NODE_PATH"
+          cd "$DG_NODE_PATH"
+          git init -q
+          git remote add origin https://github.com/dhammagift/dg-node.git
+          git fetch --depth 1 origin "${{ steps.pin.outputs.ref }}" -q
+          git checkout -q FETCH_HEAD
+          echo "dg-node@${{ steps.pin.outputs.ref }} = $(git rev-parse HEAD)"
+
+      # structure/tree is NOT optional — dg-light.js's TOC_TREE_ROOT reads
+      # .../sc-data/structure/tree/{sutta,vinaya,abhidhamma}/{code}-tree.json for every single
+      # /api/toc/book/:code request. Missing it doesn't error at checkout time (sc_bilara_data
+      # alone builds a perfectly valid skeleton/offline-db) — every book lookup just 404s at
+      # request time instead, which is exactly what once silently broke the TOC snapshot 46/46.
+      - name: Checkout SuttaCentral bilara data (public, root/variant/html/translation only)
+        uses: actions/checkout@v4
+        with:
+          repository: suttacentral/sc-data
+          path: repos/sc-data
+          sparse-checkout: |
+            sc_bilara_data
+            structure
+          sparse-checkout-cone-mode: true
+          fetch-depth: 1
+
+      - name: Checkout DhammaGift offline translations
+        uses: actions/checkout@v4
+        with:
+          repository: dhammagift/offline-data
+          path: repos/offline-data
+          sparse-checkout: |
+            dhammagift
+          sparse-checkout-cone-mode: true
+          fetch-depth: 1
+
+      - name: Create symlink structure for sc-data/offline-data
+        run: |
+          sudo mkdir -p /var/www/html/suttacentral.net
+          sudo mkdir -p /var/www/suttacentral.net
+          sudo mkdir -p /var/www/offline-data
+          sudo mkdir -p /offline-data
+
+          sudo rm -f /var/www/html/suttacentral.net/sc-data || true
+          sudo rm -f /var/www/suttacentral.net/sc-data || true
+          sudo rm -f /var/www/offline-data/dhammagift || true
+          sudo rm -f /offline-data/dhammagift || true
+
+          # dblight.js / dg-light.js / lib/translation-sources.js all read from
+          # .../suttacentral.net/sc-data/sc_bilara_data (prod has a real sc-data/ directory there).
+          # Symlink the CHECKED-OUT sc-data dir itself — not its sc_bilara_data subfolder — one
+          # level up so that "sc-data" path segment resolves. Placed under both /var/www/html and
+          # /var/www so either relative layout works.
+          sudo ln -s "$REPOS_ROOT/sc-data" /var/www/html/suttacentral.net/sc-data
+          sudo ln -s "$REPOS_ROOT/sc-data" /var/www/suttacentral.net/sc-data
+          sudo ln -s "$REPOS_ROOT/offline-data/dhammagift" /var/www/offline-data/dhammagift
+          sudo ln -s "$REPOS_ROOT/offline-data/dhammagift" /offline-data/dhammagift
+
+          sudo chown -R "$(id -u):$(id -g)" /var/www/suttacentral.net /var/www/offline-data /offline-data /var/www/html/suttacentral.net || true
+
+          # Replace the placeholder files that stand in for relative symlink targets in the
+          # checked-out dg-node with real absolute symlinks — the same treatment prod gives
+          # siteroot/data/<site>.
+          DG_NODE_DATA="$DG_NODE_PATH/siteroot/data"
+          sudo rm -rf "$DG_NODE_DATA/suttacentral.net" || true
+          sudo ln -s /var/www/suttacentral.net "$DG_NODE_DATA/suttacentral.net"
+          sudo rm -rf "$DG_NODE_DATA/dhammagift" || true
+          sudo ln -s /offline-data/dhammagift "$DG_NODE_DATA/dhammagift"
+          sudo chown -R "$(id -u):$(id -g)" "$DG_NODE_DATA" || true
+          readlink -f "$DG_NODE_DATA/suttacentral.net" || true
+
+      - name: Verify data layout resolves
+        working-directory: /var/www/html/nodejs
+        run: |
+          test -d siteroot/data/suttacentral.net/sc-data/sc_bilara_data/root || { echo "::error::sc-data did not land where siteroot/data/suttacentral.net/sc-data expects it"; exit 1; }
+          test -d siteroot/data/suttacentral.net/sc-data/structure/tree/sutta || { echo "::error::sc-data's structure/tree missing — every /api/toc/book/:code request 404s without it (TOC_TREE_ROOT in dg-light.js)"; exit 1; }
+          test -d siteroot/data/dhammagift/translation/en || { echo "::error::offline-data did not land where siteroot/data/dhammagift expects it"; exit 1; }
+          test -f /var/www/html/assets/js/textinfo.json || { echo "::error::legacy assets/js missing (textinfo.json) — dblight.js needs it"; exit 1; }
+          test -f reader/images/favicon-name-black.png || { echo "::error::reader/images relative symlink didn't resolve — dg and dg-node must be checked out at their real absolute prod paths (see workflow header)"; exit 1; }
+          test -f reader/css/index.css || { echo "::error::reader/css/index.css relative symlink didn't resolve — needs /var/www/html/read/css/index.css, check dg's sparse-checkout includes 'read'"; exit 1; }
+          echo "Data layout OK."
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.20.0'
+
+      - name: Restore npm cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            /var/www/html/nodejs/node_modules
+            ${{ github.workspace }}/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 36
+          build-tools-version: 36.0.0
+
+      - name: Install dg-node dependencies
+        working-directory: /var/www/html/nodejs
+        run: npm install --legacy-peer-deps --no-audit
+
+      - name: Install app dependencies
+        run: npm install --legacy-peer-deps --no-audit
+
+      # public/overrides/js/fontawesome-local.js is gitignored in dg-node and generated from its
+      # @fortawesome devDependency. dg-node's own CI never ran this, so every APK it produced
+      # shipped without the icon bundle — build-assets.js reported it as MISSING and carried on.
+      - name: Build dg-node icon bundle (fontawesome-local.js)
+        working-directory: /var/www/html/nodejs
+        run: npm run build-icons
+
+      # Skeleton (dg_db_light.json) is gitignored in dg-node — each environment builds its own.
+      # Needed before build-offline-db AND before dg-light.js can boot for the TOC snapshot.
+      - name: Build skeleton (dg_db_light.json)
+        working-directory: /var/www/html/nodejs
+        run: npm run build-db
+
+      - name: Build offline database
+        run: npm run build-offline-db
+
+      # dg-light.js's app.listen() accepts connections immediately, while its async initServer()
+      # (buildSettingsDemoCache — Aksharamukha conversion for every script — then
+      # buildScriptListCache/buildLangCountsCache/buildTranslatorCatalogCache) keeps running in
+      # the background and writes settings/{scripts,demo-data,lang-counts,translator-catalog}.json
+      # only once done. Measured: /api/toc answers in ~6s but translator-catalog.json — the LAST
+      # file in that sequence — doesn't land until ~36s. Killing the server before then froze
+      # initServer() mid-way and left "Build assets" with permanently missing inputs. Waiting on
+      # translator-catalog.json, not just /api/toc, closes that window.
+      - name: Start dg-light.js (for the TOC snapshot and the generated settings files)
+        working-directory: /var/www/html/nodejs
+        run: |
+          npm start > /tmp/dg-light.log 2>&1 &
+          echo $! > /tmp/dg-light.pid
+          for i in $(seq 1 45); do
+            if curl -sf http://localhost:3000/api/toc > /dev/null 2>&1 && [ -f settings/translator-catalog.json ]; then
+              echo "dg-light.js is up and fully initialized on attempt $i."
+              exit 0
+            fi
+            echo "Attempt $i/45..."
+            sleep 2
+          done
+          echo "::error::dg-light.js did not become fully ready within 90s"
+          cat /tmp/dg-light.log
+          exit 1
+
+      - name: Build TOC snapshot
+        run: npm run build-toc-snapshot
+
+      - name: Stop dg-light.js
+        if: always()
+        run: |
+          if [ -f /tmp/dg-light.pid ]; then
+            PID=$(cat /tmp/dg-light.pid)
+            kill "$PID" 2>/dev/null || true
+            sleep 1
+            kill -9 "$PID" 2>/dev/null || true
+          fi
+
+      # MUST run after dg-light.js has booted at least once: settings/{scripts,demo-data,
+      # lang-counts,translator-catalog}.json are gitignored and written by the server at startup,
+      # so on a fresh checkout they don't exist until it has run.
+      #
+      # `npm run build` = build-page.js (www/index.html from dg-node's search/index.html) then
+      # build-assets.js (every asset that page references, plus src/ and sql.js's WASM).
+      - name: Build web bundle (page + assets)
+        run: npm run build
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Grant gradlew permissions
+        run: chmod +x android/gradlew
+
+      # assembleRelease has no signingConfig in app/build.gradle — it would produce
+      # app-release-unsigned.apk, not installable without a separate signing step. assembleDebug
+      # is auto-signed with the Android debug keystore (no secrets needed).
+      - name: Build Android Debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: List build outputs
+        run: ls -lah android/app/build/outputs/apk/debug/ || echo "Debug APK directory not found"
+
+      - name: Create Release
+        if: success()
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            android/app/build/outputs/apk/debug/app-debug.apk
+          body: |
+            UI built from dg-node@${{ steps.pin.outputs.ref }}.
+          token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,11 +1,14 @@
 {
-  "name": "dg-mobile",
+  "name": "dg-app-full",
   "private": true,
-  "description": "Offline Android/iOS app build tooling — isolated from dg-light.js (the web server), no shared dependencies or requires in either direction.",
+  "description": "Dhamma.gift offline Android/iOS app. The UI is not maintained here — it is generated from a dg-node checkout at build time (see paths.js / DG_NODE_PATH); this repo holds only the app's own files: the fetch shim, the native bridge, the build scripts and the native platform projects.",
   "scripts": {
-    "build-offline-db": "node build-offline-db.js",
+    "build": "node build-page.js && node build-assets.js",
+    "build-page": "node build-page.js",
     "build-assets": "node build-assets.js",
+    "build-offline-db": "node build-offline-db.js",
     "build-toc-snapshot": "node build-toc-snapshot.js",
+    "sync-android": "cap sync android",
     "serve-dist": "node serve-dist.js"
   },
   "dependencies": {
