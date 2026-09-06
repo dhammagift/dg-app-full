@@ -349,7 +349,12 @@ jobs:
           PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
         run: |
           npm install --no-save playwright-core@1.49.1
-          npx --package=playwright-core@1.49.1 playwright install --with-deps chromium
+          # The CLI's `install` subcommand lives in the "playwright" package, not the
+          # library-only "playwright-core" this repo actually requires at runtime (confirmed
+          # locally: `npx --package=playwright-core ... playwright install` fails instantly with
+          # "playwright: not found" — playwright-core ships no such binary at all). Same version
+          # pin either way, so both packages agree on which Chromium revision to fetch/resolve.
+          npx --yes playwright@1.49.1 install --with-deps chromium
 
       # A FIXTURE, not dist/. The snapshots these checks diff against were captured from a server
       # running on this same fixture, so serving the real 170MB slice here would fail on the
