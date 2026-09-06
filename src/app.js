@@ -33,10 +33,23 @@
     // Favorites/History (they live inside the Quick Modal, not the SPA router), so this just
     // opens the modal once its lazy-load stub (settings-bundle.js) exists. No tab argument needed:
     // tab-fav (Favorites+History combined) is already the modal's default active tab.
+    //
+    // Unlike _nativeRoute above (a synchronous replaceState, nothing else has to be ready),
+    // toggleQuickModal depends on settings-bundle.js having already executed by 'load' — verified
+    // that this holds in a desktop browser, but on a device reported "just opens the home
+    // screen": WebView script-execution timing isn't guaranteed identical, and a single check at
+    // 'load' with no retry fails silently forever if it loses that race even once. Polling instead
+    // of trusting one event costs nothing when the race is won (fires on the very first check) and
+    // is the difference between "usually works" and "works" when it isn't.
     if (params.has('_openQuickModal')) {
         history.replaceState(null, '', route || location.pathname);
         window.addEventListener('load', () => {
-            if (typeof window.toggleQuickModal === 'function') window.toggleQuickModal();
+            const deadline = Date.now() + 10000;
+            (function tryOpen() {
+                if (typeof window.toggleQuickModal === 'function') { window.toggleQuickModal(); return; }
+                if (Date.now() < deadline) setTimeout(tryOpen, 100);
+                else console.error('[dg-shortcut] toggleQuickModal never became available');
+            })();
         });
     }
 

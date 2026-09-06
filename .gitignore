@@ -29,3 +29,4 @@ ios/
 # Capture output from a comparison run — the pinned snapshots in test/snapshots/site are
 # the contract; anything else is scratch from a diff.
 test/snapshots/after/
+.playwright-cli/
