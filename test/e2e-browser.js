@@ -10,9 +10,13 @@ const path = require('path');
 
 const PLAYWRIGHT = process.env.DG_PLAYWRIGHT || '/home/user/dg-node/node_modules/playwright-core';
 const { chromium } = require(PLAYWRIGHT);
-// Falls back to whatever the runner has: ubuntu-latest ships Chrome at this path.
-const BROWSER = process.env.DG_CHROMIUM
-    || (fs.existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : '/usr/bin/google-chrome');
+// DG_CHROMIUM is an explicit override (a workstation that would rather point at its own system
+// Chrome than have Playwright download one); otherwise chromium.executablePath() is Playwright's
+// own resolution — respects PLAYWRIGHT_BROWSERS_PATH, and matches whatever `playwright install`
+// actually put on disk instead of a second, hand-maintained guess at that path (CI used to guess
+// a plain "/usr/bin/google-chrome" with no install step behind it at all — see this file's git
+// history for why that stopped being safe to assume).
+const BROWSER = process.env.DG_CHROMIUM || chromium.executablePath();
 
 const SNAPSHOTS = path.join(__dirname, 'snapshots', 'site');
 const BASE = process.env.DG_BASE_URL || 'http://localhost:8097';

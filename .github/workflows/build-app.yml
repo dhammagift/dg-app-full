@@ -336,8 +336,20 @@ jobs:
       # every reader request failing on the device — because these ran in one place and CI ran
       # none of them. test/serve-local.js is deliberately no more permissive about MIME types than
       # Capacitor's asset server, so a module that would not load on a phone does not load here.
+      # Used to rely on ubuntu-latest's pre-installed /usr/bin/google-chrome instead of installing
+      # one — worked for months, then this exact step started failing this check near-instantly
+      # (page errors, no diff output) with no code change anywhere near it, timing consistent with
+      # chromium.launch() itself throwing rather than anything in the page. A system browser
+      # nobody here pins the version of is exactly the kind of thing a runner-image update changes
+      # out from under a workflow without any warning. `playwright install` pins an EXACT Chromium
+      # build matched to this playwright-core version instead, the same guarantee build-app.yml
+      # already gives every other dependency (npm's lockfile, DG_NODE_REF, the JDK/SDK versions).
       - name: Install a browser driver for the end-to-end checks
-        run: npm install --no-save playwright-core@1.49.1
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
+        run: |
+          npm install --no-save playwright-core@1.49.1
+          npx --package=playwright-core@1.49.1 playwright install --with-deps chromium
 
       # A FIXTURE, not dist/. The snapshots these checks diff against were captured from a server
       # running on this same fixture, so serving the real 170MB slice here would fail on the
@@ -363,7 +375,7 @@ jobs:
       - name: Check the app answers exactly like the site
         env:
           DG_PLAYWRIGHT: ${{ github.workspace }}/node_modules/playwright-core
-          DG_CHROMIUM: /usr/bin/google-chrome
+          PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
         run: node test/e2e-browser.js
 
       - name: Sync Capacitor
