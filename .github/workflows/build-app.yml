@@ -31,9 +31,10 @@ name: Build App
 # All repos are public, so no token needed for the checkouts.
 
 on:
+  # Every push builds — no tag needed to get an installable APK artifact (see the "Upload APK
+  # artifact" step, which runs on every run). Tags/releases are for when there is actually
+  # something to release: push one deliberately, don't tag routine work-in-progress commits.
   push:
-    tags:
-      - 'v*'
   workflow_dispatch:
     inputs:
       dg_node_ref:

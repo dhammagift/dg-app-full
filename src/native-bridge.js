@@ -75,13 +75,14 @@
         // origin, it can never reach back into this app's own WebView storage (see quickModal.js
         // override's dgOfflineLoginWithPhrase() for the actual fix — a passphrase, entered right
         // here in the app, no browser handoff needed). Route to the real working control instead
-        // of the dead-end external one: home + auto-open the Quick Modal (same `_openQuickModal`
-        // native-shortcut param app.js already handles, see its own header) where that sync
-        // button lives.
+        // of the dead-end external one: home + auto-open the Quick Modal on its default tab
+        // (settings-bundle.js's own "?sacca=true" trigger, no tab argument — same as the plain
+        // modal-open shortcut used to be before it went through app.js) where that sync button
+        // lives.
         if (e.target.closest('#cloudBtn')) {
             e.preventDefault();
             e.stopPropagation();
-            location.href = '/?_openQuickModal=1';
+            location.href = '/?sacca=true';
         }
     }, true);
 
@@ -107,5 +108,17 @@
             if (ev.canGoBack) window.history.back();
             else CapApp.exitApp();
         });
+
+        // App version footer: shown inside the Settings modal's own footer (index.html's #settings
+        // has one) when present, otherwise appended at the end of the page (settings/index.html,
+        // the standalone page, has no such modal). Native-only info (Android versionName/
+        // versionCode), so it belongs here rather than in dg-node's shared template.
+        CapApp.getInfo().then(function (info) {
+            var el = document.createElement('div');
+            el.id = 'dg-app-version';
+            el.style.cssText = 'text-align:center;padding:4px;font-size:11px;opacity:.5;';
+            el.textContent = 'v' + info.version + ' (' + info.build + ')';
+            (document.querySelector('#settings .modal-footer') || document.body).appendChild(el);
+        }).catch(function (e) { console.error('[dg-version] App.getInfo failed', e); });
     }
 })();

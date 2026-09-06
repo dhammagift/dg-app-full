@@ -61,7 +61,7 @@ public class MainActivity extends BridgeActivity {
         if (Intent.ACTION_SEND.equals(intent.getAction()) && "text/plain".equals(intent.getType())) {
             String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
             if (sharedText != null && !sharedText.isEmpty()) {
-                url = "https://localhost/?q=" + Uri.encode(sharedText);
+                url = "https://localhost/?q=" + Uri.encode(cleanSharedText(sharedText));
             }
         } else if (Intent.ACTION_VIEW.equals(intent.getAction()) && intent.getData() != null) {
             // A dhamma.gift/f.dhamma.gift/find.dhamma.gift link opened from outside the app (see
@@ -80,7 +80,17 @@ public class MainActivity extends BridgeActivity {
             } else if (intent.getStringExtra("openQuickModal") != null) {
                 // <extra> in shortcuts.xml always yields a String extra (no boolean type there),
                 // so this is checked for presence, not parsed as a boolean.
-                url = "https://localhost/?_openQuickModal=1";
+                //
+                // ?action=tab-fav, not a custom param: settings-bundle.js already listens for
+                // this itself (its own DOMContentLoaded handler, used by the site's "Быстрое
+                // окно" doc page) and opens the Quick Modal on the Favorites/History tab. A
+                // custom app.js `_openQuickModal` + `window.addEventListener('load', ...)` used
+                // to do this instead, and reportedly just opened the home screen on real devices
+                // — `load` waits on every subresource and isn't guaranteed to fire promptly (or
+                // to still be pending when the listener attaches) in this WebView, while
+                // settings-bundle.js's own hook fires on DOMContentLoaded, which is both earlier
+                // and already proven to work for this exact purpose on the live site.
+                url = "https://localhost/?action=tab-fav";
             }
         }
         if (url == null) return;
@@ -89,5 +99,25 @@ public class MainActivity extends BridgeActivity {
         if (bridge != null && bridge.getWebView() != null) {
             bridge.getWebView().post(() -> bridge.getWebView().loadUrl(finalUrl));
         }
+    }
+
+    // Chrome's "Share" on a text selection sends EXTRA_TEXT as `"<selected text>"\n<url>#:~:text=...`
+    // (a quoted copy of the highlight plus a Link-to-Text-Fragment URL). Used verbatim as a search
+    // query that whole block — quotes, URL and all — becomes the literal search string instead of
+    // the sutta line the user actually meant. Keep only the quoted portion.
+    private static String cleanSharedText(String text) {
+        text = text.trim();
+        if (text.length() >= 2 && text.charAt(0) == '"' && text.charAt(text.length() - 1) == '"') {
+            return text.substring(1, text.length() - 1);
+        }
+        // Multi-line share (quote on its own line, URL on the next) without a matching end quote
+        // caught above — still strip a leading straight or curly quote and take just that line.
+        int newline = text.indexOf('\n');
+        String firstLine = (newline >= 0 ? text.substring(0, newline) : text).trim();
+        if (firstLine.length() >= 2 && (firstLine.charAt(0) == '"' || firstLine.charAt(0) == '“')) {
+            char last = firstLine.charAt(firstLine.length() - 1);
+            if (last == '"' || last == '”') return firstLine.substring(1, firstLine.length() - 1);
+        }
+        return text;
     }
 }

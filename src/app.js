@@ -24,35 +24,18 @@
 // ready handler) ever reads window.location — rewriting the visible URL to the real target via
 // the same history.replaceState() trick the SPA already uses for its own pushState navigation.
 // A plain browser load (no native shortcut involved) never has this param, so this is a no-op.
+// "favorites" App Shortcut (res/xml/shortcuts.xml) opens Favorites/History via a plain
+// "?action=tab-fav" on the root URL — MainActivity generates it directly, no rewrite needed here.
+// settings-bundle.js already listens for exactly this on DOMContentLoaded (the same hook the
+// site's own "Быстрое окно" doc page uses), so it needs no shim of its own. A custom
+// `_openQuickModal` param used to be rewritten here and opened via a `window.addEventListener(
+// 'load', ...)` poll, but `load` waits on every subresource and isn't guaranteed to still be
+// pending when the listener attaches — it reportedly just opened the home screen on real devices.
+// DOMContentLoaded, which settings-bundle.js's own hook uses, has neither problem.
 (function rewriteNativeShortcutRoute() {
     const params = new URLSearchParams(location.search);
     const route = params.get('_nativeRoute');
     if (route) history.replaceState(null, '', route);
-
-    // "favorites" App Shortcut (res/xml/shortcuts.xml) — no dedicated route exists for
-    // Favorites/History (they live inside the Quick Modal, not the SPA router), so this just
-    // opens the modal once its lazy-load stub (settings-bundle.js) exists. No tab argument needed:
-    // tab-fav (Favorites+History combined) is already the modal's default active tab.
-    //
-    // Unlike _nativeRoute above (a synchronous replaceState, nothing else has to be ready),
-    // toggleQuickModal depends on settings-bundle.js having already executed by 'load' — verified
-    // that this holds in a desktop browser, but on a device reported "just opens the home
-    // screen": WebView script-execution timing isn't guaranteed identical, and a single check at
-    // 'load' with no retry fails silently forever if it loses that race even once. Polling instead
-    // of trusting one event costs nothing when the race is won (fires on the very first check) and
-    // is the difference between "usually works" and "works" when it isn't.
-    if (params.has('_openQuickModal')) {
-        history.replaceState(null, '', route || location.pathname);
-        window.addEventListener('load', () => {
-            const deadline = Date.now() + 10000;
-            (function tryOpen() {
-                if (typeof window.toggleQuickModal === 'function') { window.toggleQuickModal(); return; }
-                if (Date.now() < deadline) setTimeout(tryOpen, 100);
-                else console.error('[dg-shortcut] toggleQuickModal never became available');
-            })();
-        });
-    }
-
 })();
 
 // Where the offline database is published: siteroot/mobile-data in dg-node, served from the live
