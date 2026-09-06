@@ -114,7 +114,11 @@ function readWithTimeout(reader, ms) {
     });
 }
 
-async function downloadInto(pool, url, name, expectedBytes) {
+// expectedWireBytes/expectedDbBytes differ only for a gzipped download: the manifest's bytes_gz
+// (what actually crosses the network, checked against Content-Length before reading anything) vs
+// its bytes (what the file is once DecompressionStream — native, no library — expands it, checked
+// against what importDb actually receives). For a plain download both are the same number.
+async function downloadInto(pool, url, name, expectedWireBytes, expectedDbBytes, gzip) {
     const phase = 'download';
 
     for (let attempt = 1; ; attempt++) {
@@ -125,35 +129,41 @@ async function downloadInto(pool, url, name, expectedBytes) {
             const response = await fetch(url, { signal: controller.signal });
             if (!response.ok) throw new Error(`dg-mobile.db: HTTP ${response.status}`);
             const total = Number(response.headers.get('Content-Length')) || 0;
-            if (expectedBytes && total && total > expectedBytes * OVERSHOOT_FACTOR) {
+            if (expectedWireBytes && total && total > expectedWireBytes * OVERSHOOT_FACTOR) {
                 throw Object.assign(
                     new Error(`dg-mobile.db: server offered ${Math.round(total / 1048576)}MB, ` +
-                        `manifest promised ${Math.round(expectedBytes / 1048576)}MB — ` +
+                        `manifest promised ${Math.round(expectedWireBytes / 1048576)}MB — ` +
                         `check mobile-data/dg-mobile.db on the server, it may point at the wrong file`),
                     { mismatch: true });
             }
-            reader = response.body.getReader();
+
+            // The progress bar reports against the DECOMPRESSED size (what the reader is actually
+            // waiting on and what ends up on disk) rather than Content-Length, which for a gzipped
+            // response is the smaller, wire-only figure and would make the bar read >100%.
+            const progressTotal = gzip ? (expectedDbBytes || 0) : total;
+            const body = gzip ? response.body.pipeThrough(new DecompressionStream('gzip')) : response.body;
+            reader = body.getReader();
             let loaded = 0, lastReport = 0;
 
             const loadedBytes = await pool.importDb(name, async () => {
                 const { done, value } = await readWithTimeout(reader, STALL_MS);
                 if (done) return undefined;
                 loaded += value.byteLength;
-                if (expectedBytes && loaded > expectedBytes * OVERSHOOT_FACTOR) {
+                if (expectedDbBytes && loaded > expectedDbBytes * OVERSHOOT_FACTOR) {
                     throw Object.assign(
                         new Error(`dg-mobile.db: past ${Math.round(loaded / 1048576)}MB with only ` +
-                            `${Math.round(expectedBytes / 1048576)}MB promised — ` +
+                            `${Math.round(expectedDbBytes / 1048576)}MB promised — ` +
                             `check mobile-data/dg-mobile.db on the server, it may point at the wrong file`),
                         { mismatch: true });
                 }
                 const now = Date.now();
                 if (now - lastReport > 200) {
                     lastReport = now;
-                    post({ type: 'progress', loaded, total, phase });
+                    post({ type: 'progress', loaded, total: progressTotal, phase });
                 }
                 return value;
             });
-            post({ type: 'progress', loaded, total, phase });
+            post({ type: 'progress', loaded, total: progressTotal, phase });
             return loadedBytes;
         } catch (e) {
             if (e && e.mismatch) throw e; // a server misconfiguration, not a network blip — retrying serves nobody
@@ -259,9 +269,16 @@ async function fetchCurrent(pool, distBase) {
     const target = manifest && manifest.build_id ? dbNameFor(manifest.build_id) : LEGACY_DB_NAME;
     const stale = storedDatabases(pool).filter(n => n !== target);
 
+    // Prefer the gzipped file when the manifest offers one: on the corpus this app currently
+    // ships, gzip cuts ~500MB to ~176MB (the trigram-index-heavy slice that used to make gzip a
+    // net loss has apparently changed shape). DecompressionStream is a native Streams API, so
+    // this needs no library on either side of the wire.
+    const gzip = !!(manifest && manifest.file_gz);
+    const file = gzip ? manifest.file_gz : (manifest && manifest.file) || 'dg-mobile.db';
+    const expectedWireBytes = gzip ? manifest.bytes_gz : (manifest && manifest.bytes);
+
     post({ type: 'downloading' });
-    await downloadInto(pool, `${distBase}/${(manifest && manifest.file) || 'dg-mobile.db'}`, target,
-        manifest && manifest.bytes);
+    await downloadInto(pool, `${distBase}/${file}`, target, expectedWireBytes, manifest && manifest.bytes, gzip);
 
     const candidate = inspect(pool, target);
     if (!candidate.ok) {
@@ -425,7 +442,9 @@ self.onmessage = async (event) => {
             const manifest = present ? null : await fetchManifest(args && args.distBase);
             post({ id, ok: true, result: {
                 present,
-                bytes: manifest ? manifest.bytes : null,
+                // The consent dialog states what actually crosses the connection, not the size on
+                // disk afterward — for a gzipped manifest those are no longer the same number.
+                bytes: manifest ? (manifest.bytes_gz || manifest.bytes) : null,
                 build_id: manifest ? manifest.build_id : null,
                 langs: manifest ? manifest.langs : null,
             } });
@@ -444,7 +463,7 @@ self.onmessage = async (event) => {
             post({ id, ok: true, result: manifest ? {
                 current: manifest.build_id === (local && local.value),
                 build_id: manifest.build_id,
-                bytes: manifest.bytes,
+                bytes: manifest.bytes_gz || manifest.bytes,
                 built_at: manifest.built_at,
                 schema_supported: Number(manifest.schema_version) === SCHEMA_VERSION,
             } : { unknown: true } });
