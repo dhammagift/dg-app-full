@@ -84,6 +84,19 @@
             e.stopPropagation();
             location.href = '/?sacca=true';
         }
+        // settings/index.html's "Voice and reading speed" -> "Open" button: same
+        // location.href-from-onclick shape as #cloudBtn above, pointed at /read/ (or /ru/read/)
+        // — the legacy standalone reader page, real and working on the live site (verified: 200),
+        // but never bundled into this app (same reason the "DG Read" App Shortcut was dropped —
+        // see shortcuts.xml's own comment: its logic was never ported to the offline shim). Left
+        // unhandled, this just silently loaded a blank 404 in the app's own WebView with nothing
+        // in the console to explain why — no fetch involved, so app.js's shim never even sees it.
+        if (e.target.closest('#voiceBtn')) {
+            e.preventDefault();
+            e.stopPropagation();
+            var ru = (localStorage.getItem('dhammaLanguage') || localStorage.getItem('siteLanguage') || 'en') === 'ru';
+            openExternal(ONLINE_ORIGIN + (ru ? '/ru/read/' : '/read/'));
+        }
     }, true);
 
     // Owner (real usage): "не работают переходы назад — кнопка Android назад или свайп назад".
