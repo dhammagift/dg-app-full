@@ -50,7 +50,18 @@ const CASES = [
 ];
 
 (async () => {
-    const browser = await chromium.launch({ executablePath: BROWSER, args: ['--no-sandbox'] });
+    let browser;
+    try {
+        // --disable-dev-shm-usage: /dev/shm is often tiny on CI VMs/containers, and Chrome uses
+        // it for shared memory by default — too small and the renderer crashes on launch with no
+        // useful error surfacing here at all (this is the single most common reason "headless
+        // Chrome works everywhere except CI" reports exist). Falls back to /tmp instead, which is
+        // always sized to the disk, not RAM.
+        browser = await chromium.launch({ executablePath: BROWSER, args: ['--no-sandbox', '--disable-dev-shm-usage'] });
+    } catch (e) {
+        console.log('chromium.launch failed:', e.message);
+        process.exit(1);
+    }
     const page = await browser.newPage();
     // Point the app at this server's own /mobile-data instead of the live host.
     await page.addInitScript(() => { window.DG_DIST_BASE = '/mobile-data'; });
