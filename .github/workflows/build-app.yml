@@ -50,6 +50,12 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # The default GITHUB_TOKEN is read-only on this org; action-gh-release below needs
+    # contents: write to create a release on a tag push, and fails with a 403 without it (never
+    # caught before because every prior CI run here was workflow_dispatch, which the Create
+    # Release step skips entirely).
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout this repo (the app)
