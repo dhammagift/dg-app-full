@@ -154,19 +154,54 @@ function withLoadingEvent(fn) {
     });
 }
 
+// Languages this app's own offline database slice was cut with (see build-app-db.js's
+// --langs=ru,en in the workflow). Anything else the language picker offers exists on the corpus
+// but isn't in THIS device's copy — a "частный случай" (edge case), fine to just require internet
+// for rather than growing the bundled database, same call as needsOnline's script check below.
+const OFFLINE_LANGS = ['ru', 'en'];
+
+// Script conversion (?script=, "Система письма" in /settings/) runs through Aksharamukha on the
+// server (Python/Pyodide) — dg-fastify.js's convertPaliScript()/convertScriptInSearchResult(),
+// not core/search-core.js, so this app's local worker (which calls the core directly) has no
+// equivalent and never will unless that ~30MB engine gets ported here too. Same call as
+// OFFLINE_LANGS: a rarely-used option, online-only is an acceptable answer for it. 'isopali' is
+// the default the client already omits (see search/index.html's own `scriptSetting !== 'isopali'`
+// check before it even adds ?script= to a request) — treated the same as "absent" here.
+function needsOnline(qs) {
+    const script = qs.get('script');
+    if (script && script.toLowerCase() !== 'isopali') return true;
+    const langs = (qs.get('langs') || '').split(',').map((s) => s.trim()).filter(Boolean);
+    return langs.some((l) => !OFFLINE_LANGS.includes(l));
+}
+
 // Installed synchronously, at the very top of <head> (see build-page.js) — before any other
 // script or asset on the page can issue a real fetch(). Requests this doesn't recognise pass
 // straight through to the real fetch: static JSON/HTML/CSS/JS all resolve as plain local files.
 function installFetchShim() {
     const realFetch = window.fetch.bind(window);
+    // https://localhost (this app's own origin) has no server behind it for anything dynamic —
+    // used for requests that must go to the actual internet: a non-default script or a language
+    // outside this device's bundled slice (needsOnline above), and /api/transliterate, which has
+    // no local equivalent at all (paliLookup.js's ensureIastWord() already fetches it against
+    // `location.origin`, i.e. this app's own dead-end origin, unaware it's running inside the
+    // app rather than on the live site). Forwarding to the real host makes these behave exactly
+    // like the site when a connection exists, and fail visibly and fast, like any other
+    // unreachable fetch, when it doesn't — no bespoke "you're offline" handling needed here,
+    // callers of both already tolerate a failed fetch (ensureIastWord catches it and falls back
+    // to the untransliterated word; search/reader show the same error state the site itself
+    // would on a dropped connection).
     window.fetch = async (input, init) => {
         const url = typeof input === 'string' ? input : input.url;
         let parsed;
         try { parsed = new URL(url, location.href); } catch (e) { return realFetch(input, init); }
         const p = parsed.pathname;
         const qs = parsed.searchParams;
+        const toOnline = () => realFetch('https://dhamma.gift' + p + parsed.search, init);
+
+        if (p === '/api/transliterate') return toOnline();
 
         if (p.startsWith('/api/text/')) {
+            if (needsOnline(qs)) return toOnline();
             return withLoadingEvent(async () => {
                 await ready;
                 return respond(await call('text', {
@@ -201,6 +236,7 @@ function installFetchShim() {
             return realFetch(`/reader/${side}-pm-fragment.html`, init);
         }
         if (p === '/search/enrich') {
+            if (needsOnline(qs)) return toOnline();
             await ready;
             return respond(await call('enrich', {
                 q: qs.get('q') || '', ids: qs.get('ids') || '', langs: qs.get('langs') || 'ru,en',
@@ -209,6 +245,7 @@ function installFetchShim() {
             }));
         }
         if (p === '/search' || (p.startsWith('/search/') && p !== '/search/enrich')) {
+            if (needsOnline(qs)) return toOnline();
             return withLoadingEvent(async () => {
                 await ready;
                 return respond(await call('search', {
