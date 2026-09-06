@@ -78,19 +78,18 @@ public class MainActivity extends BridgeActivity {
             if (route != null) {
                 url = "https://localhost/?_nativeRoute=" + Uri.encode(route);
             } else if (intent.getStringExtra("openQuickModal") != null) {
-                // <extra> in shortcuts.xml always yields a String extra (no boolean type there),
-                // so this is checked for presence, not parsed as a boolean.
+                // The extra's VALUE is the Quick Modal tab key itself (e.g. "tab-fav",
+                // "tab-4as") — settings-bundle.js already listens for exactly this shape on
+                // DOMContentLoaded (its own hook, used by the site's "Быстрое окно" doc page), so
+                // it needs no shim of its own here beyond forwarding the value through.
                 //
-                // ?action=tab-fav, not a custom param: settings-bundle.js already listens for
-                // this itself (its own DOMContentLoaded handler, used by the site's "Быстрое
-                // окно" doc page) and opens the Quick Modal on the Favorites/History tab. A
-                // custom app.js `_openQuickModal` + `window.addEventListener('load', ...)` used
+                // A custom app.js `_openQuickModal` + `window.addEventListener('load', ...)` used
                 // to do this instead, and reportedly just opened the home screen on real devices
                 // — `load` waits on every subresource and isn't guaranteed to fire promptly (or
                 // to still be pending when the listener attaches) in this WebView, while
                 // settings-bundle.js's own hook fires on DOMContentLoaded, which is both earlier
                 // and already proven to work for this exact purpose on the live site.
-                url = "https://localhost/?action=tab-fav";
+                url = "https://localhost/?action=" + Uri.encode(intent.getStringExtra("openQuickModal"));
             }
         }
         if (url == null) return;

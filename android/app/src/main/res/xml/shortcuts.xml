@@ -16,10 +16,16 @@
        (/toc/pli-tv-bu-pm, /toc/pli-tv-bi-pm) rather than the legacy /pm.php-rendered single page
        (reader/bu-pm.html) — that page's own logic wasn't ported into the offline shim, TOC
        already reaches the same content.
-     - "favorites" has no route of its own (Favorites/History live inside the Quick Modal, not
-       the SPA router) — MainActivity passes a boolean "openQuickModal" extra instead of "route",
-       app.js opens the modal once it loads (see rewriteNativeShortcutRoute). tab-fav (Favorites+
-       History combined) is already the modal's default tab, no tab-switch needed. -->
+     - "favorites" and "four_noble_truths" have no route of their own (both live inside the Quick
+       Modal, not the SPA router) — MainActivity passes an "openQuickModal" extra instead of
+       "route", whose VALUE is the modal's own tab key ("tab-fav", "tab-4as"); settings-bundle.js
+       already listens for exactly this on DOMContentLoaded (?action=<tab key>), same mechanism
+       the site's own "Быстрое окно" doc page uses to embed an already-open modal on a given tab.
+
+     A 5th shortcut here goes past the "all 4 slots used" design above and past what some Android
+     launchers may actually display (getMaxShortcutCountPerActivity() varies by device/launcher,
+     commonly 4-5) — kept anyway per an explicit ask; if a launcher silently drops one, it'll be
+     this one or the plainest of the four above, worth revisiting if that's ever reported. -->
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
     <shortcut
         android:shortcutId="toc"
@@ -70,7 +76,20 @@
             android:action="android.intent.action.MAIN"
             android:targetPackage="gift.dhamma.mobile"
             android:targetClass="gift.dhamma.mobile.MainActivity">
-            <extra android:name="openQuickModal" android:value="true" />
+            <extra android:name="openQuickModal" android:value="tab-fav" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="four_noble_truths"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_4as_short"
+        android:shortcutLongLabel="@string/shortcut_4as_long">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="gift.dhamma.mobile"
+            android:targetClass="gift.dhamma.mobile.MainActivity">
+            <extra android:name="openQuickModal" android:value="tab-4as" />
         </intent>
     </shortcut>
 </shortcuts>

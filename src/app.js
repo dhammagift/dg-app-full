@@ -157,21 +157,78 @@ function withLoadingEvent(fn) {
 // Languages this app's own offline database slice was cut with (see build-app-db.js's
 // --langs=ru,en in the workflow). Anything else the language picker offers exists on the corpus
 // but isn't in THIS device's copy — a "частный случай" (edge case), fine to just require internet
-// for rather than growing the bundled database, same call as needsOnline's script check below.
+// for rather than growing the bundled database (unlike script conversion below, there is no
+// offline alternative to offer here, so this stays a plain online-or-nothing check).
 const OFFLINE_LANGS = ['ru', 'en'];
-
-// Script conversion (?script=, "Система письма" in /settings/) runs through Aksharamukha on the
-// server (Python/Pyodide) — dg-fastify.js's convertPaliScript()/convertScriptInSearchResult(),
-// not core/search-core.js, so this app's local worker (which calls the core directly) has no
-// equivalent and never will unless that ~30MB engine gets ported here too. Same call as
-// OFFLINE_LANGS: a rarely-used option, online-only is an acceptable answer for it. 'isopali' is
-// the default the client already omits (see search/index.html's own `scriptSetting !== 'isopali'`
-// check before it even adds ?script= to a request) — treated the same as "absent" here.
-function needsOnline(qs) {
-    const script = qs.get('script');
-    if (script && script.toLowerCase() !== 'isopali') return true;
+function langNeedsOnline(qs) {
     const langs = (qs.get('langs') || '').split(',').map((s) => s.trim()).filter(Boolean);
     return langs.some((l) => !OFFLINE_LANGS.includes(l));
+}
+
+// 'isopali' is the default the client already omits (see search/index.html's own
+// `scriptSetting !== 'isopali'` check before it even adds ?script= to a request) — treated the
+// same as "absent" here. Returns the requested script code, or null when it's the default.
+function scriptRequested(qs) {
+    const script = qs.get('script');
+    return (script && script.toLowerCase() !== 'isopali') ? script : null;
+}
+
+// Script conversion (?script=, "Система письма" in /settings/) has no local equivalent in
+// core/search-core.js — it runs through Aksharamukha (script-engine.js's own local port, or
+// dg-fastify.js's identical server-side copy) as a separate post-processing pass over plain IAST
+// results either way, never inside the core itself. Asked once (dg:need-script-consent, see
+// offline-status.js) the first time any request needs it; the answer is remembered in
+// window.dgScriptEngine's mode so later requests don't ask again. A failed offline install falls
+// back to 'online' for THIS request without persisting that as the answer — see the catch below —
+// so a one-off failure (e.g. a dropped connection mid-download) doesn't lock the reader out of
+// ever being asked again.
+// reader/mode-table.json is a static build output (build-assets.js's buildModeTable) already
+// bundled for the reader's own use — reused here rather than re-deriving dualScript some other
+// way, since it's the exact same table dg-fastify.js's own modeConfig lookup reads server-side.
+let modeTablePromise = null;
+function fetchModeTable() {
+    if (!modeTablePromise) modeTablePromise = fetch('/reader/mode-table.json').then((r) => r.json()).catch(() => ({}));
+    return modeTablePromise;
+}
+
+async function ensureScriptMode() {
+    const engine = window.dgScriptEngine;
+    let mode = engine.getMode();
+    if (mode === 'offline' && !engine.isOfflineReady()) {
+        // Chosen in an earlier session — Cache Storage persists, so boot() should just replay
+        // from cache with no network at all. If it can't (cache was cleared, a file went
+        // missing), fall through to asking again rather than silently wedging on 'offline'
+        // forever with no way to recover.
+        try { await engine.boot(); } catch (e) { console.error('[script-engine] re-boot from cache failed:', e); mode = null; }
+    }
+    if (mode) return mode;
+
+    const wantsOffline = await new Promise((resolve) => {
+        window.dispatchEvent(new CustomEvent('dg:need-script-consent', { detail: { resolve } }));
+    });
+    if (!wantsOffline) { engine.setMode('online'); return 'online'; }
+
+    try {
+        await engine.downloadEngine((loaded, total) => {
+            window.dispatchEvent(new CustomEvent('dg:dl-progress', {
+                detail: {
+                    loaded, total, kind: 'script-engine',
+                    titleRu: 'Загрузка модуля транслитерации', titleEn: 'Downloading the script engine',
+                },
+            }));
+        });
+        await engine.boot();
+        window.dispatchEvent(new CustomEvent('dg:dl-progress', {
+            detail: { loaded: 1, total: 1, done: true, kind: 'script-engine',
+                      titleRu: 'Модуль готов', titleEn: 'Engine ready' },
+        }));
+        engine.setMode('offline');
+        return 'offline';
+    } catch (e) {
+        console.error('[script-engine] offline install failed, using online for this request:', e);
+        engine.setMode(null);
+        return 'online';
+    }
 }
 
 // Installed synchronously, at the very top of <head> (see build-page.js) — before any other
@@ -180,16 +237,19 @@ function needsOnline(qs) {
 function installFetchShim() {
     const realFetch = window.fetch.bind(window);
     // https://localhost (this app's own origin) has no server behind it for anything dynamic —
-    // used for requests that must go to the actual internet: a non-default script or a language
-    // outside this device's bundled slice (needsOnline above), and /api/transliterate, which has
-    // no local equivalent at all (paliLookup.js's ensureIastWord() already fetches it against
-    // `location.origin`, i.e. this app's own dead-end origin, unaware it's running inside the
-    // app rather than on the live site). Forwarding to the real host makes these behave exactly
-    // like the site when a connection exists, and fail visibly and fast, like any other
-    // unreachable fetch, when it doesn't — no bespoke "you're offline" handling needed here,
-    // callers of both already tolerate a failed fetch (ensureIastWord catches it and falls back
-    // to the untransliterated word; search/reader show the same error state the site itself
-    // would on a dropped connection).
+    // used for requests that must go to the actual internet: a language outside this device's
+    // bundled slice (langNeedsOnline — no offline alternative exists for that), a non-default
+    // script when the reader chose to stay online rather than install the local engine
+    // (ensureScriptMode/script-engine.js — CAN work offline, this is the "online" branch of that
+    // choice), and /api/transliterate when the reader is in that same 'online' mode
+    // (paliLookup.js's ensureIastWord() already fetches it against `location.origin`, i.e. this
+    // app's own dead-end origin, unaware it's running inside the app rather than on the live
+    // site). Forwarding to the real host makes these behave exactly like the site when a
+    // connection exists, and fail visibly and fast, like any other unreachable fetch, when it
+    // doesn't — the toast in toOnline()'s own catch covers the "why", callers of both already
+    // tolerate a failed fetch (ensureIastWord catches it and falls back to the untransliterated
+    // word; search/reader show the same error state the site itself would on a dropped
+    // connection).
     window.fetch = async (input, init) => {
         const url = typeof input === 'string' ? input : input.url;
         let parsed;
@@ -212,20 +272,31 @@ function installFetchShim() {
             throw e;
         });
 
-        if (p === '/api/transliterate') return toOnline();
+        if (p === '/api/transliterate') {
+            if ((await ensureScriptMode()) === 'online') return toOnline();
+            return jsonResponse(await window.dgScriptEngine.transliterateToIast(qs.get('text') || ''));
+        }
 
         if (p.startsWith('/api/text/')) {
-            if (needsOnline(qs)) return toOnline();
+            if (langNeedsOnline(qs)) return toOnline();
+            const script = scriptRequested(qs);
+            if (script && (await ensureScriptMode()) === 'online') return toOnline();
             return withLoadingEvent(async () => {
                 await ready;
-                return respond(await call('text', {
+                const json = await call('text', {
                     suttaId: decodeURIComponent(p.slice('/api/text/'.length)).toLowerCase(),
                     mode: qs.get('mode'),
                     langs: qs.get('langs'),
                     lang: qs.get('lang'),
                     translators: qs.get('translators'),
                     multiFor: qs.get('multiFor'),
-                }));
+                });
+                if (script && json && !json.__status) {
+                    const modeTable = await fetchModeTable();
+                    const dualScript = !!(modeTable[qs.get('mode')] && modeTable[qs.get('mode')].dualScript);
+                    await window.dgScriptEngine.convertScriptInTextResult(json, script, dualScript);
+                }
+                return respond(json);
             });
         }
         if (p.startsWith('/api/nav/')) {
@@ -250,19 +321,25 @@ function installFetchShim() {
             return realFetch(`/reader/${side}-pm-fragment.html`, init);
         }
         if (p === '/search/enrich') {
-            if (needsOnline(qs)) return toOnline();
+            if (langNeedsOnline(qs)) return toOnline();
+            const script = scriptRequested(qs);
+            if (script && (await ensureScriptMode()) === 'online') return toOnline();
             await ready;
-            return respond(await call('enrich', {
+            const enrichJson = await call('enrich', {
                 q: qs.get('q') || '', ids: qs.get('ids') || '', langs: qs.get('langs') || 'ru,en',
                 scope: qs.get('scope') || 'default', exact: qs.get('exact') === 'true',
                 lb: parseInt(qs.get('lb')) || 0, la: parseInt(qs.get('la')) || 0,
-            }));
+            });
+            if (script && enrichJson && !enrichJson.__status) await window.dgScriptEngine.convertScriptInSearchResult(enrichJson, script);
+            return respond(enrichJson);
         }
         if (p === '/search' || (p.startsWith('/search/') && p !== '/search/enrich')) {
-            if (needsOnline(qs)) return toOnline();
+            if (langNeedsOnline(qs)) return toOnline();
+            const script = scriptRequested(qs);
+            if (script && (await ensureScriptMode()) === 'online') return toOnline();
             return withLoadingEvent(async () => {
                 await ready;
-                return respond(await call('search', {
+                const json = await call('search', {
                     q: p === '/search' ? (qs.get('q') || '') : decodeURIComponent(p.slice('/search/'.length)),
                     scope: qs.get('scope') || 'default',
                     langs: qs.get('langs') || 'ru,en',
@@ -270,7 +347,9 @@ function installFetchShim() {
                     lb: parseInt(qs.get('lb')) || 0,
                     la: parseInt(qs.get('la')) || 0,
                     fast: qs.get('fast') === '1',
-                }));
+                });
+                if (script && json && !json.__status) await window.dgScriptEngine.convertScriptInSearchResult(json, script);
+                return respond(json);
             });
         }
         return realFetch(input, init);

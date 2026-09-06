@@ -35,7 +35,11 @@ const APP_SCRIPTS = `<!-- Offline data-shim: installs window.fetch interception 
 <!-- Routes memo/login/mirror-link's external opens through the device's real browser instead of
      this app's own WebView — see native-bridge.js for why plain navigation doesn't work here. -->
 <script src="/native-bridge.js"></script>
-<script src="/offline-status.js"></script>`;
+<script src="/offline-status.js"></script>
+<!-- Offline script-conversion engine (Aksharamukha + Pyodide, downloaded on demand — see its own
+     header). Only defines window.dgScriptEngine; app.js's ensureScriptMode() is what actually
+     calls into it, the first time a request needs a non-default script. -->
+<script src="/script-engine.js"></script>`;
 
 const APP_SCRIPTS_MARKER = '<!-- dg:app-scripts -->';
 

@@ -239,9 +239,15 @@
         // networkDone in db-worker.js) and what is left is unpacking it — no percentage worth
         // showing for that, it is a few hundred ms of local CPU, not more waiting on a connection.
         var importing = detail.phase === 'import';
+        // titleRu/titleEn: an explicit override for a download this event shape also carries but
+        // that isn't the main database — script-engine.js's engine install (app.js's
+        // ensureScriptMode()) reuses this exact card/event rather than a second one, distinguished
+        // only by its own title text (kind: 'script-engine' is otherwise unused here, present for
+        // any future listener that does need to tell them apart).
         card.querySelector('.dgdl-title').textContent = importing
             ? (ru ? 'Распаковка и применение' : 'Unpacking and applying')
-            : (ru ? 'Загрузка офлайн-библиотеки' : 'Downloading the offline library');
+            : (detail.titleRu && detail.titleEn ? (ru ? detail.titleRu : detail.titleEn)
+                                                 : (ru ? 'Загрузка офлайн-библиотеки' : 'Downloading the offline library'));
         if (importing) pct = null;
         card.querySelector('.dgdl-pct').textContent = pct === null ? '' : pct + '%';
         card.classList.toggle('indeterminate', pct === null);
@@ -265,7 +271,9 @@
         // the import phase reports 0/0 (see above), which the old loaded>=total check would never
         // read as finished.
         if (detail.done) {
-            card.querySelector('.dgdl-title').textContent = ru ? 'Библиотека готова' : 'Library ready';
+            card.querySelector('.dgdl-title').textContent = detail.titleRu && detail.titleEn
+                ? (ru ? detail.titleRu : detail.titleEn)
+                : (ru ? 'Библиотека готова' : 'Library ready');
             dlHideTimer = setTimeout(function () { card.classList.remove('show'); }, 2500);
         }
     });
@@ -343,6 +351,67 @@
                 if (ev.key === 'Escape') { ev.preventDefault(); close(false); return; }
                 if (ev.key !== 'Tab') return;
                 // Two focusable elements, so a manual wrap is enough to keep focus in the sheet.
+                ev.preventDefault();
+                var idx = ev.shiftKey ? 0 : 1;
+                buttons[document.activeElement === buttons[idx] ? (idx ? 0 : 1) : idx].focus();
+            }
+            buttons[0].addEventListener('click', function () { close(false); });
+            buttons[1].addEventListener('click', function () { close(true); });
+            overlay.addEventListener('click', function (ev) { if (ev.target === overlay) close(false); });
+            document.addEventListener('keydown', onKey, true);
+            buttons[1].focus();
+        });
+    }
+
+    // Same sheet as askConsent() above (identical #dgConsent/#dgConsentSheet/.dgc-* markup and
+    // CSS, different copy/buttons) — asked once, the first time any request needs a non-default
+    // script (app.js's ensureScriptMode()), for the offline Aksharamukha+Pyodide engine
+    // (script-engine.js) rather than the main database. Kept as its own function instead of
+    // parameterising askConsent(): that one's figures (size/languages) are specific to the
+    // single-file database download, and bending it to fit a second, differently-shaped question
+    // risked breaking the one already proven to work on real devices.
+    window.addEventListener('dg:need-script-consent', function (e) {
+        e.detail.resolve(askScriptConsent(isRuLang()));
+    });
+
+    function askScriptConsent(ru) {
+        return new Promise(function (resolve) {
+            var previouslyFocused = document.activeElement;
+            var overlay = document.createElement('div');
+            overlay.id = 'dgConsent';
+            overlay.innerHTML =
+                '<div id="dgConsentSheet" role="alertdialog" aria-modal="true"' +
+                     ' aria-labelledby="dgScriptConsentTitle" aria-describedby="dgScriptConsentBody">' +
+                  '<div class="dgc-eyebrow">' + (ru ? 'Система письма' : 'Script conversion') + '</div>' +
+                  '<p class="dgc-title" id="dgScriptConsentTitle">' +
+                    (ru ? 'Работать онлайн или скачать модуль офлайн?' : 'Work online, or download the offline module?') +
+                  '</p>' +
+                  '<p class="dgc-body" id="dgScriptConsentBody">' +
+                    (ru ? 'Показ пали в другой системе письма (деванагари, тайская и т.п.) использует отдельный движок — Aksharamukha, ~16 МБ. Скачайте один раз, и дальше это работает без сети; либо оставайтесь онлайн — тогда для каждого такого запроса нужен интернет. Выбор можно позже изменить, повторно выбрав другую систему письма.'
+                        : 'Showing Pali in another script (Devanagari, Thai, etc.) uses a separate engine — Aksharamukha, ~16MB. Download it once and this keeps working with no connection; or stay online, which needs a connection for every such request. You can change this later by switching scripts again.') +
+                  '</p>' +
+                  '<div class="dgc-actions">' +
+                    '<button type="button" class="dgc-ghost">' + (ru ? 'Онлайн' : 'Online') + '</button>' +
+                    '<button type="button" class="dgc-primary">' + (ru ? 'Скачать (~16 МБ)' : 'Download (~16MB)') + '</button>' +
+                  '</div>' +
+                '</div>';
+            document.body.appendChild(overlay);
+            requestAnimationFrame(function () { overlay.classList.add('show'); });
+
+            var buttons = overlay.querySelectorAll('button');
+            var settled = false;
+            function close(answer) {
+                if (settled) return;
+                settled = true;
+                document.removeEventListener('keydown', onKey, true);
+                overlay.classList.remove('show');
+                setTimeout(function () { overlay.remove(); }, 200);
+                if (previouslyFocused && previouslyFocused.focus) previouslyFocused.focus();
+                resolve(answer);
+            }
+            function onKey(ev) {
+                if (ev.key === 'Escape') { ev.preventDefault(); close(false); return; }
+                if (ev.key !== 'Tab') return;
                 ev.preventDefault();
                 var idx = ev.shiftKey ? 0 : 1;
                 buttons[document.activeElement === buttons[idx] ? (idx ? 0 : 1) : idx].focus();
