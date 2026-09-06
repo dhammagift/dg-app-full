@@ -83,7 +83,17 @@ const MANIFEST_TIMEOUT_MS = 8000;
 // keeps a whole fleet of readers from retrying in lockstep against the same server.
 const RETRY_BACKOFF_MS = attempt => Math.min(8000, 500 * 2 ** attempt) + Math.floor(Math.random() * 500);
 
-async function downloadInto(pool, url, name) {
+// Seen in production before (see the comment on DB_PREFIX above): mobile-data/dg-mobile.db on the
+// server has, at least once, ended up symlinked to dg-node's own full dg.db — every language,
+// several times the size of the ru+en slice this app expects — rather than the slice
+// build-app-db.js is supposed to publish. That is a server-side mistake no client-side retry can
+// fix, and left unchecked it reads as this app quietly downloading an ever-growing, seemingly
+// made-up number rather than what it is: a real transfer of the wrong file. OVERSHOOT_FACTOR bounds
+// how much more than the manifest promised is tolerated before that is called out directly instead
+// of continuing (compressed responses can legitimately run a little over, so this is not 1.0).
+const OVERSHOOT_FACTOR = 1.5;
+
+async function downloadInto(pool, url, name, expectedBytes) {
     const phase = 'download';
 
     for (let attempt = 1; ; attempt++) {
@@ -97,6 +107,13 @@ async function downloadInto(pool, url, name) {
             const response = await fetch(url, { signal: controller.signal });
             if (!response.ok) throw new Error(`dg-mobile.db: HTTP ${response.status}`);
             const total = Number(response.headers.get('Content-Length')) || 0;
+            if (expectedBytes && total && total > expectedBytes * OVERSHOOT_FACTOR) {
+                throw Object.assign(
+                    new Error(`dg-mobile.db: server offered ${Math.round(total / 1048576)}MB, ` +
+                        `manifest promised ${Math.round(expectedBytes / 1048576)}MB — ` +
+                        `check mobile-data/dg-mobile.db on the server, it may point at the wrong file`),
+                    { mismatch: true });
+            }
             const reader = response.body.getReader();
             let loaded = 0, lastReport = 0;
 
@@ -105,6 +122,13 @@ async function downloadInto(pool, url, name) {
                 lastByteAt = Date.now();
                 if (done) return undefined;
                 loaded += value.byteLength;
+                if (expectedBytes && loaded > expectedBytes * OVERSHOOT_FACTOR) {
+                    throw Object.assign(
+                        new Error(`dg-mobile.db: past ${Math.round(loaded / 1048576)}MB with only ` +
+                            `${Math.round(expectedBytes / 1048576)}MB promised — ` +
+                            `check mobile-data/dg-mobile.db on the server, it may point at the wrong file`),
+                        { mismatch: true });
+                }
                 const now = Date.now();
                 if (now - lastReport > 200) {
                     lastReport = now;
@@ -115,6 +139,7 @@ async function downloadInto(pool, url, name) {
             post({ type: 'progress', loaded, total, phase });
             return loadedBytes;
         } catch (e) {
+            if (e && e.mismatch) throw e; // a server misconfiguration, not a network blip — retrying serves nobody
             const stalled = e && e.name === 'AbortError';
             if (attempt >= MAX_ATTEMPTS) {
                 throw stalled
@@ -218,7 +243,8 @@ async function fetchCurrent(pool, distBase) {
     const stale = storedDatabases(pool).filter(n => n !== target);
 
     post({ type: 'downloading' });
-    await downloadInto(pool, `${distBase}/${(manifest && manifest.file) || 'dg-mobile.db'}`, target);
+    await downloadInto(pool, `${distBase}/${(manifest && manifest.file) || 'dg-mobile.db'}`, target,
+        manifest && manifest.bytes);
 
     const candidate = inspect(pool, target);
     if (!candidate.ok) {
