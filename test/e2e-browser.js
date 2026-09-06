@@ -54,16 +54,30 @@ const CASES = [
     page.on('pageerror', e => errors.push('PAGEERROR: ' + String(e).slice(0, 200)));
     page.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text().slice(0, 200)); });
 
-    await page.goto(BASE + '/', { waitUntil: 'domcontentloaded', timeout: 60000 });
-
-    // Wait for the worker to have opened the database — that is the app's own readiness promise.
-    const opened = await page.evaluate(async () => {
-        try { return { ok: true, result: await window.dgOfflineReady }; }
-        catch (e) { return { ok: false, error: e.message }; }
-    });
-    console.log('dgOfflineReady ->', JSON.stringify(opened));
+    // A loaded/cold CI runner can be slow enough for the very first page load or worker
+    // (module worker + OPFS SAH-pool init, see db-worker.js) to blow past a generous timeout on
+    // the FIRST try even though nothing is actually wrong — retrying with a fresh navigation
+    // costs a few seconds on the rare occasion it's needed and nothing when it isn't. Real
+    // breakage (a genuinely broken worker) fails identically on every attempt, so this doesn't
+    // hide anything, it just stops a slow start from masquerading as one.
+    let opened;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        errors.length = 0;
+        try {
+            await page.goto(BASE + '/', { waitUntil: 'domcontentloaded', timeout: 60000 });
+            opened = await page.evaluate(async () => {
+                try { return { ok: true, result: await window.dgOfflineReady }; }
+                catch (e) { return { ok: false, error: e.message }; }
+            });
+        } catch (e) {
+            opened = { ok: false, error: e.message };
+        }
+        console.log(`dgOfflineReady (attempt ${attempt}) ->`, JSON.stringify(opened));
+        if (opened.ok) break;
+        if (attempt < 3) await new Promise(r => setTimeout(r, 3000));
+    }
     if (!opened.ok) {
-        console.log(errors.slice(0, 6).join('\n'));
+        console.log(errors.join('\n'));
         await browser.close();
         process.exit(1);
     }

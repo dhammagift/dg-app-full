@@ -6,7 +6,7 @@ name: Build App
 #
 # THE UI IS NOT IN THIS REPOSITORY. It is generated at build time from a dg-node checkout:
 # build-page.js turns dg-node's search/index.html into www/index.html, build-assets.js copies
-# every asset that page references, build-toc-snapshot.js snapshots a running dg-light.js.
+# every asset that page references, build-toc-snapshot.js snapshots a running dg-fastify.js.
 # Which dg-node commit is used is pinned by the DG_NODE_REF file at this repo's root (a branch
 # name or tag), overridable per-run via the workflow_dispatch input below.
 #
@@ -45,7 +45,7 @@ on:
 env:
   REPOS_ROOT: ${{ github.workspace }}/repos
   DG_NODE_PATH: /var/www/html/nodejs
-  # Port dg-light.js is started on for the TOC snapshot — see that step for why it is pinned.
+  # Port dg-fastify.js is started on for the TOC snapshot — see that step for why it is pinned.
   DG_SERVER_PORT: '3000'
 
 jobs:
@@ -117,7 +117,7 @@ jobs:
           git checkout -q FETCH_HEAD
           echo "dg-node@${{ steps.pin.outputs.ref }} = $(git rev-parse HEAD)"
 
-      # structure/tree is NOT optional — dg-light.js's TOC_TREE_ROOT reads
+      # structure/tree is NOT optional — dg-fastify.js's TOC_TREE_ROOT reads
       # .../sc-data/structure/tree/{sutta,vinaya,abhidhamma}/{code}-tree.json for every single
       # /api/toc/book/:code request. Missing it doesn't error at checkout time (sc_bilara_data
       # alone builds a perfectly valid skeleton/offline-db) — every book lookup just 404s at
@@ -187,9 +187,9 @@ jobs:
         working-directory: /var/www/html/nodejs
         run: |
           test -d siteroot/data/suttacentral.net/sc-data/sc_bilara_data/root || { echo "::error::sc-data did not land where siteroot/data/suttacentral.net/sc-data expects it"; exit 1; }
-          test -d siteroot/data/suttacentral.net/sc-data/structure/tree/sutta || { echo "::error::sc-data's structure/tree missing — every /api/toc/book/:code request 404s without it (TOC_TREE_ROOT in dg-light.js)"; exit 1; }
+          test -d siteroot/data/suttacentral.net/sc-data/structure/tree/sutta || { echo "::error::sc-data's structure/tree missing — every /api/toc/book/:code request 404s without it (TOC_TREE_ROOT in dg-fastify.js)"; exit 1; }
           test -d siteroot/data/dhammagift/translation/en || { echo "::error::offline-data did not land where siteroot/data/dhammagift expects it"; exit 1; }
-          test -f /var/www/html/assets/js/textinfo.json || { echo "::error::legacy assets/js missing (textinfo.json) — dblight.js needs it"; exit 1; }
+          test -f /var/www/html/assets/js/textinfo.json || { echo "::error::legacy assets/js missing (textinfo.json) — build-search-db.js needs it"; exit 1; }
           test -f reader/images/favicon-name-black.png || { echo "::error::reader/images relative symlink didn't resolve — dg and dg-node must be checked out at their real absolute prod paths (see workflow header)"; exit 1; }
           test -f reader/css/index.css || { echo "::error::reader/css/index.css relative symlink didn't resolve — needs /var/www/html/read/css/index.css, check dg's sparse-checkout includes 'read'"; exit 1; }
           echo "Data layout OK."
@@ -241,12 +241,6 @@ jobs:
         working-directory: /var/www/html/nodejs
         run: npm run build-icons
 
-      # Skeleton (dg_db_light.json) is gitignored in dg-node — each environment builds its own.
-      # It is build-search-db.js's input, and dg-light.js needs it to boot for the TOC snapshot.
-      - name: Build skeleton (dg_db_light.json)
-        working-directory: /var/www/html/nodejs
-        run: npm run build-db
-
       # The app no longer builds a database of its own. dg-node builds dg.db from the corpus —
       # the same file the site queries — and the app cuts a language slice out of it. That is
       # what makes the two provably the same data rather than two readings of the same files.
@@ -274,56 +268,60 @@ jobs:
           DG_NODE_PATH: /var/www/html/nodejs
         run: node test/fts-fold.test.js dist/dg-mobile.db
 
-      # dg-light.js's app.listen() accepts connections immediately, while its async initServer()
+      # dg-fastify.js is what prod actually runs (dg-light.js was its predecessor, replaced there
+      # entirely) — using it here too, not dg-light.js, means the TOC snapshot and the generated
+      # settings/*.json files this build bakes in come from the SAME code path that answers the
+      # live site, not a second, unmaintained implementation that can silently drift from it.
+      # It needs dg.db to boot (throws if missing) — already built two steps above — which is also
+      # why dblight.js's dg_db_light.json skeleton is gone from this workflow entirely: dg-fastify
+      # reads its own skeleton out of dg.db directly, that file was only ever dg-light.js's input.
+      #
+      # app.listen() accepts connections immediately, while its async initServer()
       # (buildSettingsDemoCache — Aksharamukha conversion for every script — then
       # buildScriptListCache/buildLangCountsCache/buildTranslatorCatalogCache) keeps running in
       # the background and writes settings/{scripts,demo-data,lang-counts,translator-catalog}.json
-      # only once done. Measured: /api/toc answers in ~6s but translator-catalog.json — the LAST
-      # file in that sequence — doesn't land until ~36s. Killing the server before then froze
-      # initServer() mid-way and left "Build assets" with permanently missing inputs. Waiting on
-      # translator-catalog.json, not just /api/toc, closes that window.
+      # only once done. Measured on dg-light.js: /api/toc answers in ~6s but translator-catalog.
+      # json — the LAST file in that sequence — doesn't land until ~36s; killing the server before
+      # then froze initServer() mid-way and left "Build assets" with permanently missing inputs.
+      # Waiting on translator-catalog.json, not just /api/toc, closes that window — dg-fastify.js
+      # runs the identical four functions in the identical order, so the same wait applies.
       #
-      # PORT is set explicitly rather than relying on dg-light.js's default: that default has
-      # already moved (3000 -> 3001, with dg-fastify.js now on 3000), and a hardcoded 3000 here
-      # is what made this step time out — the server was up the whole time, just on another port.
-      # dg-light.js reads process.env.PORT, so pinning it makes the two agree by construction.
-      #
-      # Still dg-light.js and not dg-fastify.js: Fastify serves from dg.db, which this build has
-      # no reason to produce (the app ships its own database). The grep server needs only the
-      # corpus checkouts above, and both answer /api/toc identically.
-      - name: Start dg-light.js (for the TOC snapshot and the generated settings files)
+      # PORT is set explicitly rather than relying on the default: dg-fastify.js's own default
+      # (3000) happens to already match DG_SERVER_PORT, but pinning it here makes that agreement
+      # explicit instead of coincidental.
+      - name: Start dg-fastify.js (for the TOC snapshot and the generated settings files)
         working-directory: /var/www/html/nodejs
         env:
           PORT: ${{ env.DG_SERVER_PORT }}
         run: |
-          npm start > /tmp/dg-light.log 2>&1 &
-          echo $! > /tmp/dg-light.pid
+          npm run start:fastify > /tmp/dg-fastify.log 2>&1 &
+          echo $! > /tmp/dg-fastify.pid
           for i in $(seq 1 45); do
             if curl -sf "http://localhost:$PORT/api/toc" > /dev/null 2>&1 && [ -f settings/translator-catalog.json ]; then
-              echo "dg-light.js is up on port $PORT and fully initialized (attempt $i)."
+              echo "dg-fastify.js is up on port $PORT and fully initialized (attempt $i)."
               exit 0
             fi
             echo "Attempt $i/45..."
             sleep 2
           done
-          echo "::error::dg-light.js did not become fully ready within 90s on port $PORT"
-          cat /tmp/dg-light.log
+          echo "::error::dg-fastify.js did not become fully ready within 90s on port $PORT"
+          cat /tmp/dg-fastify.log
           exit 1
 
       - name: Build TOC snapshot
         run: npm run build-toc-snapshot -- --base=http://localhost:${{ env.DG_SERVER_PORT }}
 
-      - name: Stop dg-light.js
+      - name: Stop dg-fastify.js
         if: always()
         run: |
-          if [ -f /tmp/dg-light.pid ]; then
-            PID=$(cat /tmp/dg-light.pid)
+          if [ -f /tmp/dg-fastify.pid ]; then
+            PID=$(cat /tmp/dg-fastify.pid)
             kill "$PID" 2>/dev/null || true
             sleep 1
             kill -9 "$PID" 2>/dev/null || true
           fi
 
-      # MUST run after dg-light.js has booted at least once: settings/{scripts,demo-data,
+      # MUST run after dg-fastify.js has booted at least once: settings/{scripts,demo-data,
       # lang-counts,translator-catalog}.json are gitignored and written by the server at startup,
       # so on a fresh checkout they don't exist until it has run.
       #
