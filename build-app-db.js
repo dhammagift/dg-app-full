@@ -25,11 +25,20 @@
 //   node build-app-db.js --langs=ru,en --fts=prefix   # smaller index, weaker matching (see below)
 //   node build-app-db.js --langs=ru,en --fts=none     # no index at all — for measuring only
 //
-// Output: dist/dg-mobile.db
+// Output: dist/dg-mobile.db, dist/dg-mobile.db.gz and dist/db-manifest.json beside them.
+//
+// The .gz is what a device actually downloads: the file is mostly text and text compresses, and
+// the worker inflates it on the way into OPFS (src/db-download.js). The plain .db stays published
+// for an app old enough not to read the manifest's file_gz. A database that already exists —
+// built by an earlier version of this script, or by this one with --no-gzip — is compressed and
+// its manifest brought up to date without rebuilding anything:
+//
+//   node build-app-db.js --compress=/var/www/dg-ru-en.db
 
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const zlib = require('zlib');
 // node:sqlite, not better-sqlite3, even though this repo depends on the latter: that keeps the
 // file runnable on its own. The database being sliced lives on the prod server, which has
 // dg-node but no checkout of this repo and no reason to gain one — so this has to work as a
@@ -185,14 +194,17 @@ function sha256File(file) {
 }
 
 function parseArgs() {
-    const args = { from: null, langs: null, out: null, fts: 'trigram' };
+    const args = { from: null, langs: null, out: null, fts: 'trigram', gzip: true, compress: null };
     for (const arg of process.argv.slice(2)) {
         const [key, value] = arg.replace(/^--/, '').split('=');
         if (key === 'from') args.from = value;
         if (key === 'out') args.out = value;
         if (key === 'langs') args.langs = value === 'all' ? 'all' : value.split(',').map(s => s.trim()).filter(Boolean);
         if (key === 'fts') args.fts = value;
+        if (key === 'no-gzip') args.gzip = false;
+        if (key === 'compress') args.compress = value;
     }
+    if (args.compress) return args;
     if (!(args.fts in FTS_MODES)) {
         console.error(`--fts must be one of: ${Object.keys(FTS_MODES).join(', ')}`);
         process.exit(1);
@@ -213,8 +225,84 @@ function parseArgs() {
 
 function mb(bytes) { return (bytes / 1048576).toFixed(1); }
 
-function main() {
+// ---- the compressed copy ----------------------------------------------------------------------
+// Written beside the database as <file>.gz and recorded in the manifest as file_gz/bytes_gz, so a
+// device can choose it. Streamed through zlib rather than read into memory — the input is the
+// hundreds-of-MB file this whole script exists to keep off a phone's RAM, and the server this runs
+// on is the one dg-node already fills.
+//
+// gzip and not something stronger because the other end is a WebView: DecompressionStream speaks
+// gzip and deflate and nothing else, and no library has to ship in the APK for it.
+function gzipFile(file) {
+    return new Promise((resolve, reject) => {
+        const out = `${file}.gz`;
+        const tmp = `${out}.part`;
+        const gzip = zlib.createGzip({ level: zlib.constants.Z_BEST_COMPRESSION, memLevel: 9 });
+        fs.createReadStream(file, { highWaterMark: 1 << 20 })
+            .on('error', reject)
+            .pipe(gzip).on('error', reject)
+            .pipe(fs.createWriteStream(tmp)).on('error', reject)
+            .on('finish', () => {
+                try { fs.renameSync(tmp, out); resolve(out); } catch (e) { reject(e); }
+            });
+    });
+}
+
+// The manifest's compressed-file entries, computed from the .gz that exists on disk. Kept
+// separate from the manifest's other fields so --compress can add them to a manifest written by
+// an older version of this script without recomputing anything about the database itself.
+function compressedEntries(dbFile, gzFile) {
+    return {
+        file_gz: path.basename(gzFile),
+        bytes_gz: fs.statSync(gzFile).size,
+        sha256_gz: sha256File(gzFile),
+    };
+}
+
+// --compress=<db>: gzip an existing database and update the manifest beside it. This is the path
+// for a server that already has the file: nothing is rebuilt, the build_id does not change, and a
+// device that has this build already is not told there is anything new.
+async function compressExisting(dbFile) {
+    if (!fs.existsSync(dbFile)) throw new Error(`database not found: ${dbFile}`);
+    const manifestPath = path.join(path.dirname(dbFile), 'db-manifest.json');
+    let manifest = null;
+    if (fs.existsSync(manifestPath)) {
+        manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+        if (manifest.file && manifest.file !== path.basename(dbFile)) {
+            throw new Error(
+                `${manifestPath} describes ${manifest.file}, not ${path.basename(dbFile)} — ` +
+                `compress the file the manifest names, or move the manifest`);
+        }
+    } else {
+        // A database published before manifests existed. The device-facing fields it needs are
+        // read from the file's own meta table, which every build since provenance carries.
+        const db = new DatabaseSync(dbFile, { readOnly: true });
+        const meta = {};
+        try {
+            for (const row of db.prepare('SELECT key, value FROM meta').all()) meta[row.key] = row.value;
+        } catch (e) {
+            throw new Error(`${dbFile} has no meta table — it predates provenance; rebuild it with --from/--langs`);
+        } finally { db.close(); }
+        manifest = { ...meta, schema_version: Number(meta.schema_version) || SCHEMA_VERSION, patches: [] };
+    }
+    manifest.file = path.basename(dbFile);
+    manifest.bytes = fs.statSync(dbFile).size;
+    if (!manifest.sha256) manifest.sha256 = sha256File(dbFile);
+
+    let t = Date.now();
+    console.log(`compressing ${dbFile} (${mb(manifest.bytes)} MB)...`);
+    const gzFile = await gzipFile(dbFile);
+    Object.assign(manifest, compressedEntries(dbFile, gzFile));
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
+    console.log(
+        `${gzFile}: ${mb(manifest.bytes_gz)} MB — ${Math.round(100 * manifest.bytes_gz / manifest.bytes)}% ` +
+        `of the ${mb(manifest.bytes)} MB database (${((Date.now() - t) / 1000).toFixed(1)}s)\n` +
+        `manifest: ${manifestPath} (build ${manifest.build_id}, file_gz ${manifest.file_gz})`);
+}
+
+async function main() {
     const args = parseArgs();
+    if (args.compress) return compressExisting(args.compress);
 
     if (!fs.existsSync(args.from)) {
         throw new Error(
@@ -360,18 +448,29 @@ function main() {
         // it will see tomorrow rather than choke on an unknown field.
         patches: [],
     };
+    // The compressed copy is what a device downloads; see gzipFile(). Written before the manifest
+    // so the manifest never names a .gz that is not there yet.
+    let gzLine = '';
+    if (args.gzip) {
+        t = Date.now();
+        fs.rmSync(`${args.out}.gz`, { force: true });
+        const gzFile = await gzipFile(args.out);
+        Object.assign(manifest, compressedEntries(args.out, gzFile));
+        gzLine = `${gzFile}: ${mb(manifest.bytes_gz)} MB on the wire ` +
+            `(${Math.round(100 * manifest.bytes_gz / bytes)}% of the database, gzip in ${Date.now() - t}ms)\n`;
+    }
     const manifestPath = path.join(path.dirname(args.out), 'db-manifest.json');
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
-    console.log(`manifest: ${manifestPath} (sha256 in ${Date.now() - t}ms)`);
+    console.log(`manifest: ${manifestPath}`);
 
     const srcMb = mb(fs.statSync(args.from).size);
     const outMb = mb(bytes);
     console.log(
-        `\n${args.out}: ${outMb} MB (from ${srcMb} MB)\n` + breakdown +
+        `\n${args.out}: ${outMb} MB (from ${srcMb} MB)\n` + breakdown + gzLine +
         `build ${manifest.build_id} · schema ${SCHEMA_VERSION} · ${provenance.chunks} chunks\n` +
         `translations kept: ${kept.map(r => `${r.lang} ${r.c}`).join(', ') || 'none'}\n` +
         `Total ${((Date.now() - started) / 1000).toFixed(1)}s`
     );
 }
 
-main();
+main().catch(e => { console.error(e.message || e); process.exit(1); });

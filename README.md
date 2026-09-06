@@ -23,6 +23,7 @@ changes, the next build picks the change up.
 src/                     the app's own web files (committed)
   app.js                 the fetch shim: parses the query string, asks the worker, answers
   db-worker.js           the database and the site's search core; everything SQL happens here
+  db-download.js         the download itself: resumes a dropped connection, inflates the .gz
   native-bridge.js       external links via Custom Tabs, Android back button
   offline-status.js      download progress, the consent sheet, error reporting
   offline-library-settings.js
@@ -31,7 +32,7 @@ build-page.js            www/index.html      <- dg-node's search/index.html + 2 
 build-core-bundle.js     www/core-bundle.mjs <- dg-node's core/search-core.js, made WebView-loadable
 build-assets.js          www/assets, www/reader, ... <- dg-node + legacy assets + src/ + sqlite-wasm
 build-toc-snapshot.js    www/api-snapshots/*.json <- a running dg-light.js
-build-app-db.js          dist/dg-mobile.db   <- a language slice of dg-node's dg.db
+build-app-db.js          dist/dg-mobile.db, .db.gz, db-manifest.json <- a language slice of dg-node's dg.db
 android/                 Capacitor Android project, incl. hand-written native source
 test/                    the fixture, the site snapshots, and the parity checks
 www/                     GENERATED, gitignored
@@ -60,8 +61,41 @@ The database lives in a Worker because OPFS hands out synchronous access handles
 synchronous access is what lets SQLite read a ~170 MB file from storage instead of holding it in
 memory, and what lets the core, written against `node:sqlite`, run unchanged.
 
-It is **not** bundled in the APK (~12 MB). On first launch it is streamed from
-`dhamma.gift/mobile-data/dg-mobile.db` straight into OPFS, chunk by chunk, and stays there.
+It is **not** bundled in the APK (~12 MB). On first launch the app reads
+`dhamma.gift/mobile-data/db-manifest.json`, downloads the file it names — the gzip-compressed one
+when the manifest publishes it — and streams it into OPFS chunk by chunk, inflating on the way
+(`src/db-download.js`). A dropped connection is resumed with a Range request from where it stopped;
+one that goes silent for 30 s is abandoned and resumed the same way; a server that will not resume
+fails with a reason the reader can see, not a bar frozen at some number. On Android the transfer
+itself is Android's DownloadManager (`DgDownloader.java`) and the worker only imports the result.
+
+### Publishing the database on the server
+
+`build-app-db.js` runs standalone (only `node:sqlite`, nothing to install). It writes the slice,
+the `.gz` beside it, and `db-manifest.json`, and the app reads all three from `DIST_BASE`:
+
+```bash
+cd /var/www
+curl -O https://raw.githubusercontent.com/dhammagift/dg-app-full/main/build-app-db.js
+node build-app-db.js --from=/var/www/html/nodejs/dg.db --langs=ru,en --out=/var/www/dg-ru-en.db
+# -> dg-ru-en.db, dg-ru-en.db.gz, db-manifest.json
+
+# a database that already exists: compress it and bring its manifest up to date, no rebuild
+node build-app-db.js --compress=/var/www/dg-ru-en.db
+```
+
+Whatever serves `/mobile-data/` must (1) send `Access-Control-Allow-Origin: *` — the WebView's
+origin is `https://localhost`; (2) serve the `.gz` as a plain file, with `Content-Length` and
+`Accept-Ranges: bytes`, and **not** re-compress on the fly (`gzip_types` must not cover it) and not
+mark it `Content-Encoding: gzip` — the worker inflates it itself and counts bytes on the wire; (3)
+send `Content-Length` for the `.db` too, so the bar has a denominator without the manifest. nginx
+does all three for a static file by default; check with:
+
+```bash
+curl -sI -H 'Origin: https://localhost' https://dhamma.gift/mobile-data/db-manifest.json
+curl -sI -H 'Origin: https://localhost' -H 'Range: bytes=1000-' https://dhamma.gift/mobile-data/dg-ru-en.db.gz
+# expect: 206, Content-Range, Access-Control-Allow-Origin, no Content-Encoding
+```
 
 The name is deliberate: the server's own database is `dg.db` and sits on the same machine. Calling
 the app's slice by the same name is how a symlink ends up pointing every language at a phone.
@@ -124,11 +158,12 @@ is pinned in **`DG_NODE_REF`** (a branch name or tag); a `workflow_dispatch` run
 - **`build-assets.js`'s asset list is hand-maintained** — a new `<script>` on the site must be
   added there too. Planned replacement: crawl a running dg-light.js and save every 200 response at
   its own URL path. The page itself no longer has this problem (`build-page.js` generates it).
-- **First install now needs room for two copies.** The download lands as a file (Android's
-  DownloadManager writes it) and is then imported into OPFS, so the peak is ~340MB before the
-  temporary copy is deleted. The streaming path that went straight into OPFS still exists and is
-  what runs in a browser; it costs half the disk and cannot survive the app being backgrounded,
-  which is why it is the fallback rather than the default.
+- **First install needs room for the compressed copy plus the database.** The download lands as
+  a file (Android's DownloadManager writes the `.gz`) and is then inflated into OPFS, so the peak is
+  the two together before the temporary copy is deleted. The streaming path that goes straight
+  into OPFS still exists and is what runs in a browser; it costs only the database itself and
+  cannot survive the app being backgrounded, which is why it is the fallback rather than the
+  default.
 - **Updates are whole-file, not incremental.** Every published database now records what it
   contains — a `meta` table with a `build_id`, and a `chunks` table hashing each
   (sutta, kind, lang, translator) — and `db-manifest.json` is published beside it, so a device asks

@@ -36,7 +36,10 @@ function chk(label, ok, extra) {
         const calls = { start: null, statusPolls: 0, cleared: null, converted: null };
         window.__calls = calls;
         window.Capacitor = {
-            convertFileSrc(p) { calls.converted = p; return '/mobile-data/dg-mobile.db'; },
+            // The system wrote the compressed file under the .db name — DownloadManager keeps
+            // whatever name it was given — so the worker has to tell gzip from SQLite by
+            // content, not by extension. Pointing the stub at the .gz is what checks that.
+            convertFileSrc(p) { calls.converted = p; return '/mobile-data/dg-mobile.db.gz'; },
             Plugins: {
                 DgDownloader: {
                     async start(options) { calls.start = options; return { id: 42 }; },
@@ -66,8 +69,13 @@ function chk(label, ok, extra) {
     chk('the database opens through the native path', opened.ok, JSON.stringify(opened.value || opened.error));
 
     const calls = await page.evaluate(() => window.__calls);
-    chk('the system downloader was asked for the published file',
-        !!calls.start && calls.start.url.endsWith('/dg-mobile.db'), calls.start && calls.start.url);
+    // The manifest names the file — the compressed one, when it publishes one — and the page must
+    // ask for that, not for a name compiled in. This used to be a hardcoded dg-mobile.db, which
+    // 404s against a server publishing under any other name.
+    const manifest = await page.evaluate(async () => (await fetch('/mobile-data/db-manifest.json')).json());
+    const expected = '/mobile-data/' + (manifest.file_gz || manifest.file);
+    chk('the system downloader was asked for the file the manifest publishes',
+        !!calls.start && calls.start.url === expected, (calls.start && calls.start.url) + ' vs ' + expected);
     chk('it was polled until done', calls.statusPolls >= 3, calls.statusPolls);
     chk('the finished file was converted for the WebView',
         calls.converted === '/data/app/files/dg-mobile.db', calls.converted);

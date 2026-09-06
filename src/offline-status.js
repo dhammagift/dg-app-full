@@ -111,6 +111,7 @@
             display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
             background: var(--dgc-rule); border-radius: 12px; overflow: hidden; margin: 0;
         }
+        #dgConsentSheet .dgc-fig-wide { grid-column: 1 / -1; }
         #dgConsentSheet .dgc-fig { background: var(--dgc-sunk); padding: 10px 12px; }
         #dgConsentSheet .dgc-fig dt {
             font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase;
@@ -188,6 +189,20 @@
             font-size: 11.5px; line-height: 1.4; color: var(--dgc-faint);
             border-top: 1px solid var(--dgc-rule); padding-top: 8px; margin-top: 1px;
         }
+        /* A failed download keeps the card, turned into the reason, until the reader dismisses
+           it. It used to be a toast for nine seconds over a bar that then sat there forever
+           saying "Downloading" — the one word that was no longer true. */
+        #dgDlCard.failed { pointer-events: auto; }
+        #dgDlCard.failed .dgdl-fill { background: #b3261e; width: 100%; }
+        #dgDlCard.failed .dgdl-pct { color: #b3261e; }
+        #dgDlCard .dgdl-actions { display: none; gap: 9px; margin-top: 2px; }
+        #dgDlCard.failed .dgdl-actions { display: flex; }
+        #dgDlCard .dgdl-actions button {
+            flex: 1; font: inherit; font-size: 13px; font-weight: 600;
+            padding: 9px 12px; border-radius: 11px; cursor: pointer;
+            border: 1px solid var(--dgc-rule); background: transparent; color: var(--dgc-muted);
+        }
+        #dgDlCard .dgdl-actions .dgdl-retry { background: var(--dgc-accent); color: #fff; border-color: transparent; }
         @media (prefers-reduced-motion: reduce) {
             #dgConsent, #dgConsentSheet, #dgDlCard, #dgDlCard .dgdl-fill { transition: none; }
             #dgDlCard.indeterminate .dgdl-fill { animation: none; }
@@ -209,6 +224,7 @@
     // of text saying "50%" gives no sense of whether it is moving, and this is the longest wait
     // the app ever asks anyone to sit through.
     var dlCard = null;
+    var dlHideTimer = null;
     function ensureDlCard() {
         if (dlCard) return dlCard;
         dlCard = document.createElement('div');
@@ -219,12 +235,54 @@
             '<div class="dgdl-head"><span class="dgdl-title"></span><span class="dgdl-pct"></span></div>' +
             '<div class="dgdl-track"><div class="dgdl-fill"></div></div>' +
             '<div class="dgdl-sub"></div>' +
-            '<div class="dgdl-hint" hidden></div>';
+            '<div class="dgdl-hint" hidden></div>' +
+            '<div class="dgdl-actions">' +
+              '<button type="button" class="dgdl-dismiss"></button>' +
+              '<button type="button" class="dgdl-retry"></button>' +
+            '</div>';
+        dlCard.querySelector('.dgdl-dismiss').addEventListener('click', function () { hideCard(); });
+        dlCard.querySelector('.dgdl-retry').addEventListener('click', function () {
+            hideCard();
+            // Wrapped below, so the new attempt's ending reaches this card too.
+            if (typeof window.dgRetryOfflineDownload === 'function') window.dgRetryOfflineDownload();
+        });
         document.body.appendChild(dlCard);
         return dlCard;
     }
 
-    var dlHideTimer = null;
+    function hideCard() {
+        if (!dlCard) return;
+        dlCard.classList.remove('show');
+        dlCard.classList.remove('failed');
+    }
+
+    // What the card says once the whole thing is over — either way. The progress events cannot
+    // carry this: the last of them is "the bytes arrived", and the library is ready only after the
+    // worker has opened and verified the file, or is not ready because it could not.
+    function showCardResult(ok, message) {
+        var ru = isRuLang();
+        var card = ensureDlCard();
+        clearTimeout(dlHideTimer);
+        card.classList.remove('indeterminate');
+        card.querySelector('.dgdl-hint').hidden = true;
+        if (ok) {
+            card.classList.remove('failed');
+            card.querySelector('.dgdl-title').textContent = ru ? 'Библиотека готова' : 'Library ready';
+            card.querySelector('.dgdl-pct').textContent = '100%';
+            card.querySelector('.dgdl-fill').style.width = '100%';
+            card.classList.add('show');
+            dlHideTimer = setTimeout(hideCard, 2500);
+            return;
+        }
+        card.classList.add('failed');
+        card.querySelector('.dgdl-title').textContent = ru ? 'Не удалось скачать библиотеку' : 'Could not download the library';
+        card.querySelector('.dgdl-pct').textContent = '';
+        card.querySelector('.dgdl-sub').textContent = message || (ru ? 'неизвестная ошибка' : 'unknown error');
+        card.querySelector('.dgdl-dismiss').textContent = ru ? 'Закрыть' : 'Dismiss';
+        card.querySelector('.dgdl-retry').textContent = ru ? 'Повторить' : 'Retry';
+        card.classList.add('show');
+    }
+
     window.addEventListener('dg:dl-progress', function (e) {
         var detail = e.detail || {};
         var loaded = detail.loaded || 0;
@@ -237,6 +295,7 @@
         // file over the network (backgroundable, resumable, its own notification), then the worker
         // reads it into OPFS. The second is fast and local, and a reader watching a bar restart
         // from zero without being told why would reasonably think something went wrong.
+        card.classList.remove('failed');
         var importing = detail.phase === 'import';
         var title = importing
             ? (ru ? 'Подготовка библиотеки' : 'Preparing the library')
@@ -277,13 +336,11 @@
     // dialog states the file that is actually about to cross the connection, not a number compiled
     // in months ago.
     //
-    // It used to quote two: "~60MB downloaded, ~260MB stored", from when the library was three
-    // files and dg-light.js's gzip made the wire cost a fraction of the stored size. Neither half
-    // survives. It is one file now, and its bulk is the trigram index, which is high-entropy and
-    // does not compress — measured on a comparable slice, gzip turned 168MB into 177MB, i.e. made
-    // it bigger. Wire cost and storage cost are therefore the same number, and promising 60MB
-    // before pulling 168MB over someone's mobile data is precisely what this dialog exists to
-    // prevent. FALLBACK_MB is only for a server old enough to publish no manifest.
+    // Two figures again: what crosses the connection and what the file occupies afterwards. The
+    // published file is gzip-compressed now (build-app-db.js writes the .gz beside the .db, the
+    // worker inflates it on the way into OPFS), so the two differ, and both matter — the first to
+    // someone on mobile data, the second to someone short on storage. Both come from the manifest;
+    // FALLBACK_MB is only for a server old enough to publish none.
     const FALLBACK_MB = 170;
     function sizeMb(bytes) { return bytes ? Math.round(bytes / 1048576) : FALLBACK_MB; }
     window.addEventListener('dg:need-consent', function (e) {
@@ -297,6 +354,7 @@
     function askConsent(ru, detail) {
         var mb = sizeMb(detail && detail.bytes);
         var approx = (detail && detail.bytes) ? '' : '~';
+        var storedMb = sizeMb((detail && detail.stored_bytes) || (detail && detail.bytes));
         var langs = (detail && detail.langs) || 'ru,en';
         return new Promise(function (resolve) {
             var previouslyFocused = document.activeElement;
@@ -310,12 +368,14 @@
                     (ru ? 'Скачать тексты для работы без сети?' : 'Download the texts for offline use?') +
                   '</p>' +
                   '<p class="dgc-body" id="dgConsentBody">' +
-                    (ru ? 'Это один файл — столько же скачается, столько же займёт на устройстве: он почти не сжимается. Сейчас соединение не через Wi-Fi; загрузку можно отложить и запустить позже в Настройках.'
-                        : 'It is a single file, so that is both what downloads and what it occupies — it barely compresses. You are not on Wi-Fi right now; you can postpone this and start it later from Settings.') +
+                    (ru ? 'Один файл, сжатый для передачи. Сейчас соединение не через Wi-Fi; загрузку можно отложить и запустить позже в Настройках. Если связь оборвётся, докачается с того же места.'
+                        : 'One file, compressed for transfer. You are not on Wi-Fi right now; you can postpone this and start it later from Settings. If the connection drops, it resumes where it stopped.') +
                   '</p>' +
                   '<dl class="dgc-figures">' +
-                    '<div class="dgc-fig"><dt>' + (ru ? 'Размер' : 'Size') + '</dt>' +
+                    '<div class="dgc-fig"><dt>' + (ru ? 'Скачать' : 'Download') + '</dt>' +
                       '<dd>' + approx + mb + '<span>' + (ru ? 'МБ' : 'MB') + '</span></dd></div>' +
+                    '<div class="dgc-fig"><dt>' + (ru ? 'На устройстве' : 'On device') + '</dt>' +
+                      '<dd>' + approx + storedMb + '<span>' + (ru ? 'МБ' : 'MB') + '</span></dd></div>' +
                     '<div class="dgc-fig dgc-fig-wide"><dt>' + (ru ? 'Языки' : 'Languages') + '</dt>' +
                       '<dd>' + languageList(langs, ru) + '</dd></div>' +
                   '</dl>' +
@@ -380,10 +440,12 @@
         }
     });
 
-    if (window.dgOfflineReady && typeof window.dgOfflineReady.then === 'function') {
-        window.dgOfflineReady.then(function () {
+    function watchReady(promise) {
+        if (!promise || typeof promise.then !== 'function') return;
+        promise.then(function () {
             // Nothing was ever shown — already fully cached, ready resolved near-instantly.
             // Stay silent, exactly as the owner asked ("полоска не должна даже мелькать").
+            if (dlCard && dlCard.classList.contains('show')) showCardResult(true);
             if (!bar) return;
             bar.classList.remove('show');
             if (typeof window.showBubbleNotification === 'function') {
@@ -405,6 +467,16 @@
             var declined = err && err.message === 'offline-data-download-declined';
             if (!declined) console.error('[dg-offline] database download failed:', err);
 
+            // A failed download is the card, turned into the reason, with a retry — whether it
+            // failed at 477MB or before the first byte. The reason is the one thing worth
+            // reading, and a toast is gone before it is; the bar it used to leave behind said
+            // "Downloading" forever, the one word that was no longer true.
+            if (!declined) {
+                showCardResult(false, err && err.message);
+                return;
+            }
+            hideCard();
+
             // Owner: a permanent banner just sits there forever after declining — a few-second
             // heads-up is enough (same toast the success path already uses below); Settings'
             // own "Offline library" row (offline-library-settings.js) is the persistent, always-
@@ -421,5 +493,26 @@
                 window.showBubbleNotification(text, declined ? 4000 : 9000, declined ? 'info' : 'error');
             }
         });
+    }
+    watchReady(window.dgOfflineReady);
+
+    // Settings' "Download now" and the update path go through dgRetryOfflineDownload /
+    // dgUpdateOfflineData, which replace window.dgOfflineReady; each new attempt gets the same
+    // ending as the first one.
+    var realRetry = window.dgRetryOfflineDownload;
+    if (typeof realRetry === 'function') {
+        window.dgRetryOfflineDownload = function () {
+            var p = realRetry.apply(this, arguments);
+            watchReady(p);
+            return p;
+        };
+    }
+    var realUpdate = window.dgUpdateOfflineData;
+    if (typeof realUpdate === 'function') {
+        window.dgUpdateOfflineData = function () {
+            var p = realUpdate.apply(this, arguments);
+            watchReady(p);
+            return p;
+        };
     }
 })();

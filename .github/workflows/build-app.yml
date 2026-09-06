@@ -247,6 +247,8 @@ jobs:
         working-directory: /var/www/html/nodejs
         run: npm run build-search-db
 
+      # Writes dg-mobile.db, dg-mobile.db.gz (what a device actually downloads) and the manifest
+      # that names both.
       - name: Cut the app's language slice
         run: npm run build-app-db -- --from=/var/www/html/nodejs/dg.db --langs=ru,en --out=dist/dg-mobile.db
 
@@ -369,6 +371,18 @@ jobs:
           DG_CHROMIUM: /usr/bin/google-chrome
         run: node test/native-download.js
 
+      # The download itself, against a server that misbehaves: a connection dropped mid-file, one
+      # that goes silent, no Content-Length, a 404. First in Node (the streaming module alone),
+      # then in a browser with the worker, OPFS and DecompressionStream in the loop. This is the
+      # check the frozen-at-477MB bar on a device did not have.
+      - name: Check the download survives a bad connection
+        env:
+          DG_PLAYWRIGHT: ${{ github.workspace }}/node_modules/playwright-core
+          DG_CHROMIUM: /usr/bin/google-chrome
+        run: |
+          node test/db-download.test.js
+          node test/worker-download.js
+
       - name: Sync Capacitor
         run: npx cap sync android
 
@@ -407,6 +421,7 @@ jobs:
           name: dg-app-full-db-${{ github.run_number }}
           path: |
             dist/*.db
+            dist/*.db.gz
             dist/db-manifest.json
           if-no-files-found: error
           retention-days: 30
@@ -418,6 +433,7 @@ jobs:
           files: |
             android/app/build/outputs/apk/debug/app-debug.apk
             dist/dg-mobile.db
+            dist/dg-mobile.db.gz
             dist/db-manifest.json
           body: |
             UI built from dg-node@${{ steps.pin.outputs.ref }}.

@@ -17,6 +17,7 @@
 // with it went every search and every reader request in the app. See build-core-bundle.js.
 import sqlite3InitModule from './vendor/sqlite-wasm/index.js';
 import core from './core-bundle.js';
+import { openDatabaseStream } from './db-download.js';
 
 // dg-mobile.db, not dg.db: the server's own database is dg.db and lives on the same box, so
 // sharing the name is how a symlink ends up pointing 600MB of every language at a phone.
@@ -67,32 +68,35 @@ function nodeSqliteShim(oo1db) {
     };
 }
 
-// Streams the database straight into OPFS. The pool's importDb() takes a callback and writes each
-// chunk as it arrives, so the file never exists as one 170MB buffer — which is the difference
-// between working on a phone and not.
-async function downloadInto(pool, url, name) {
-    // Reading a file the system already fetched is not a download and should not be described as
-    // one — it is fast, local, and the reader is watching a second bar move for reasons they did
-    // not ask about unless it is named.
-    const phase = /^https?:\/\//.test(url) && !url.includes('_capacitor_file_') ? 'download' : 'import';
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`dg-mobile.db: HTTP ${response.status}`);
-    const total = Number(response.headers.get('Content-Length')) || 0;
-    const reader = response.body.getReader();
+// Streams the database into OPFS. The pool's importDb() takes a callback and writes each chunk as
+// it arrives, so the file never exists as one buffer — which is the difference between working on
+// a phone and not. What feeds the callback is db-download.js: it resumes a dropped connection with
+// a Range request, gives up on one that goes silent instead of waiting forever, and inflates a
+// gzip-compressed file on the way in. `total` is the wire size from the manifest, used when the
+// response does not state one; without a denominator the UI cannot tell finished from stuck.
+//
+// `phase` is 'download' for the network and 'import' for a file the system already fetched (see
+// fetchCurrent). Reading that file is not a download and should not be described as one — it is
+// fast, local, and the reader is watching a second bar move for reasons they did not ask about
+// unless it is named. It is also not resumable: Capacitor's server, which exposes that file, does
+// not do ranges, and a local read has no connection to wait out.
+async function downloadInto(pool, url, name, total, phase) {
     let loaded = 0, lastReport = 0;
-
-    await pool.importDb(name, async () => {
-        const { done, value } = await reader.read();
-        if (done) return undefined;
-        loaded += value.byteLength;
-        const now = Date.now();
-        if (now - lastReport > 200) {
-            lastReport = now;
-            post({ type: 'progress', loaded, total, phase });
-        }
-        return value;
+    const next = await openDatabaseStream(url, {
+        name: 'dg-mobile.db',
+        total: total || 0,
+        resumable: phase === 'download',
+        onProgress(bytes, wireTotal) {
+            loaded = bytes;
+            const now = Date.now();
+            if (now - lastReport > 200 || (wireTotal && bytes >= wireTotal)) {
+                lastReport = now;
+                post({ type: 'progress', loaded, total: wireTotal || total || 0, phase });
+            }
+        },
     });
-    post({ type: 'progress', loaded, total, phase });
+    await pool.importDb(name, next);
+    post({ type: 'progress', loaded, total: total || loaded, phase });
     return loaded;
 }
 
@@ -187,7 +191,8 @@ async function fetchCurrent(pool, distBase, sourceUrl) {
     // is only that those bytes crossed the network under Android's control rather than ours, and
     // therefore survived the reader leaving the app.
     post({ type: 'downloading' });
-    await downloadInto(pool, sourceUrl || `${distBase}/${(manifest && manifest.file) || 'dg-mobile.db'}`, target);
+    const plan = downloadPlan(distBase, manifest);
+    await downloadInto(pool, sourceUrl || plan.url, target, plan.bytes, sourceUrl ? 'import' : 'download');
 
     const candidate = inspect(pool, target);
     if (!candidate.ok) {
@@ -204,10 +209,34 @@ async function fetchCurrent(pool, distBase, sourceUrl) {
 // a server that publishes none, must still open the copy it already has.
 async function fetchManifest(distBase) {
     try {
-        const response = await fetch(`${distBase}/db-manifest.json`, { cache: 'no-store' });
+        // Bounded: this is on the path to the first screen, and a request that never answers —
+        // a captive portal, a proxy holding the connection — would otherwise hold the app with it.
+        const init = { cache: 'no-store' };
+        if (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) init.signal = AbortSignal.timeout(15000);
+        const response = await fetch(`${distBase}/db-manifest.json`, init);
         if (!response.ok) return null;
         return await response.json();
     } catch (e) { return null; }
+}
+
+// What to fetch and how much of it there is, from the manifest. The compressed file is preferred
+// when the manifest publishes one and this browser can inflate it; `bytes` is what will cross the
+// connection, `stored_bytes` what the file occupies afterwards — the consent dialog states both,
+// because the second is what the device has to have room for. Without a manifest the file goes by
+// its default name and the size is unknown.
+function downloadPlan(distBase, manifest) {
+    const canInflate = typeof DecompressionStream === 'function';
+    const compressed = !!(manifest && manifest.file_gz && canInflate);
+    const file = compressed ? manifest.file_gz : ((manifest && manifest.file) || 'dg-mobile.db');
+    return {
+        url: `${distBase}/${file}`,
+        file,
+        compressed,
+        bytes: manifest ? Number(compressed ? manifest.bytes_gz : manifest.bytes) || null : null,
+        stored_bytes: manifest ? Number(manifest.bytes) || null : null,
+        build_id: manifest ? manifest.build_id : null,
+        langs: manifest ? manifest.langs : null,
+    };
 }
 
 async function open(distBase, sourceUrl) {
@@ -329,9 +358,11 @@ self.onmessage = async (event) => {
             // about the download — a few hundred bytes, so that the question can name the real
             // size instead of a number compiled in months ago. Its absence is not fatal.
             const manifest = present ? null : await fetchManifest(args && args.distBase);
+            const plan = manifest ? downloadPlan(args && args.distBase, manifest) : null;
             post({ id, ok: true, result: {
                 present,
-                bytes: manifest ? manifest.bytes : null,
+                bytes: plan ? plan.bytes : null,
+                stored_bytes: plan ? plan.stored_bytes : null,
                 build_id: manifest ? manifest.build_id : null,
                 langs: manifest ? manifest.langs : null,
             } });
@@ -347,13 +378,32 @@ self.onmessage = async (event) => {
             if (!db) throw new Error('database not opened');
             const local = db.selectObject("SELECT value FROM meta WHERE key = 'build_id'");
             const manifest = await fetchManifest(args.distBase);
+            const plan = manifest ? downloadPlan(args.distBase, manifest) : null;
             post({ id, ok: true, result: manifest ? {
                 current: manifest.build_id === (local && local.value),
                 build_id: manifest.build_id,
-                bytes: manifest.bytes,
+                bytes: plan.bytes,
+                stored_bytes: plan.stored_bytes,
                 built_at: manifest.built_at,
                 schema_supported: Number(manifest.schema_version) === SCHEMA_VERSION,
             } : { unknown: true } });
+        } catch (e) { post({ id, ok: false, error: e.message }); }
+        return;
+    }
+
+    // Where the page should point the system downloader, decided here so that the choice between
+    // the plain and the compressed file — and the file's actual published name — is made in one
+    // place, from the manifest, rather than hardcoded on the page. A manifest that cannot be
+    // fetched yields the default name, which is what an older server publishes.
+    if (op === 'plan') {
+        try {
+            const manifest = await fetchManifest(args && args.distBase);
+            if (manifest && Number(manifest.schema_version) !== SCHEMA_VERSION) {
+                throw new Error(
+                    `published database is schema ${manifest.schema_version}, this app reads ${SCHEMA_VERSION}` +
+                    ` — update the app`);
+            }
+            post({ id, ok: true, result: downloadPlan(args && args.distBase, manifest) });
         } catch (e) { post({ id, ok: false, error: e.message }); }
         return;
     }

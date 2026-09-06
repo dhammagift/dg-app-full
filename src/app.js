@@ -111,7 +111,12 @@ async function hasNetworkConsent(info) {
         // bytes comes from the published manifest, so the question names the size of the file that
         // is actually about to be transferred rather than a figure baked into the app.
         window.dispatchEvent(new CustomEvent('dg:need-consent', {
-            detail: { resolve, bytes: info && info.bytes, langs: info && info.langs },
+            detail: {
+                resolve,
+                bytes: info && info.bytes,
+                stored_bytes: info && info.stored_bytes,
+                langs: info && info.langs,
+            },
         }));
     });
 }
@@ -199,7 +204,11 @@ async function openWithDownload(op = 'open') {
     if (!downloader) return call(op, { distBase: DIST_BASE });
 
     const ru = (localStorage.getItem('dhammaLanguage') || localStorage.getItem('siteLanguage') || 'en') === 'ru';
-    const { id, path } = await runNativeDownload(downloader, `${DIST_BASE}/dg-mobile.db`, ru);
+    // The worker reads the manifest and says which file to fetch — the published name, and the
+    // compressed one when there is one. This used to be a hardcoded dg-mobile.db, which is not
+    // what a server that publishes under another name (or only a .gz) has to offer.
+    const plan = await call('plan', { distBase: DIST_BASE });
+    const { id, path } = await runNativeDownload(downloader, plan.url, ru);
     const sourceUrl = window.Capacitor.convertFileSrc(path);
     try {
         return await call(op, { distBase: DIST_BASE, sourceUrl });
@@ -373,6 +382,9 @@ ready.then(async (opened) => {
 
     const status = await window.dgCheckOfflineUpdate();
     if (status && !status.unknown && !status.current) {
-        rememberState({ update: { build_id: status.build_id, bytes: status.bytes, built_at: status.built_at } });
+        rememberState({ update: {
+            build_id: status.build_id, bytes: status.bytes, stored_bytes: status.stored_bytes,
+            built_at: status.built_at,
+        } });
     }
 }, () => {});

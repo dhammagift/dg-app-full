@@ -53,6 +53,9 @@ import java.io.File;
 public class DgDownloader extends Plugin {
 
     static final String NOTIFICATIONS = "notifications";
+    // The name is fixed whatever the URL ends in. The page asks for the compressed file when the
+    // manifest publishes one, so what lands here is usually gzip under a .db name; the worker
+    // tells the two apart by content (src/db-download.js), never by this name.
     private static final String FILE_NAME = "dg-mobile.db";
 
     /**
