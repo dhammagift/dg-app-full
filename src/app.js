@@ -196,7 +196,21 @@ function installFetchShim() {
         try { parsed = new URL(url, location.href); } catch (e) { return realFetch(input, init); }
         const p = parsed.pathname;
         const qs = parsed.searchParams;
-        const toOnline = () => realFetch('https://dhamma.gift' + p + parsed.search, init);
+        const toOnline = () => realFetch('https://dhamma.gift' + p + parsed.search, init).catch((e) => {
+            // Without this, a failed forward here surfaces as the site's generic "Search error —
+            // check your query (invalid regular expression?)" message (index.html's own catch
+            // block) — flatly wrong for "you picked a script/language this device doesn't have
+            // offline and there's no connection", and gives the reader nothing to act on.
+            // showBubbleNotification is settings-bundle.js's own existing toast (Settings-applied,
+            // language-switched, etc.) — reused rather than inventing a second one.
+            if (typeof window.showBubbleNotification === 'function') {
+                const ru = (localStorage.getItem('dhammaLanguage') || localStorage.getItem('siteLanguage') || 'en') === 'ru';
+                window.showBubbleNotification(ru
+                    ? 'Нужен интернет: эта система письма или язык не входят в офлайн-библиотеку'
+                    : 'Needs internet: this script or language isn’t in the offline library', 5000);
+            }
+            throw e;
+        });
 
         if (p === '/api/transliterate') return toOnline();
 
