@@ -5,27 +5,27 @@
      each one is a plain Android shortcut that launches MainActivity with a "route" extra
      (see MainActivity.handleIntent), which loads that path in the already-running SPA.
 
-     All 4 slots used, matching the TWA lifehack of never leaving one idle — "Dict.Dhamma.gift"
-     (online-only DPD dictionary) and "DG Read" (legacy /read.php, superseded by this app's own
-     reader) from the original 4 were dropped as before (a shortcut into a page that doesn't work
-     offline, or a route this app doesn't have, defeats the point of a fast offline entry point),
-     but the freed slots go to TOC and Favorites/History instead of sitting unused:
+     Exactly 4, deliberately: toc, Bhikkhu/Bhikkhuni Patimokkha, and the Quick Modal's 4
+     Ariyasaccani tab — "Dict.Dhamma.gift" (online-only DPD dictionary), "DG Read" (legacy
+     /read.php, superseded by this app's own reader) and Favorites/History (owner: no shortcut
+     for it) were all dropped rather than filling every slot for its own sake.
      - "toc" replaces the old plain "/" shortcut, which just duplicated launching the app icon
        itself — TOC is a genuinely distinct entry point.
-     - "Bhikkhu/Bhikkhuni Patimokkha" point at the TOC entries for those books
-       (/toc/pli-tv-bu-pm, /toc/pli-tv-bi-pm) rather than the legacy /pm.php-rendered single page
-       (reader/bu-pm.html) — that page's own logic wasn't ported into the offline shim, TOC
-       already reaches the same content.
-     - "favorites" and "four_noble_truths" have no route of their own (both live inside the Quick
-       Modal, not the SPA router) — MainActivity passes an "openQuickModal" extra instead of
-       "route", whose VALUE is the modal's own tab key ("tab-fav", "tab-4as"); settings-bundle.js
-       already listens for exactly this on DOMContentLoaded (?action=<tab key>), same mechanism
-       the site's own "Быстрое окно" doc page uses to embed an already-open modal on a given tab.
+     - "Bhikkhu/Bhikkhuni Patimokkha" point at the FULL TOC book codes (/toc/pli-tv-bu-pm,
+       /toc/pli-tv-bi-pm), not the short "/toc/pm"/"/toc/bipm" dg-twa's own web manifest uses —
+       those short codes are not real book codes (configs/reader/toc-books.json has no "pm"/
+       "bipm" entries) and /api/toc/book/pm answers `{"error":"Unknown book code: pm"}` on the
+       live site itself; /toc/pm still returns 200 only because /toc/:code (dg-fastify.js) is an
+       unconditional catch-all that always serves the SPA shell regardless of the code, and the
+       actual book lookup (which fails) happens client-side after that. Likely a pre-existing bug
+       in dg-twa's own shortcuts, not something to copy — the full codes are the ones confirmed
+       to work end to end.
+     - "four_noble_truths" has no route of its own (lives inside the Quick Modal, not the SPA
+       router) — MainActivity passes an "openQuickModal" extra whose VALUE is the modal's own tab
+       key ("tab-4as"); settings-bundle.js already listens for exactly this on DOMContentLoaded
+       (?action=<tab key>), same mechanism the site's own "Быстрое окно" doc page uses to embed
+       an already-open modal on a given tab. -->
 
-     A 5th shortcut here goes past the "all 4 slots used" design above and past what some Android
-     launchers may actually display (getMaxShortcutCountPerActivity() varies by device/launcher,
-     commonly 4-5) — kept anyway per an explicit ask; if a launcher silently drops one, it'll be
-     this one or the plainest of the four above, worth revisiting if that's ever reported. -->
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
     <shortcut
         android:shortcutId="toc"
@@ -64,19 +64,6 @@
             android:targetPackage="gift.dhamma.mobile"
             android:targetClass="gift.dhamma.mobile.MainActivity">
             <extra android:name="route" android:value="/toc/pli-tv-bi-pm" />
-        </intent>
-    </shortcut>
-    <shortcut
-        android:shortcutId="favorites"
-        android:enabled="true"
-        android:icon="@drawable/shortcut_favorites"
-        android:shortcutShortLabel="@string/shortcut_favorites_short"
-        android:shortcutLongLabel="@string/shortcut_favorites_long">
-        <intent
-            android:action="android.intent.action.MAIN"
-            android:targetPackage="gift.dhamma.mobile"
-            android:targetClass="gift.dhamma.mobile.MainActivity">
-            <extra android:name="openQuickModal" android:value="tab-fav" />
         </intent>
     </shortcut>
     <shortcut

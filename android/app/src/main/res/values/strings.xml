@@ -12,8 +12,6 @@
     <string name="shortcut_bu_pm_long">Bhikkhu Pātimokkha</string>
     <string name="shortcut_bi_pm_short">Bhikkhuni Pātimokkha</string>
     <string name="shortcut_bi_pm_long">Bhikkhuni Pātimokkha</string>
-    <string name="shortcut_favorites_short">Favorites</string>
-    <string name="shortcut_favorites_long">Favorites &amp; History</string>
     <string name="shortcut_4as_short">4 Truths</string>
     <string name="shortcut_4as_long">Cattāri Ariyasaccāni</string>
 </resources>
