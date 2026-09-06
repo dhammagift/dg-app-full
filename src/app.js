@@ -69,7 +69,7 @@ function startWorker() {
             window.dispatchEvent(new CustomEvent('dg:dl-progress', {
                 detail: {
                     name: 'dg-mobile.db', step: 1, totalSteps: 1,
-                    loaded: msg.loaded, total: msg.total, phase: msg.phase || 'download',
+                    loaded: msg.loaded, total: msg.total, phase: msg.phase || 'download', done: !!msg.done,
                     reason: msg.retrying ? 'stalled, retrying (attempt ' + msg.retrying + ')' : null,
                 },
             }));

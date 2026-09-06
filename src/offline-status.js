@@ -235,15 +235,22 @@
         var card = ensureDlCard();
         var pct = total ? Math.min(100, Math.round((loaded / total) * 100)) : null;
 
-        card.querySelector('.dgdl-title').textContent =
-            ru ? 'Загрузка офлайн-библиотеки' : 'Downloading the offline library';
+        // 'import' means the gzipped file has fully crossed the network (see downloadInto()'s
+        // networkDone in db-worker.js) and what is left is unpacking it — no percentage worth
+        // showing for that, it is a few hundred ms of local CPU, not more waiting on a connection.
+        var importing = detail.phase === 'import';
+        card.querySelector('.dgdl-title').textContent = importing
+            ? (ru ? 'Распаковка и применение' : 'Unpacking and applying')
+            : (ru ? 'Загрузка офлайн-библиотеки' : 'Downloading the offline library');
+        if (importing) pct = null;
         card.querySelector('.dgdl-pct').textContent = pct === null ? '' : pct + '%';
         card.classList.toggle('indeterminate', pct === null);
         if (pct !== null) card.querySelector('.dgdl-fill').style.width = pct + '%';
-        card.querySelector('.dgdl-sub').textContent = total
-            ? (ru ? formatMb(loaded) + ' МБ из ' + formatMb(total) + ' МБ'
-                  : formatMb(loaded) + ' MB of ' + formatMb(total) + ' MB')
-            : (ru ? formatMb(loaded) + ' МБ' : formatMb(loaded) + ' MB');
+        card.querySelector('.dgdl-sub').textContent = importing ? ''
+            : total
+                ? (ru ? formatMb(loaded) + ' МБ из ' + formatMb(total) + ' МБ'
+                      : formatMb(loaded) + ' MB of ' + formatMb(total) + ' MB')
+                : (ru ? formatMb(loaded) + ' МБ' : formatMb(loaded) + ' MB');
 
         // Set only while a stalled connection is being retried (see STALL_MS/downloadInto in
         // db-worker.js) — the one thing worth a screenshot instead of pulling logcat.
@@ -253,10 +260,11 @@
 
         card.classList.add('show');
 
-        // The last progress event arrives when the stream ends, so completion is visible here
-        // rather than needing its own signal from the worker.
         clearTimeout(dlHideTimer);
-        if (total && loaded >= total) {
+        // detail.done is set on downloadInto()'s own final post(), not inferred from loaded/total —
+        // the import phase reports 0/0 (see above), which the old loaded>=total check would never
+        // read as finished.
+        if (detail.done) {
             card.querySelector('.dgdl-title').textContent = ru ? 'Библиотека готова' : 'Library ready';
             dlHideTimer = setTimeout(function () { card.classList.remove('show'); }, 2500);
         }

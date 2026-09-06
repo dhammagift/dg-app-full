@@ -137,11 +137,22 @@ async function downloadInto(pool, url, name, expectedWireBytes, expectedDbBytes,
                     { mismatch: true });
             }
 
-            // The progress bar reports against the DECOMPRESSED size (what the reader is actually
-            // waiting on and what ends up on disk) rather than Content-Length, which for a gzipped
-            // response is the smaller, wire-only figure and would make the bar read >100%.
-            const progressTotal = gzip ? (expectedDbBytes || 0) : total;
-            const body = gzip ? response.body.pipeThrough(new DecompressionStream('gzip')) : response.body;
+            // What the reader is warned about before agreeing to a download is what crosses their
+            // connection — for a gzipped response that's wireLoaded/expectedWireBytes, not the
+            // (larger) decompressed count importDb receives. wireLoaded is read off the compressed
+            // side via a counting TransformStream spliced in front of DecompressionStream; its
+            // flush() fires exactly when the network side is exhausted, which is also the honest
+            // point to stop calling this "downloading" — what is left is unpacking an already-
+            // fully-arrived file, not more network.
+            let wireLoaded = 0, networkDone = !gzip;
+            let body = response.body;
+            if (gzip) {
+                const counting = new TransformStream({
+                    transform(chunk, controller) { wireLoaded += chunk.byteLength; controller.enqueue(chunk); },
+                    flush() { networkDone = true; },
+                });
+                body = response.body.pipeThrough(counting).pipeThrough(new DecompressionStream('gzip'));
+            }
             reader = body.getReader();
             let loaded = 0, lastReport = 0;
 
@@ -159,11 +170,17 @@ async function downloadInto(pool, url, name, expectedWireBytes, expectedDbBytes,
                 const now = Date.now();
                 if (now - lastReport > 200) {
                     lastReport = now;
-                    post({ type: 'progress', loaded, total: progressTotal, phase });
+                    if (!gzip) {
+                        post({ type: 'progress', loaded, total, phase });
+                    } else if (networkDone) {
+                        post({ type: 'progress', loaded: 0, total: 0, phase: 'import' });
+                    } else {
+                        post({ type: 'progress', loaded: wireLoaded, total: expectedWireBytes || total, phase });
+                    }
                 }
                 return value;
             });
-            post({ type: 'progress', loaded, total: progressTotal, phase });
+            post({ type: 'progress', loaded, total: gzip ? (expectedDbBytes || 0) : total, phase, done: true });
             return loadedBytes;
         } catch (e) {
             if (e && e.mismatch) throw e; // a server misconfiguration, not a network blip — retrying serves nobody
