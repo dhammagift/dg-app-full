@@ -93,15 +93,33 @@ const RETRY_BACKOFF_MS = attempt => Math.min(8000, 500 * 2 ** attempt) + Math.fl
 // of continuing (compressed responses can legitimately run a little over, so this is not 1.0).
 const OVERSHOOT_FACTOR = 1.5;
 
+// AbortController.abort() is the textbook way to interrupt a stuck reader.read(), but on-device
+// testing showed it does not reliably do that in this WebView's Chromium build: a read that never
+// gets a chunk stays pending forever even after abort() is called on it, silently — no
+// AbortError, nothing to catch, the watchdog fires and nothing happens. So a stall is no longer
+// detected by racing the read against an abort signal; it is detected by racing it against a
+// plain setTimeout Promise, which needs no cooperation from fetch/ReadableStream at all to win.
+// The abandoned read (and the fetch behind it) may keep running in the background after this
+// races it out, uselessly — cancel()/abort() are still called on the way out as a best effort,
+// but nothing here waits on them, since that would reintroduce exactly this bug one level up.
+function readWithTimeout(reader, ms) {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+            reject(Object.assign(new Error(`no data for ${ms / 1000}s`), { name: 'AbortError' }));
+        }, ms);
+        reader.read().then(
+            result => { clearTimeout(timer); resolve(result); },
+            err => { clearTimeout(timer); reject(err); },
+        );
+    });
+}
+
 async function downloadInto(pool, url, name, expectedBytes) {
     const phase = 'download';
 
     for (let attempt = 1; ; attempt++) {
         const controller = new AbortController();
-        let lastByteAt = Date.now();
-        const watchdog = setInterval(() => {
-            if (Date.now() - lastByteAt > STALL_MS) controller.abort();
-        }, 1000);
+        let reader = null;
 
         try {
             const response = await fetch(url, { signal: controller.signal });
@@ -114,12 +132,11 @@ async function downloadInto(pool, url, name, expectedBytes) {
                         `check mobile-data/dg-mobile.db on the server, it may point at the wrong file`),
                     { mismatch: true });
             }
-            const reader = response.body.getReader();
+            reader = response.body.getReader();
             let loaded = 0, lastReport = 0;
 
             const loadedBytes = await pool.importDb(name, async () => {
-                const { done, value } = await reader.read();
-                lastByteAt = Date.now();
+                const { done, value } = await readWithTimeout(reader, STALL_MS);
                 if (done) return undefined;
                 loaded += value.byteLength;
                 if (expectedBytes && loaded > expectedBytes * OVERSHOOT_FACTOR) {
@@ -141,6 +158,8 @@ async function downloadInto(pool, url, name, expectedBytes) {
         } catch (e) {
             if (e && e.mismatch) throw e; // a server misconfiguration, not a network blip — retrying serves nobody
             const stalled = e && e.name === 'AbortError';
+            controller.abort();
+            if (reader) reader.cancel().catch(() => {});
             if (attempt >= MAX_ATTEMPTS) {
                 throw stalled
                     ? new Error(`dg-mobile.db: stalled (no data for ${STALL_MS / 1000}s), ` +
@@ -151,8 +170,6 @@ async function downloadInto(pool, url, name, expectedBytes) {
             // this abort caused, so the next attempt starts clean — nothing to unlink here.
             post({ type: 'progress', loaded: 0, total: 0, phase, retrying: attempt + 1 });
             await new Promise(resolve => setTimeout(resolve, RETRY_BACKOFF_MS(attempt)));
-        } finally {
-            clearInterval(watchdog);
         }
     }
 }
@@ -259,20 +276,32 @@ async function fetchCurrent(pool, distBase) {
 
 // The manifest is small and its absence is not an error: a device that is offline, or pointed at
 // a server that publishes none, must still open the copy it already has.
+function withTimeout(promise, ms) {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(Object.assign(new Error('timed out'), { name: 'AbortError' })), ms);
+        promise.then(
+            v => { clearTimeout(timer); resolve(v); },
+            e => { clearTimeout(timer); reject(e); },
+        );
+    });
+}
+
 async function fetchManifest(distBase) {
-    // Same silent-hang risk as the database itself (see STALL_MS above), but this one runs before
-    // the reader ever sees a progress bar — 'status' calls it just to decide whether to ask about
-    // a download at all, so a hang here would mean nothing on screen, not just a stuck bar. A
-    // manifest is a few hundred bytes; if it hasn't arrived in MANIFEST_TIMEOUT_MS it never will
-    // on this attempt, and its absence is already a handled, non-fatal case.
+    // Same silent-hang risk as the database itself (see readWithTimeout above), and for the same
+    // reason not left to AbortController alone — it runs before the reader ever sees a progress
+    // bar ('status' calls it just to decide whether to ask about a download at all), so a hang
+    // here would mean nothing on screen, not just a stuck bar. A manifest is a few hundred bytes;
+    // if it hasn't arrived in MANIFEST_TIMEOUT_MS it never will on this attempt, and its absence is
+    // already a handled, non-fatal case.
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), MANIFEST_TIMEOUT_MS);
     try {
-        const response = await fetch(`${distBase}/db-manifest.json`, { cache: 'no-store', signal: controller.signal });
+        const response = await withTimeout(
+            fetch(`${distBase}/db-manifest.json`, { cache: 'no-store', signal: controller.signal }),
+            MANIFEST_TIMEOUT_MS);
         if (!response.ok) return null;
-        return await response.json();
+        return await withTimeout(response.json(), MANIFEST_TIMEOUT_MS);
     } catch (e) { return null; }
-    finally { clearTimeout(timer); }
+    finally { controller.abort(); }
 }
 
 async function open(distBase) {
