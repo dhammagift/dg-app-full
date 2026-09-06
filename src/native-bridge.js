@@ -20,9 +20,17 @@
         else window.location.href = url; // plain-browser fallback (local dev/testing, no Capacitor runtime)
     }
 
+    // memo/login/docs are same-ORIGIN paths (https://localhost/docs/...) but not actually
+    // bundled content — a plain origin check alone calls them "not external" and lets
+    // window.open() below try to open them locally, 404ing silently in a blank new tab/window.
+    // Shared with the click listener further down so both agree on what "not bundled" means.
+    var NOT_BUNDLED_RE = /^\/(ru\/)?(memo|login|docs)(\/|$)/;
+
     function isExternal(url) {
-        try { return new URL(url, location.href).origin !== location.origin; }
-        catch (e) { return false; }
+        try {
+            var parsed = new URL(url, location.href);
+            return parsed.origin !== location.origin || NOT_BUNDLED_RE.test(parsed.pathname);
+        } catch (e) { return false; }
     }
 
     // mirror-link.js (public/overrides/js/mirror-link.js) already resolves 4nt/TBW/Th.ru/Th.su
@@ -39,7 +47,16 @@
             // just enough of that shape for its own code to work unmodified.
             return { closed: false, set location(url) { openExternal(url); } };
         }
-        if (isExternal(url)) { openExternal(url); return null; }
+        if (isExternal(url)) {
+            // mirror-link.js's own targets are already absolute (real cross-origin URLs); a
+            // not-bundled path like "/docs/multitool" is same-origin and relative, so it has to
+            // be resolved against the REAL site, not this app's own https://localhost, or the
+            // Browser plugin would just try to open a Custom Tab on a host that doesn't exist
+            // outside this app's own WebView.
+            var resolved = new URL(url, location.href);
+            openExternal(resolved.origin === location.origin ? ONLINE_ORIGIN + resolved.pathname + resolved.search + resolved.hash : url);
+            return null;
+        }
         return realOpen(url, target, features);
     };
 
@@ -61,7 +78,7 @@
         var a = e.target.closest('a[href]');
         if (a) {
             var href = a.getAttribute('href');
-            if (/^\/(ru\/)?(memo|login|docs)(\/|$)/.test(href)) {
+            if (NOT_BUNDLED_RE.test(href)) {
                 e.preventDefault();
                 openExternal(ONLINE_ORIGIN + href);
             }
