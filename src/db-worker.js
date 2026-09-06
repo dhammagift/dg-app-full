@@ -180,6 +180,20 @@ async function downloadInto(pool, url, name, expectedWireBytes, expectedDbBytes,
                 }
                 return value;
             });
+            // reader.read() returning {done: true} is the NORMAL, successful end of a stream — but
+            // a dropped connection can also produce exactly that with no error at all (observed:
+            // a from-scratch download that silently stopped 55% in, same exact byte count on a
+            // repeat attempt, no stall, no exception, just an early "done"). Nothing above this
+            // point ever checked the received count against what the manifest promised, so a
+            // truncated file went straight to inspect()/SQLite as if it had arrived whole — the
+            // resulting SQLITE_CORRUPT, several layers removed from "the download stopped early",
+            // is what a reader actually saw. Treated as retryable (not `mismatch: true`, which is
+            // reserved for "the server is serving the wrong file entirely") since an ordinary retry
+            // already succeeds once the connection is good again.
+            if (expectedDbBytes && loadedBytes !== expectedDbBytes) {
+                throw new Error(`dg-mobile.db: stream ended after ${Math.round(loadedBytes / 1048576)}MB, ` +
+                    `expected ${Math.round(expectedDbBytes / 1048576)}MB — connection likely dropped mid-transfer`);
+            }
             post({ type: 'progress', loaded, total: gzip ? (expectedDbBytes || 0) : total, phase, done: true });
             return loadedBytes;
         } catch (e) {
