@@ -278,11 +278,21 @@ async function compressExisting(dbFile) {
         // read from the file's own meta table, which every build since provenance carries.
         const db = new DatabaseSync(dbFile, { readOnly: true });
         const meta = {};
+        let hasMeta = true;
         try {
             for (const row of db.prepare('SELECT key, value FROM meta').all()) meta[row.key] = row.value;
         } catch (e) {
-            throw new Error(`${dbFile} has no meta table — it predates provenance; rebuild it with --from/--langs`);
+            hasMeta = false;
         } finally { db.close(); }
+        if (!hasMeta) {
+            // Older still: no meta at all. The app opens such a file (the worker keeps it under
+            // its legacy name) and the download works, but it carries no build_id, so no device
+            // can ever be told that a newer build exists. Good enough to test with, and said so.
+            console.warn(
+                `WARNING: ${dbFile} has no meta table (built before provenance). The manifest will name it\n` +
+                `and its .gz, but without a build_id — devices cannot be offered an update until it is\n` +
+                `rebuilt: node build-app-db.js --from=<dg.db> --langs=ru,en --out=${dbFile}`);
+        }
         manifest = { ...meta, schema_version: Number(meta.schema_version) || SCHEMA_VERSION, patches: [] };
     }
     manifest.file = path.basename(dbFile);
@@ -297,7 +307,7 @@ async function compressExisting(dbFile) {
     console.log(
         `${gzFile}: ${mb(manifest.bytes_gz)} MB — ${Math.round(100 * manifest.bytes_gz / manifest.bytes)}% ` +
         `of the ${mb(manifest.bytes)} MB database (${((Date.now() - t) / 1000).toFixed(1)}s)\n` +
-        `manifest: ${manifestPath} (build ${manifest.build_id}, file_gz ${manifest.file_gz})`);
+        `manifest: ${manifestPath} (build ${manifest.build_id || 'none'}, file_gz ${manifest.file_gz})`);
 }
 
 async function main() {
