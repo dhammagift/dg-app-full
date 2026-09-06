@@ -381,7 +381,20 @@ jobs:
         env:
           DG_PLAYWRIGHT: ${{ github.workspace }}/node_modules/playwright-core
           PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
-        run: node test/e2e-browser.js
+        run: node test/e2e-browser.js 2>&1 | tee e2e-output.log
+
+      # Job log downloads need admin rights on this repo, which this workflow's own token doesn't
+      # have — an artifact is the one way to actually read what this step printed when it fails
+      # without that. Only uploaded on failure: the log is redundant with the console output on a
+      # normal green run, and would otherwise pile up 30 days of identical "24/24 identical"
+      # files for nothing.
+      - name: Upload e2e output on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-output-${{ github.run_number }}
+          path: e2e-output.log
+          retention-days: 7
 
       - name: Sync Capacitor
         run: npx cap sync android
