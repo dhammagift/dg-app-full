@@ -32,11 +32,12 @@ public class MainActivity extends BridgeActivity {
         handleIntent(intent);
     }
 
-    // Turns the two ways this activity can be launched with extra data — a shared-text Intent
-    // (Web Share Target equivalent, see AndroidManifest.xml's ACTION_SEND filter) or a static App
-    // Shortcut's "route" extra (res/xml/shortcuts.xml) — into a URL the WebView loads. Neither is
-    // wired up automatically here the way it would be for a Trusted Web Activity reading the
-    // site's web manifest; this is the Capacitor equivalent.
+    // Turns the three ways this activity can be launched with extra data — a shared-text Intent
+    // (Web Share Target equivalent, see AndroidManifest.xml's ACTION_SEND filter), a dhamma.gift
+    // deep link (ACTION_VIEW filter, same file), or a static App Shortcut's "route" extra
+    // (res/xml/shortcuts.xml) — into a URL the WebView loads. None of these are wired up
+    // automatically here the way they would be for a Trusted Web Activity reading the site's web
+    // manifest; this is the Capacitor equivalent.
     //
     // https://localhost is Capacitor's default local-server origin (capacitor.config.json sets no
     // custom server.hostname/androidScheme) — hardcoded rather than derived because the bridge/
@@ -62,6 +63,16 @@ public class MainActivity extends BridgeActivity {
             if (sharedText != null && !sharedText.isEmpty()) {
                 url = "https://localhost/?q=" + Uri.encode(sharedText);
             }
+        } else if (Intent.ACTION_VIEW.equals(intent.getAction()) && intent.getData() != null) {
+            // A dhamma.gift/f.dhamma.gift/find.dhamma.gift link opened from outside the app (see
+            // the VIEW intent-filter in AndroidManifest.xml) — same _nativeRoute handoff as the
+            // App Shortcuts below, just built from the tapped URL's own path+query instead of a
+            // fixed extra.
+            Uri data = intent.getData();
+            String path = data.getPath();
+            String route = (path == null || path.isEmpty() ? "/" : path)
+                + (data.getQuery() != null ? "?" + data.getQuery() : "");
+            url = "https://localhost/?_nativeRoute=" + Uri.encode(route);
         } else {
             String route = intent.getStringExtra("route");
             if (route != null) {

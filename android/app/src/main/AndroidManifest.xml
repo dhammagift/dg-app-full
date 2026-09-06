@@ -36,6 +36,29 @@
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />
 
+            <!-- Deep links: a dhamma.gift URL tapped anywhere on the device (browser, chat app,
+                 email) opens straight into the app instead of the browser, at the same path —
+                 MainActivity.handleIntent turns the URL's path+query into the SPA's own
+                 _nativeRoute (same mechanism the App Shortcuts above already use).
+
+                 No android:autoVerify="true" yet: verified App Links need a stable release
+                 signing key and a matching assetlinks.json published at
+                 https://dhamma.gift/.well-known/ — this app currently only ships an
+                 auto-signed debug build. Without it, Android still registers these hosts, it
+                 just shows a disambiguation dialog ("Open with: Chrome / Dhamma.gift") instead
+                 of skipping straight to the app. Add autoVerify once a release key exists. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="dhamma.gift" />
+                <data android:scheme="https" android:host="www.dhamma.gift" />
+                <data android:scheme="https" android:host="f.dhamma.gift" />
+                <data android:scheme="https" android:host="www.f.dhamma.gift" />
+                <data android:scheme="https" android:host="find.dhamma.gift" />
+                <data android:scheme="https" android:host="www.find.dhamma.gift" />
+            </intent-filter>
+
         </activity>
 
         <provider
