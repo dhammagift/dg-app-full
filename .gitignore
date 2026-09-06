@@ -26,6 +26,13 @@ test-dist/
 # `npx cap add ios` output — not created yet (Android only so far).
 ios/
 
+# Release signing keystore — NEVER commit (this repo is public). Lives here, not in android/,
+# same convention as /var/www/dg-twa/android.keystore. CI reads the equivalent secret instead
+# (see android.keystore.readme for what to put in GitHub Actions repo secrets).
+*.keystore
+*.keystore.readme
+*.jks
+
 # Capture output from a comparison run — the pinned snapshots in test/snapshots/site are
 # the contract; anything else is scratch from a diff.
 test/snapshots/after/

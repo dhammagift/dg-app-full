@@ -41,13 +41,18 @@
                  MainActivity.handleIntent turns the URL's path+query into the SPA's own
                  _nativeRoute (same mechanism the App Shortcuts above already use).
 
-                 No android:autoVerify="true" yet: verified App Links need a stable release
-                 signing key and a matching assetlinks.json published at
-                 https://dhamma.gift/.well-known/ — this app currently only ships an
-                 auto-signed debug build. Without it, Android still registers these hosts, it
-                 just shows a disambiguation dialog ("Open with: Chrome / Dhamma.gift") instead
-                 of skipping straight to the app. Add autoVerify once a release key exists. -->
-            <intent-filter>
+                 android:autoVerify="true": Android confirms this app controls these hosts by
+                 fetching https://dhamma.gift/.well-known/assetlinks.json (dg-fastify.js route,
+                 see its own comment) and checking this APK's signing certificate against the
+                 fingerprint listed there — only then does a tap skip the "Open with: Chrome /
+                 Dhamma.gift" chooser entirely, including for links tapped INSIDE Chrome itself
+                 (which a non-verified filter never intercepts at all, chooser or not). That
+                 verification only ever passes for a build signed with the release key
+                 (android.keystore, gitignored — see android.keystore.readme) whose fingerprint
+                 is the one actually published; a debug-signed build still registers the intent
+                 -filter (chooser dialog from outside Chrome/Telegram's in-app browser) but can
+                 never pass verification. -->
+            <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />

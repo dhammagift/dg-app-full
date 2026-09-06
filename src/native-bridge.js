@@ -109,16 +109,22 @@
             else CapApp.exitApp();
         });
 
-        // App version footer: shown inside the Settings modal's own footer (index.html's #settings
-        // has one) when present, otherwise appended at the end of the page (settings/index.html,
-        // the standalone page, has no such modal). Native-only info (Android versionName/
-        // versionCode), so it belongs here rather than in dg-node's shared template.
-        CapApp.getInfo().then(function (info) {
-            var el = document.createElement('div');
-            el.id = 'dg-app-version';
-            el.style.cssText = 'text-align:center;padding:4px;font-size:11px;opacity:.5;';
-            el.textContent = 'v' + info.version + ' (' + info.build + ')';
-            (document.querySelector('#settings .modal-footer') || document.body).appendChild(el);
-        }).catch(function (e) { console.error('[dg-version] App.getInfo failed', e); });
+        // App version row (settings/index.html's "Данные" section — build-assets.js's
+        // injectAppVersionRow adds the row's markup, same patch-the-copy pattern as the Offline
+        // library row above it). No button: tapping the row itself copies the version string,
+        // same "no button, tap it" UX as the row's plain-text-value siblings elsewhere on this page.
+        var versionRow = document.getElementById('dgAppVersionRow');
+        if (versionRow) {
+            CapApp.getInfo().then(function (info) {
+                var text = 'v' + info.version + ' (' + info.build + ')';
+                var desc = document.getElementById('dgAppVersionDesc');
+                if (desc) desc.textContent = text;
+                versionRow.addEventListener('click', function () {
+                    navigator.clipboard.writeText(text).catch(function (e) {
+                        console.error('[dg-version] clipboard write failed', e);
+                    });
+                });
+            }).catch(function (e) { console.error('[dg-version] App.getInfo failed', e); });
+        }
     }
 })();

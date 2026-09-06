@@ -374,9 +374,10 @@ jobs:
       - name: Grant gradlew permissions
         run: chmod +x android/gradlew
 
-      # assembleRelease has no signingConfig in app/build.gradle — it would produce
-      # app-release-unsigned.apk, not installable without a separate signing step. assembleDebug
-      # is auto-signed with the Android debug keystore (no secrets needed).
+      # assembleDebug is auto-signed with the Android debug keystore (no secrets needed) — quick
+      # to install for throwaway testing, but its signature can never match assetlinks.json
+      # (see AndroidManifest.xml's autoVerify comment), so deep links on it always fall back to
+      # the disambiguation chooser at best.
       - name: Build Android Debug APK
         working-directory: android
         run: ./gradlew assembleDebug --stacktrace
@@ -394,6 +395,42 @@ jobs:
         with:
           name: dg-app-full-apk-${{ github.run_number }}
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      # Release-signed build: the ONLY kind that can pass Android App Links verification (see
+      # AndroidManifest.xml's autoVerify comment) — install this one, not the debug APK above, to
+      # actually test deep links opening without the chooser dialog. Secrets are repo-level
+      # (Settings -> Secrets and variables -> Actions), populated once from android.keystore's own
+      # local android.keystore.readme (gitignored, never committed) and unrelated to Gradle's
+      # own debug-keystore auto-signing above, which needs none of this.
+      - name: Decode release keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "ANDROID_KEYSTORE_BASE64 secret not set — skipping the release build this run."
+            echo "skip=true" >> "$GITHUB_ENV"
+          else
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+            echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build Android Release APK
+        if: env.skip != 'true'
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Upload release APK artifact
+        if: success() && env.skip != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dg-app-full-apk-release-${{ github.run_number }}
+          path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
 
@@ -416,6 +453,7 @@ jobs:
         with:
           files: |
             android/app/build/outputs/apk/debug/app-debug.apk
+            android/app/build/outputs/apk/release/*.apk
             dist/dg-mobile.db
             dist/db-manifest.json
           body: |

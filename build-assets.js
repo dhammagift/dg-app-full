@@ -290,6 +290,36 @@ function injectOfflineLibraryRow() {
     fs.writeFileSync(dest, html, 'utf8');
 }
 
+// Same patch-the-copy pattern as injectOfflineLibraryRow() above, one more row in the same
+// "Данные"/"Data" section. No row-control/button (native-bridge.js makes the whole row itself
+// the control: tapping it copies the version string) — matches this app's other injected rows'
+// convention of a plain hardcoded English title, no site i18n hook.
+function injectAppVersionRow() {
+    const dest = path.join(WWW, 'settings', 'index.html');
+    let html = fs.readFileSync(dest, 'utf8');
+    const marker = `<div class="row-control"><button class="btn btn-danger" type="button" id="resetAllBtn">Сбросить</button></div>
+      </div>
+    </div>
+  </section>`;
+    const withRow = `<div class="row-control"><button class="btn btn-danger" type="button" id="resetAllBtn">Сбросить</button></div>
+      </div>
+      <div class="row" id="dgAppVersionRow" style="cursor:pointer">
+        <div><p class="row-title" id="dgAppVersionTitle">App version</p><p class="row-desc" id="dgAppVersionDesc">&nbsp;</p></div>
+      </div>
+    </div>
+  </section>`;
+    if (!html.includes('id="dgAppVersionRow"')) {
+        if (!html.includes(marker)) {
+            throw new Error(
+                'injectAppVersionRow: anchor not found in settings/index.html.\n' +
+                'The Data section markup changed upstream in dg-node. Update `marker` to match it.'
+            );
+        }
+        html = html.replace(marker, withRow);
+    }
+    fs.writeFileSync(dest, html, 'utf8');
+}
+
 // dg-docs (Help/Docs portal): deliberately NOT bundled. First cut baked the ~23MB Docusaurus
 // build (en+ru) into the APK, but owner (weighing APK size vs. offline benefit): docs are read
 // occasionally, not offline-critical the way search/reader are — the DB download at first launch
@@ -358,6 +388,7 @@ function main() {
     copyReaderImages();
     injectNativeBridge();
     injectOfflineLibraryRow();
+    injectAppVersionRow();
     console.log(`Assets: ${ok} copied, ${missing} missing. +${srcCount} app files from src/, +${svgCount} svg icons, reader/images/, 2 generated bundles, mode-table.json (langs=${args.langs.join(',')}).`);
     console.log(`  dg-node: ${NODEJS_ROOT}\n  legacy assets: ${LEGACY_ASSETS}`);
     if (missing > 0) process.exitCode = 1;
