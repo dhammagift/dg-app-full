@@ -311,34 +311,10 @@ jobs:
       - name: Snapshot the offline TOC (needs dg-fastify.js from the previous step)
         run: npm run build-toc-snapshot -- --base=http://localhost:${{ env.DG_SERVER_PORT }}
 
-      # The app's own checks, run in dg-node against the server that is already up: every bundled
-      # page compared with the live site (the "tile opens the search page" family — a missing path
-      # is not a 404 in a WebView, it is index.html), and no referenced-but-absent file.
-      - name: Check the app's pages against the site
-        env:
-          DG_APP_PATH: ${{ github.workspace }}
-          DG_SITE_URL: http://localhost:${{ env.DG_SERVER_PORT }}
-          DG_PLAYWRIGHT: ${{ github.workspace }}/node_modules/playwright-core
-          PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
-        working-directory: /var/www/html/nodejs
-        run: |
-          node test/app-ui/check-pages.js
-          node test/app-ui/check-assets.js
-
       - name: Build web assets (www/**)
         run: node build-assets.js
 
-      # Only now: the page checks above compare the app against this server, and the TOC snapshot
-      # came from it. Stopping it earlier left the checks with nothing to compare against.
-      - name: Stop dg-fastify.js
-        if: always()
-        run: |
-          if [ -f /tmp/dg-fastify.pid ]; then
-            PID=$(cat /tmp/dg-fastify.pid)
-            kill "$PID" 2>/dev/null || true
-            sleep 1
-            kill -9 "$PID" 2>/dev/null || true
-          fi
+
 
       # The checks that run against the BUILT page in a real browser. They belong here and not
       # only on a workstation: the app once shipped with its data worker dead — every search and
@@ -364,6 +340,33 @@ jobs:
           # "playwright: not found" — playwright-core ships no such binary at all). Same version
           # pin either way, so both packages agree on which Chromium revision to fetch/resolve.
           npx --yes playwright@1.49.1 install --with-deps chromium
+
+      # The app's own checks, run in dg-node against the server that is already up: every bundled
+      # page compared with the live site (the "tile opens the search page" family — a missing path
+      # is not a 404 in a WebView, it is index.html), and no referenced-but-absent file.
+      - name: Check the app's pages against the site
+        env:
+          DG_APP_PATH: ${{ github.workspace }}
+          DG_SITE_URL: http://localhost:${{ env.DG_SERVER_PORT }}
+          DG_PLAYWRIGHT: ${{ github.workspace }}/node_modules/playwright-core
+          PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
+        working-directory: /var/www/html/nodejs
+        run: |
+          node test/app-ui/check-pages.js
+          node test/app-ui/check-assets.js
+
+      # Only now: the page checks above compare the app against this server, and the TOC snapshot
+      # came from it. Stopping it earlier left the checks with nothing to compare against.
+      - name: Stop dg-fastify.js
+        if: always()
+        run: |
+          if [ -f /tmp/dg-fastify.pid ]; then
+            PID=$(cat /tmp/dg-fastify.pid)
+            kill "$PID" 2>/dev/null || true
+            sleep 1
+            kill -9 "$PID" 2>/dev/null || true
+          fi
+
 
       # The offline library, built by dg-node (the app is no longer a source of database code — see
       # docs/OFFLINE_PWA_PLAN.md). ~509MB, a couple of minutes, and it is BOTH what the browser
