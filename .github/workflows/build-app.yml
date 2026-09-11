@@ -93,14 +93,24 @@ jobs:
       #
       # "read" is checked out alongside assets/* — reader/css/index.css's relative symlink needs
       # /var/www/html/read/css/index.css to exist.
-      - name: Checkout legacy dg (assets + read only)
+      - name: Checkout legacy dg (the asset trees the app copies)
         working-directory: /var/www/html
         run: |
           git init -q
           git remote add origin https://github.com/dhammagift/dg.git
           git config core.sparseCheckout true
           git sparse-checkout init --cone
-          git sparse-checkout set assets/img assets/css assets/js assets/svg assets/texts read
+          # build-assets.js copies whole trees (ASSET_TREES/ASSET_LOOSE_FILES) for the pages the
+          # app's menu links to — common/, grammar/, materials/, diff/, repeat-timer/ — and
+          # verifies afterwards that every referenced file is in www/. A tree that this checkout
+          # does not fetch is therefore a hard build failure, not a warning: that is exactly how
+          # the first CI run of this workflow failed (assets/common and assets/grammar were
+          # missing and the verification listed the History page and the grammar pages as
+          # unreachable). Keep this list in step with build-assets.js.
+          git sparse-checkout set \
+            assets/img assets/css assets/js assets/svg assets/texts \
+            assets/common assets/grammar assets/materials assets/diff assets/repeat-timer \
+            read
           git fetch --depth 1 origin main -q
           git checkout -q FETCH_HEAD
 
