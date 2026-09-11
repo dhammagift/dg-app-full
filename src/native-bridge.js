@@ -66,7 +66,7 @@
     // (Before, this list was everything the history held: "toc", "bupm", "история", "запись1/2" —
     // bare commands and memo recordings, none of them a text — and the designed shortcuts were
     // pushed out of the menu entirely.)
-    var SHORTCUTS_MAX = 4;
+    var SHORTCUTS_MAX = 2;
 
     function isRu() {
         return (localStorage.getItem('dhammaLanguage') || localStorage.getItem('siteLanguage') || 'en') === 'ru';
@@ -112,17 +112,11 @@
             items.push({ id: id, label: String(label || route), route: route, rank: rank });
         }
 
-        // Android shows dynamic shortcuts ABOVE the static ones, and the launcher shows four. So
-        // the owner's design ("toc, fav+history, dyn, dyn" — owner's list) is only reachable if the
-        // first two are dynamic too: the navigator and the favourites/history tab are fixed
-        // entries with the top ranks, and the remaining slots are whatever was actually read. The
-        // static manifest XML keeps Dictionary and Memo, which therefore appear after these four
-        // on launchers that show more.
-        push('dg-pinned-toc', isRu() ? 'Оглавление' : 'Contents', '/toc', 0);
-        push('dg-pinned-fav', isRu() ? 'Избранное' : 'Favorites', '/4as', 1);
-
-        // Then real favourites and history, both filtered to texts (see isTextRoute) — the
-        // launcher's two remaining slots.
+        // Only "recently read". Contents and Favorites used to be pinned here with ranks 0/1, on the
+        // assumption that Android lists dynamic shortcuts above static ones — on the owner's launcher
+        // it is the other way round, so the pinned pair ended up below Dictionary/Memo instead of
+        // above them. They are static shortcuts now (res/xml/shortcuts.xml, in the owner's order);
+        // this list adds at most two texts the reader actually opened, after them.
         readJson('dg_favorites').forEach(function (fav) {
             if (!fav) return;
             var route = (fav.path && fav.search) ? (fav.path + fav.search) : ('/' + (fav.slug || ''));

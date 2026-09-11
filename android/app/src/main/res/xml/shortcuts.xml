@@ -4,11 +4,13 @@
      Icons come from dg-twa (owner: "шорткаты и иконки неактуальные возьми из dg-twa там последняя
      версия") — drawable-*/shortcut_N.png, mirrored here.
 
-     Only TWO static shortcuts: Dictionary and Memo. Contents (TOC) and Favorites & history are
-     pushed as DYNAMIC shortcuts with the top ranks by the page (native-bridge.js collectRecent),
-     because Android shows dynamic shortcuts ABOVE static ones and a launcher shows four — so the
-     owner's intended order for the app ("toc, fav+history, dyn, dyn") is only reachable that way.
-     These two appear on launchers that show more than four, and before the page has run once.
+     The order below is the owner's and matches the site manifest (docs/PWA_SHORTCUTS.md):
+     Contents, Favorites & history, Dictionary, Memo. It has to be STATIC — the first attempt kept
+     Contents/Favorites as dynamic shortcuts with rank 0/1, on the assumption that Android lists
+     dynamic ones above static ones. On the owner's launcher the opposite happens: the static pair
+     (Dictionary, Memo) came first and the pinned two fell to the bottom, which is exactly the
+     screenshot that reopened this. Dynamic shortcuts are now only what they are good for —
+     "recently read" (native-bridge.js, filtered to real texts, at most two).
 
      Two of the four cannot run inside this app and are routed to the real browser by
      native-bridge.js (see EXTERNAL_ROUTES there):
@@ -22,6 +24,32 @@
      bootstrap reads it. Dynamic "recently read" shortcuts (DgShortcutsPlugin) fill whatever slots
      the launcher has left. -->
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="toc"
+        android:enabled="true"
+        android:icon="@drawable/shortcut_2"
+        android:shortcutShortLabel="@string/shortcut_toc_short"
+        android:shortcutLongLabel="@string/shortcut_toc_long">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="gift.dhamma.mobile"
+            android:targetClass="gift.dhamma.mobile.MainActivity">
+            <extra android:name="route" android:value="/toc" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="favorites_history"
+        android:enabled="true"
+        android:icon="@drawable/shortcut_0"
+        android:shortcutShortLabel="@string/shortcut_fav_short"
+        android:shortcutLongLabel="@string/shortcut_fav_long">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="gift.dhamma.mobile"
+            android:targetClass="gift.dhamma.mobile.MainActivity">
+            <extra android:name="route" android:value="/4as" />
+        </intent>
+    </shortcut>
     <shortcut
         android:shortcutId="dictionary"
         android:enabled="true"
