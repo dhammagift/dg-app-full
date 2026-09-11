@@ -1,82 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Static App Shortcuts (long-press the launcher icon). Ported from dg-twa's web manifest
-     (app/src/main/res/raw/web_app_manifest.json "shortcuts") — a Capacitor WebView isn't a
-     Trusted Web Activity, so the OS doesn't wire these up from a web manifest automatically;
-     each one is a plain Android shortcut that launches MainActivity with a "route" extra
-     (see MainActivity.handleIntent), which loads that path in the already-running SPA.
+<!-- Static App Shortcuts (long-press the launcher icon).
 
-     Exactly 4, deliberately: toc, Bhikkhu/Bhikkhuni Patimokkha, and the Quick Modal's 4
-     Ariyasaccani tab — "Dict.Dhamma.gift" (online-only DPD dictionary), "DG Read" (legacy
-     /read.php, superseded by this app's own reader) and Favorites/History (owner: no shortcut
-     for it) were all dropped rather than filling every slot for its own sake.
-     - "toc" replaces the old plain "/" shortcut, which just duplicated launching the app icon
-       itself — TOC is a genuinely distinct entry point.
-     - "Bhikkhu/Bhikkhuni Patimokkha" point at the FULL TOC book codes (/toc/pli-tv-bu-pm,
-       /toc/pli-tv-bi-pm), not the short "/toc/pm"/"/toc/bipm" dg-twa's own web manifest uses —
-       those short codes are not real book codes (configs/reader/toc-books.json has no "pm"/
-       "bipm" entries) and /api/toc/book/pm answers `{"error":"Unknown book code: pm"}` on the
-       live site itself; /toc/pm still returns 200 only because /toc/:code (dg-fastify.js) is an
-       unconditional catch-all that always serves the SPA shell regardless of the code, and the
-       actual book lookup (which fails) happens client-side after that. Likely a pre-existing bug
-       in dg-twa's own shortcuts, not something to copy — the full codes are the ones confirmed
-       to work end to end.
-     - "four_noble_truths" has no route of its own (lives inside the Quick Modal, not the SPA
-       router) — MainActivity passes an "openQuickModal" extra whose VALUE is the modal's own tab
-       key ("tab-4as"); settings-bundle.js already listens for exactly this on DOMContentLoaded
-       (?action=<tab key>), same mechanism the site's own "Быстрое окно" doc page uses to embed
-       an already-open modal on a given tab. -->
+     Icons come from dg-twa (owner: "шорткаты и иконки неактуальные возьми из dg-twa там последняя
+     версия") — drawable-*/shortcut_N.png, mirrored here.
 
+     Only TWO static shortcuts: Dictionary and Memo. Contents (TOC) and Favorites & history are
+     pushed as DYNAMIC shortcuts with the top ranks by the page (native-bridge.js collectRecent),
+     because Android shows dynamic shortcuts ABOVE static ones and a launcher shows four — so the
+     owner's intended order for the app ("toc, fav+history, dyn, dyn") is only reachable that way.
+     These two appear on launchers that show more than four, and before the page has run once.
+
+     Two of the four cannot run inside this app and are routed to the real browser by
+     native-bridge.js (see EXTERNAL_ROUTES there):
+       - Dictionary (/dict): a server-rendered page of dict.dhamma.gift, not part of the SPA;
+       - Memo (/memo): deliberately not bundled (owner: the APK should not carry occasionally-read
+         sections — see native-bridge.js).
+     TOC (/toc) and Favorites (/4as) are SPA routes and open in place.
+
+     Each shortcut launches MainActivity with a "route" extra; MainActivity turns it into
+     https://localhost/?_nativeRoute=..., and the page rewrites the visible URL before its own
+     bootstrap reads it. Dynamic "recently read" shortcuts (DgShortcutsPlugin) fill whatever slots
+     the launcher has left. -->
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
     <shortcut
-        android:shortcutId="toc"
+        android:shortcutId="dictionary"
         android:enabled="true"
-        android:icon="@mipmap/ic_launcher"
-        android:shortcutShortLabel="@string/shortcut_toc_short"
-        android:shortcutLongLabel="@string/shortcut_toc_long">
+        android:icon="@drawable/shortcut_1"
+        android:shortcutShortLabel="@string/shortcut_dict_short"
+        android:shortcutLongLabel="@string/shortcut_dict_long">
         <intent
             android:action="android.intent.action.MAIN"
             android:targetPackage="gift.dhamma.mobile"
             android:targetClass="gift.dhamma.mobile.MainActivity">
-            <extra android:name="route" android:value="/toc" />
+            <extra android:name="route" android:value="/dict" />
         </intent>
     </shortcut>
     <shortcut
-        android:shortcutId="bhikkhu_patimokkha"
+        android:shortcutId="memo"
         android:enabled="true"
-        android:icon="@drawable/shortcut_monk"
-        android:shortcutShortLabel="@string/shortcut_bu_pm_short"
-        android:shortcutLongLabel="@string/shortcut_bu_pm_long">
+        android:icon="@drawable/shortcut_3"
+        android:shortcutShortLabel="@string/shortcut_memo_short"
+        android:shortcutLongLabel="@string/shortcut_memo_long">
         <intent
             android:action="android.intent.action.MAIN"
             android:targetPackage="gift.dhamma.mobile"
             android:targetClass="gift.dhamma.mobile.MainActivity">
-            <extra android:name="route" android:value="/toc/pli-tv-bu-pm" />
-        </intent>
-    </shortcut>
-    <shortcut
-        android:shortcutId="bhikkhuni_patimokkha"
-        android:enabled="true"
-        android:icon="@drawable/shortcut_nun"
-        android:shortcutShortLabel="@string/shortcut_bi_pm_short"
-        android:shortcutLongLabel="@string/shortcut_bi_pm_long">
-        <intent
-            android:action="android.intent.action.MAIN"
-            android:targetPackage="gift.dhamma.mobile"
-            android:targetClass="gift.dhamma.mobile.MainActivity">
-            <extra android:name="route" android:value="/toc/pli-tv-bi-pm" />
-        </intent>
-    </shortcut>
-    <shortcut
-        android:shortcutId="four_noble_truths"
-        android:enabled="true"
-        android:icon="@mipmap/ic_launcher"
-        android:shortcutShortLabel="@string/shortcut_4as_short"
-        android:shortcutLongLabel="@string/shortcut_4as_long">
-        <intent
-            android:action="android.intent.action.MAIN"
-            android:targetPackage="gift.dhamma.mobile"
-            android:targetClass="gift.dhamma.mobile.MainActivity">
-            <extra android:name="openQuickModal" android:value="tab-4as" />
+            <extra android:name="route" android:value="/memo" />
         </intent>
     </shortcut>
 </shortcuts>

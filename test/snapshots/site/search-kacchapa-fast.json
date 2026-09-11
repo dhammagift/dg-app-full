@@ -20,34 +20,26 @@
     "ru",
     "en"
    ],
-   "totalFiles": 2,
-   "totalMatches": 3,
+   "totalFiles": 7,
+   "totalMatches": 8,
    "hasVariantMatch": true,
    "partial": true
   },
   "data": {
-   "dn22": {
-    "sutta_id": "dn22",
+   "dn2": {
+    "sutta_id": "dn2",
     "category": "dhamma",
     "dir_path": "pli/ms/sutta/dn",
     "titles": {
-     "root": "Mahāsatipaṭṭhānasutta"
+     "root": "Sāmaññaphalasutta "
     },
-    "mr": 12,
-    "count": 2,
+    "mr": 30,
+    "count": 1,
     "unique_words": [],
     "segments": [
      {
-      "segment": "dn22:1.3",
-      "root_text": "",
-      "variant": "kacchapo → kacchapa",
-      "translations": {},
-      "lb_context": [],
-      "la_context": []
-     },
-     {
-      "segment": "dn22:1.4",
-      "root_text": "Mahākacchapānaṁ pana rūpaṁ evaṁ hoti.",
+      "segment": "dn2:57.2",
+      "root_text": "Seyyathidaṁ—maṇilakkhaṇaṁ vatthalakkhaṇaṁ daṇḍalakkhaṇaṁ satthalakkhaṇaṁ asilakkhaṇaṁ usulakkhaṇaṁ dhanulakkhaṇaṁ āvudhalakkhaṇaṁ itthilakkhaṇaṁ purisalakkhaṇaṁ kumāralakkhaṇaṁ kumārilakkhaṇaṁ dāsalakkhaṇaṁ dāsilakkhaṇaṁ hatthilakkhaṇaṁ assalakkhaṇaṁ mahiṁsalakkhaṇaṁ usabhalakkhaṇaṁ golakkhaṇaṁ ajalakkhaṇaṁ meṇḍalakkhaṇaṁ kukkuṭalakkhaṇaṁ vaṭṭakalakkhaṇaṁ godhālakkhaṇaṁ kaṇṇikalakkhaṇaṁ kacchapalakkhaṇaṁ migalakkhaṇaṁ ",
       "variant": "",
       "translations": {},
       "lb_context": [],
@@ -55,20 +47,133 @@
      }
     ]
    },
-   "sn56.11": {
-    "sutta_id": "sn56.11",
+   "mn129": {
+    "sutta_id": "mn129",
     "category": "dhamma",
-    "dir_path": "pli/ms/sutta/sn/sn56",
+    "dir_path": "pli/ms/sutta/mn",
     "titles": {
-     "root": "Dhammacakkappavattanasutta"
+     "root": "Bālapaṇḍitasutta "
     },
-    "mr": 9,
+    "mr": 13,
     "count": 1,
     "unique_words": [],
     "segments": [
      {
-      "segment": "sn56.11:2.2",
-      "root_text": "Kacchapānaṁ viya gati dukkhā hoti.",
+      "segment": "mn129:21.3",
+      "root_text": "Macchā kacchapā susumārā, ye vā panaññepi keci tiracchānagatā pāṇā udakasmiṁ jāyanti udakasmiṁ jīyanti udakasmiṁ mīyanti. ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "dn1": {
+    "sutta_id": "dn1",
+    "category": "dhamma",
+    "dir_path": "pli/ms/sutta/dn",
+    "titles": {
+     "root": "Brahmajālasutta "
+    },
+    "mr": 2,
+    "count": 1,
+    "unique_words": [],
+    "segments": [
+     {
+      "segment": "dn1:1.22.2",
+      "root_text": "seyyathidaṁ—maṇilakkhaṇaṁ vatthalakkhaṇaṁ daṇḍalakkhaṇaṁ satthalakkhaṇaṁ asilakkhaṇaṁ usulakkhaṇaṁ dhanulakkhaṇaṁ āvudhalakkhaṇaṁ itthilakkhaṇaṁ purisalakkhaṇaṁ kumāralakkhaṇaṁ kumārilakkhaṇaṁ dāsalakkhaṇaṁ dāsilakkhaṇaṁ hatthilakkhaṇaṁ assalakkhaṇaṁ mahiṁsalakkhaṇaṁ usabhalakkhaṇaṁ golakkhaṇaṁ ajalakkhaṇaṁ meṇḍalakkhaṇaṁ kukkuṭalakkhaṇaṁ vaṭṭakalakkhaṇaṁ godhālakkhaṇaṁ kaṇṇikālakkhaṇaṁ kacchapalakkhaṇaṁ migalakkhaṇaṁ ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "sn20.9": {
+    "sutta_id": "sn20.9",
+    "category": "dhamma",
+    "dir_path": "pli/ms/sutta/sn/sn20",
+    "titles": {
+     "root": "Nāgasutta "
+    },
+    "mr": 1,
+    "count": 1,
+    "unique_words": [],
+    "segments": [
+     {
+      "segment": "sn20.9:3.5",
+      "root_text": "Tesaṁyeva kho pana, bhikkhave, mahānāgānaṁ anusikkhamānā taruṇā bhiṅkacchāpā taṁ sarasiṁ ogāhetvā soṇḍāya bhisamuḷālaṁ abbuhetvā na suvikkhālitaṁ vikkhāletvā sakaddamaṁ asaṅkhāditvā ajjhoharanti. ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "sn35.240": {
+    "sutta_id": "sn35.240",
+    "category": "dhamma",
+    "dir_path": "pli/ms/sutta/sn/sn35",
+    "titles": {
+     "root": "Kummopamasutta "
+    },
+    "mr": 1,
+    "count": 2,
+    "unique_words": [],
+    "segments": [
+     {
+      "segment": "sn35.240:1.5",
+      "root_text": "Siṅgālopi kho, bhikkhave, addasa kummaṁ kacchapaṁ dūratova gocarapasutaṁ. ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "sn35.240:1.6",
+      "root_text": "Disvāna yena kummo kacchapo tenupasaṅkami; upasaṅkamitvā kummaṁ kacchapaṁ paccupaṭṭhito ahosi: ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "thig16.1": {
+    "sutta_id": "thig16.1",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/thig",
+    "titles": {
+     "root": "Sumedhātherīgāthā "
+    },
+    "mr": 1,
+    "count": 1,
+    "unique_words": [],
+    "segments": [
+     {
+      "segment": "thig16.1:53.1",
+      "root_text": "Sara kāṇakacchapaṁ pubba- ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "thig12.1": {
+    "sutta_id": "thig12.1",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/thig",
+    "titles": {
+     "root": "Puṇṇātherīgāthā "
+    },
+    "mr": 0,
+    "count": 1,
+    "unique_words": [],
+    "segments": [
+     {
+      "segment": "thig12.1:6.2",
+      "root_text": "sabbe maṇḍūkakacchapā; ",
       "variant": "",
       "translations": {},
       "lb_context": [],
@@ -79,44 +184,86 @@
   },
   "wordReport": [
    {
-    "word": "kacchapa",
-    "textCount": 1,
-    "matchCount": 1,
+    "word": "kacchapalakkhaṇaṁ",
+    "textCount": 2,
+    "matchCount": 2,
     "links": [
      {
-      "sutta_id": "dn22",
-      "segment": "dn22:1.3"
+      "sutta_id": "dn1",
+      "segment": "dn1:1.22.2"
+     },
+     {
+      "sutta_id": "dn2",
+      "segment": "dn2:57.2"
      }
     ]
    },
    {
-    "word": "kacchapānaṁ",
+    "word": "bhiṅkacchāpā",
     "textCount": 1,
     "matchCount": 1,
     "links": [
      {
-      "sutta_id": "sn56.11",
-      "segment": "sn56.11:2.2"
+      "sutta_id": "sn20.9",
+      "segment": "sn20.9:3.5"
      }
     ]
    },
    {
-    "word": "mahākacchapānaṁ",
+    "word": "kacchapā",
     "textCount": 1,
     "matchCount": 1,
     "links": [
      {
-      "sutta_id": "dn22",
-      "segment": "dn22:1.4"
+      "sutta_id": "mn129",
+      "segment": "mn129:21.3"
+     }
+    ]
+   },
+   {
+    "word": "kacchapaṁ",
+    "textCount": 1,
+    "matchCount": 2,
+    "links": [
+     {
+      "sutta_id": "sn35.240",
+      "segment": "sn35.240:1.5"
+     }
+    ]
+   },
+   {
+    "word": "kāṇakacchapaṁ",
+    "textCount": 1,
+    "matchCount": 1,
+    "links": [
+     {
+      "sutta_id": "thig16.1",
+      "segment": "thig16.1:53.1"
+     }
+    ]
+   },
+   {
+    "word": "maṇḍūkakacchapā",
+    "textCount": 1,
+    "matchCount": 1,
+    "links": [
+     {
+      "sutta_id": "thig12.1",
+      "segment": "thig12.1:6.2"
      }
     ]
    }
   ],
   "variantSegments": [
    {
-    "sutta_id": "dn22",
-    "segment": "dn22:1.3",
-    "text": "kacchapo → kacchapa"
+    "sutta_id": "tha-ap407",
+    "segment": "tha-ap407:3.3",
+    "text": "Macchakacchapasañchannā → macchakacchapasampannā (?) "
+   },
+   {
+    "sutta_id": "tha-ap414",
+    "segment": "tha-ap414:2.3",
+    "text": "Macchakacchapasampannā → … sañchannā (mr) "
    }
   ]
  }

@@ -37,3 +37,10 @@ ios/
 # the contract; anything else is scratch from a diff.
 test/snapshots/after/
 .playwright-cli/
+
+# Playwright profile for the app e2e (holds the downloaded offline library)
+.e2e-profile/
+.android-sdk/
+.gradle-home/
+.android-home/
+.tmp/

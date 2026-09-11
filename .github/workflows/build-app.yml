@@ -248,25 +248,13 @@ jobs:
         working-directory: /var/www/html/nodejs
         run: npm run build-search-db
 
-      - name: Cut the app's language slice
-        run: npm run build-app-db -- --from=/var/www/html/nodejs/dg.db --langs=ru,en --out=dist/dg-mobile.db
-
-      # dg-mobile.db IS the offline library — the app fetches it from DIST_BASE at first launch and
-      # streams it into OPFS. Listing it makes its size visible in the log; the upload below makes
-      # it retrievable.
-      - name: List offline database output
-        run: ls -lah dist/ || { echo "::error::no dist/ — the slice was not produced"; exit 1; }
-
-      # The check that would have caught the one real divergence this slice ever had: it was
-      # indexed under a plain trigram tokenizer over pre-folded text, so the stored side folded
-      # diacritics and the query side did not, and searching for "kacchapānaṁ" as the word is
-      # actually written found nothing in the app and two suttas on the site. Cheap, needs no
-      # corpus and no device — it compares the slice's index definition against dg.db's and then
-      # exercises the folding on rows it builds itself.
-      - name: Check the slice folds like dg.db
-        env:
-          DG_NODE_PATH: /var/www/html/nodejs
-        run: node test/fts-fold.test.js dist/dg-mobile.db
+      # The offline layer (fetch shim, data worker, core bundle, sqlite-wasm) is built in dg-node and
+      # copied into the app verbatim — see docs/OFFLINE_PWA_PLAN.md, "Этап 2". Building it here rather
+      # than in the app is what keeps one core bundle for the site, the PWA and the app: the app's own
+      # build-core-bundle.js is gone, and build-assets.js fails loudly if this step did not run.
+      - name: Build the offline layer (dg-node)
+        working-directory: /var/www/html/nodejs
+        run: npm run build-offline
 
       # dg-fastify.js is what prod actually runs (dg-light.js was its predecessor, replaced there
       # entirely) — using it here too, not dg-light.js, means the TOC snapshot and the generated
@@ -308,9 +296,40 @@ jobs:
           cat /tmp/dg-fastify.log
           exit 1
 
-      - name: Build TOC snapshot
+      # MUST run after dg-fastify.js has booted at least once: settings/{scripts,demo-data,
+      # lang-counts,translator-catalog}.json are gitignored and written by the server at startup,
+      # so on a fresh checkout they don't exist until it has run.
+      #
+      # The bundle is built in TWO phases on purpose, with the TOC snapshot in between: the page
+      # first (build-page.js — dg-node's search/index.html with the native platform and bridge
+      # injected), then the snapshot, then build-assets.js. build-assets.js refuses to run without
+      # www/api-snapshots/toc.json now — the navigator answers /api/toc from it, and when it went
+      # missing the app showed "Failed to load TOC: /api/toc: HTTP 404" on a device.
+      - name: Build the page (www/index.html)
+        run: node build-page.js
+
+      - name: Snapshot the offline TOC (needs dg-fastify.js from the previous step)
         run: npm run build-toc-snapshot -- --base=http://localhost:${{ env.DG_SERVER_PORT }}
 
+      # The app's own checks, run in dg-node against the server that is already up: every bundled
+      # page compared with the live site (the "tile opens the search page" family — a missing path
+      # is not a 404 in a WebView, it is index.html), and no referenced-but-absent file.
+      - name: Check the app's pages against the site
+        env:
+          DG_APP_PATH: ${{ github.workspace }}
+          DG_SITE_URL: http://localhost:${{ env.DG_SERVER_PORT }}
+          DG_PLAYWRIGHT: ${{ github.workspace }}/node_modules/playwright-core
+          PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
+        working-directory: /var/www/html/nodejs
+        run: |
+          node test/app-ui/check-pages.js
+          node test/app-ui/check-assets.js
+
+      - name: Build web assets (www/**)
+        run: node build-assets.js
+
+      # Only now: the page checks above compare the app against this server, and the TOC snapshot
+      # came from it. Stopping it earlier left the checks with nothing to compare against.
       - name: Stop dg-fastify.js
         if: always()
         run: |
@@ -320,16 +339,6 @@ jobs:
             sleep 1
             kill -9 "$PID" 2>/dev/null || true
           fi
-
-      # MUST run after dg-fastify.js has booted at least once: settings/{scripts,demo-data,
-      # lang-counts,translator-catalog}.json are gitignored and written by the server at startup,
-      # so on a fresh checkout they don't exist until it has run.
-      #
-      # `npm run build` = build-page.js (www/index.html from dg-node's search/index.html),
-      # build-core-bundle.js (dg-node's search core, made loadable in a WebView), then
-      # build-assets.js (every asset that page references, plus src/ and sqlite-wasm).
-      - name: Build web bundle (page + assets)
-        run: npm run build
 
       # The checks that run against the BUILT page in a real browser. They belong here and not
       # only on a workstation: the app once shipped with its data worker dead — every search and
@@ -356,18 +365,21 @@ jobs:
           # pin either way, so both packages agree on which Chromium revision to fetch/resolve.
           npx --yes playwright@1.49.1 install --with-deps chromium
 
-      # A FIXTURE, not dist/. The snapshots these checks diff against were captured from a server
-      # running on this same fixture, so serving the real 170MB slice here would fail on the
-      # difference in corpus rather than on anything being wrong. make-fixture-db.js is
-      # deterministic — the file it writes is byte-identical to the one the snapshots came from.
-      - name: Build the fixture database the snapshots were captured from
-        run: |
-          node test/make-fixture-db.js test/fixture.db
-          node build-app-db.js --from=test/fixture.db --langs=ru,en --out=test-dist/dg-mobile.db
+      # The offline library, built by dg-node (the app is no longer a source of database code — see
+      # docs/OFFLINE_PWA_PLAN.md). ~509MB, a couple of minutes, and it is BOTH what the browser
+      # checks below download and what this run publishes as the database artifact, so the thing
+      # tested and the thing shipped are literally the same file.
+      - name: Build the offline library (dg-node)
+        working-directory: /var/www/html/nodejs
+        run: npm run build-mobile-db
+
+      - name: List the offline library
+        working-directory: /var/www/html/nodejs
+        run: ls -lah siteroot/mobile-data/ || { echo "::error::build-mobile-db produced nothing"; exit 1; }
 
       - name: Serve the built app and its database
         run: |
-          node test/serve-local.js www test-dist 8097 &
+          node test/serve-local.js www /var/www/html/nodejs/siteroot/mobile-data 8097 &
           for i in $(seq 1 20); do
             curl -sf http://localhost:8097/ >/dev/null && break
             sleep 0.5
@@ -462,6 +474,29 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      # The AAB is what Google Play takes — an APK built from this same project cannot be uploaded
+      # there, and until now the workflow produced only APKs (owner: "поправишь где надо git action
+      # на сборку апок и aab"). Same keystore, same buildType: `bundleRelease` runs the identical
+      # release variant and only changes the output packaging, so the AAB and the APK are the same
+      # code signed by the same key.
+      - name: Build Android Release AAB (Google Play)
+        if: env.skip != 'true'
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew bundleRelease --stacktrace
+
+      - name: Upload release AAB artifact
+        if: success() && env.skip != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dg-app-full-aab-release-${{ github.run_number }}
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 30
+
       # Kept as an artifact rather than committed anywhere, and attached to the release below on
       # tags so a tagged build is self-contained: the APK plus the exact database it expects.
       - name: Upload offline database
@@ -470,8 +505,8 @@ jobs:
         with:
           name: dg-app-full-db-${{ github.run_number }}
           path: |
-            dist/*.db
-            dist/db-manifest.json
+            /var/www/html/nodejs/siteroot/mobile-data/dg-mobile.db
+            /var/www/html/nodejs/siteroot/mobile-data/db-manifest.json
           if-no-files-found: error
           retention-days: 30
 
@@ -482,8 +517,9 @@ jobs:
           files: |
             android/app/build/outputs/apk/debug/app-debug.apk
             android/app/build/outputs/apk/release/*.apk
-            dist/dg-mobile.db
-            dist/db-manifest.json
+            android/app/build/outputs/bundle/release/*.aab
+            /var/www/html/nodejs/siteroot/mobile-data/dg-mobile.db
+            /var/www/html/nodejs/siteroot/mobile-data/db-manifest.json
           body: |
             UI built from dg-node@${{ steps.pin.outputs.ref }}.
           token: ${{ secrets.GITHUB_TOKEN }}

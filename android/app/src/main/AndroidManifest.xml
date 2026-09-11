@@ -75,11 +75,31 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
+
+        <!-- Holds the foreground slot for the offline-library download (see DgDownloadService):
+             without it Android is free to freeze the WebView process the moment the reader
+             switches away, and the transfer is exactly what the notification is reporting on. -->
+        <service
+            android:name=".DgDownloadService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
     </application>
 
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- The offline-library download keeps running while the app is backgrounded: the
+         ongoing progress notification holds a foreground service slot (DgDownloadService),
+         which is what stops Android treating the WebView process as idle mid-transfer. -->
+    <!-- The download must survive the screen going off: the foreground slot keeps the process,
+         these keep the CPU and the radio (see DgDownloadService.acquireLocks). WAKE_LOCK and the
+         two Wi-Fi permissions are normal permissions — nothing is asked of the reader. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Read by the Network plugin (hasNetworkConsent in app.js) to tell Wi-Fi from cellular
          before asking about the library download. -->

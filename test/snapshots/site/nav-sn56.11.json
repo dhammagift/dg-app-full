@@ -2,9 +2,12 @@
  "status": 200,
  "body": {
   "prev": {
-   "slug": "dn22",
-   "title": "Mahāsatipaṭṭhānasutta"
+   "slug": "sn56.10",
+   "title": "Tiracchānakathāsutta "
   },
-  "next": null
+  "next": {
+   "slug": "sn56.12",
+   "title": "Tathāgatasutta "
+  }
  }
 }

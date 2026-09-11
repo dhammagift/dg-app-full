@@ -3,23 +3,24 @@
   "private": true,
   "description": "Dhamma.gift offline Android/iOS app. The UI is not maintained here — it is generated from a dg-node checkout at build time (see paths.js / DG_NODE_PATH); this repo holds only the app's own files: the fetch shim, the native bridge, the build scripts and the native platform projects.",
   "scripts": {
-    "build": "node build-page.js && node build-core-bundle.js && node build-assets.js",
-    "build-page": "node build-page.js",
-    "build-core-bundle": "node build-core-bundle.js",
+    "build": "node build-page.js && node build-assets.js",
     "build-assets": "node build-assets.js",
-    "build-app-db": "node build-app-db.js",
+    "build-page": "node build-page.js",
     "build-toc-snapshot": "node build-toc-snapshot.js",
-    "sync-android": "cap sync android",
     "serve-dist": "node serve-dist.js",
-    "test-parity": "node test/core-parity.mjs",
+    "serve-local": "node test/serve-local.js www dist 8097",
+    "sync-android": "cap sync android",
     "test-e2e": "node test/e2e-browser.js",
-    "serve-local": "node test/serve-local.js www dist 8097"
+    "test-parity": "node test/core-parity.mjs"
   },
   "dependencies": {
     "@capacitor/app": "^6.0.3",
     "@capacitor/browser": "^6.0.6",
     "@capacitor/core": "^6.2.1",
+    "@capacitor/dialog": "^6.0.3",
     "@capacitor/network": "^6.0.4",
+    "@capacitor/share": "^6.0.4",
+    "@capacitor/status-bar": "^6.0.3",
     "@sqlite.org/sqlite-wasm": "^3.53.0-build1"
   },
   "devDependencies": {

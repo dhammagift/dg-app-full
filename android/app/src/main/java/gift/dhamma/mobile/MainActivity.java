@@ -16,8 +16,26 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // Before super.onCreate(): Capacitor collects the registered plugins while the bridge
+        // itself is being created. DgShortcuts is the dynamic-shortcuts bridge (recently read) —
+        // see its own comment for why dynamic shortcuts are the reason this app is Capacitor.
+        registerPlugin(DgShortcutsPlugin.class);
+        // Download progress in the status bar, so backgrounding the app doesn't hide the 509MB
+        // transfer (the page keeps reporting it; this only mirrors it natively).
+        registerPlugin(DgProgressPlugin.class);
         super.onCreate(savedInstanceState);
         // Deliberately no handleIntent() here — see handledIntent above.
+
+        // And no second WebView, ever. With multiple windows enabled, any target="_blank" or
+        // window.open() made Capacitor open another WebView, which loads the same local origin —
+        // and this origin has no server behind paths like /sn56.48:1.4, so the reader got Chrome's
+        // "Webpage not available (net::ERR_INVALID_RESPONSE)" in a window that also had no back
+        // handling: the only way out was killing the app (owner, screenshots). native-bridge.js now
+        // rewrites those navigations in place (openInPlace); this is the belt to that suspenders —
+        // if anything still asks for a window, the WebView loads it in the current view instead.
+        if (getBridge() != null && getBridge().getWebView() != null) {
+            getBridge().getWebView().getSettings().setSupportMultipleWindows(false);
+        }
     }
 
     @Override
@@ -61,7 +79,15 @@ public class MainActivity extends BridgeActivity {
         if (Intent.ACTION_SEND.equals(intent.getAction()) && "text/plain".equals(intent.getType())) {
             String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
             if (sharedText != null && !sharedText.isEmpty()) {
-                url = "https://localhost/?q=" + Uri.encode(cleanSharedText(sharedText));
+                // RAW text, deliberately: the shared payload ("<text>" plus the source page's URL,
+                // sometimes with a #:~:text= fragment) is cleaned by the SITE, in
+                // search/index.html's `?q=` handling — the same code path a web share_target and a
+                // plain link already go through, and the same thing dg-twa's LauncherActivity does
+                // (it too just passes EXTRA_TEXT through). Cleaning here as well meant two
+                // implementations to fix every time Android's share format changed; the copy that
+                // used to live in this file was removed for exactly that reason. Nothing about
+                // incoming shares belongs in a wrapper.
+                url = "https://localhost/?q=" + Uri.encode(sharedText);
             }
         } else if (Intent.ACTION_VIEW.equals(intent.getAction()) && intent.getData() != null) {
             // A dhamma.gift/f.dhamma.gift/find.dhamma.gift link opened from outside the app (see
@@ -100,23 +126,10 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
-    // Chrome's "Share" on a text selection sends EXTRA_TEXT as `"<selected text>"\n<url>#:~:text=...`
-    // (a quoted copy of the highlight plus a Link-to-Text-Fragment URL). Used verbatim as a search
-    // query that whole block — quotes, URL and all — becomes the literal search string instead of
-    // the sutta line the user actually meant. Keep only the quoted portion.
-    private static String cleanSharedText(String text) {
-        text = text.trim();
-        if (text.length() >= 2 && text.charAt(0) == '"' && text.charAt(text.length() - 1) == '"') {
-            return text.substring(1, text.length() - 1);
-        }
-        // Multi-line share (quote on its own line, URL on the next) without a matching end quote
-        // caught above — still strip a leading straight or curly quote and take just that line.
-        int newline = text.indexOf('\n');
-        String firstLine = (newline >= 0 ? text.substring(0, newline) : text).trim();
-        if (firstLine.length() >= 2 && (firstLine.charAt(0) == '"' || firstLine.charAt(0) == '“')) {
-            char last = firstLine.charAt(firstLine.length() - 1);
-            if (last == '"' || last == '”') return firstLine.substring(1, firstLine.length() - 1);
-        }
-        return text;
-    }
+    // cleanSharedText() used to live here. Removed on purpose: the site cleans `?q=` itself
+    // (search/index.html — strips a trailing source URL, then one wrapping quote pair), which is
+    // the one place that also serves the web share_target, the PWA and the TWA. Keeping a second
+    // copy in the wrapper is how the two drift apart, and Android's share format is not stable
+    // enough for "fix it in every shell" to be a plan. dg-twa's LauncherActivity does the same:
+    // it passes EXTRA_TEXT straight through.
 }
