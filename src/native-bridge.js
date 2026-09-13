@@ -560,9 +560,19 @@
             // By pathname, not the raw href: the reading-mode menus build absolute
             // https://localhost/read/ links, which a regex on the raw href never matched.
             var mapped = onlineUrlFor(href);
-            if (mapped && new URL(href, location.href).origin === location.origin) {
+            var u = new URL(href, location.href);
+            if (mapped && u.origin === location.origin) {
                 e.preventDefault();
                 openExternal(mapped);
+                return;
+            }
+            // Capacitor falls back to index.html only when the last path segment has no dot, so a
+            // plain link to /an3.57:1.3 (the Favorites/History sheet rows) was looked up as a file:
+            // "Webpage not available ... net::ERR_INVALID_RESPONSE". Reload through the root with
+            // the same _nativeRoute handoff MainActivity uses (rewriteNativeShortcutRoute above).
+            if (u.origin === location.origin && /\.[^/]*$/.test(u.pathname) && !/\.[a-z]{2,5}$/i.test(u.pathname)) {
+                e.preventDefault();
+                location.href = '/?_nativeRoute=' + encodeURIComponent(u.pathname + u.search + u.hash);
             }
             return;
         }
