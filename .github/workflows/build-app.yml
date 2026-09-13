@@ -469,26 +469,12 @@ jobs:
       - name: Decode release keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 || secrets.KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
             echo "ANDROID_KEYSTORE_BASE64 secret not set — skipping the release build this run."
             echo "skip=true" >> "$GITHUB_ENV"
           else
             echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
-            # Which keystore the secret holds, without revealing it: compare with
-            # `sha256sum android.keystore | cut -c1-16` next to the readme (gift.dhamma.mobile's own key).
-            echo "keystore: $(stat -c %s "$RUNNER_TEMP/release.keystore") bytes, sha256 $(sha256sum "$RUNNER_TEMP/release.keystore" | cut -c1-16)"
-            # Which password secret opens it (yes/no only, never the value).
-            for name in ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_PASSWORD KEYSTORE_PASSWORD; do
-              v="${!name}"; [ -z "$v" ] && { echo "$name: not set"; continue; }
-              echo "$name: ${#v} chars"
-              keytool -list -keystore "$RUNNER_TEMP/release.keystore" -storepass "$(printf %s "$v" | tr -d '\r\n')" >/dev/null 2>&1 \
-                && echo "$name: opens the keystore" || echo "$name: does NOT open the keystore"
-            done
-            [ "$ANDROID_KEYSTORE_PASSWORD" = "$ANDROID_KEY_PASSWORD" ] && echo "store and key password secrets: same" || echo "store and key password secrets: different"
             echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
           fi
 
@@ -502,7 +488,7 @@ jobs:
         # The signing certificate's SHA-256 is public: it is what assetlinks.json must list for gift.dhamma.mobile.
         run: |
           ./gradlew assembleRelease --stacktrace
-          keytool -printcert -jarfile app/build/outputs/apk/release/app-release.apk | grep -m1 'SHA256:' | sed 's/^/release cert /'
+          "$ANDROID_HOME"/build-tools/36.0.0/apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk | grep -m1 'SHA-256'
 
       - name: Upload release APK artifact
         if: success() && env.skip != 'true'
