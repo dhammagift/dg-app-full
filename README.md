@@ -129,8 +129,9 @@ is pinned in **`DG_NODE_REF`** (a branch name or tag); a `workflow_dispatch` run
   database already carries.
 - **The regex search path scans the whole table** — a few seconds rather than milliseconds,
   because FTS5 cannot express alternation. Marked `ponytail:` in the core.
-- **`?script=` (Devanagari, Thai, …) does not work offline** — it needs Aksharamukha, which runs
-  Python under Pyodide on the server. This was already true before.
+- **`?script=` offline covers the main Pali scripts only** (dg-node's pali-script.js: Devanagari,
+  Thai, Sinhala, Khmer, Burmese, Tibetan, ...). Other scripts and word-click transliteration back to
+  IAST (/api/transliterate) still need the network.
 - **iOS has not been started** — `npx cap add ios` has never been run. Nothing about the data
   layer is Android-specific, so this is packaging work rather than a port.
 - **Parity snapshots are from 2026-09-05** (`test/snapshots/site`, a fixture database). CI compares the

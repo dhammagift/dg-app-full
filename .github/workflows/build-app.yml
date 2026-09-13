@@ -365,6 +365,11 @@ jobs:
           node test/app-ui/check-pages.js
           node test/app-ui/check-assets.js
 
+      # The parity reference: what THIS server answers, on the dg.db this run publishes below. The
+      # committed test/snapshots/site came from a 2026-09-05 fixture database and no longer matched.
+      - name: Capture the site's answers (parity reference)
+        run: node test/capture.js --base=http://localhost:${{ env.DG_SERVER_PORT }} --out=test/snapshots/site
+
       # Only now: the page checks above compare the app against this server, and the TOC snapshot
       # came from it. Stopping it earlier left the checks with nothing to compare against.
       - name: Stop dg-fastify.js
@@ -405,7 +410,11 @@ jobs:
         env:
           DG_PLAYWRIGHT: ${{ github.workspace }}/node_modules/playwright-core
           PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
-        run: node test/e2e-browser.js 2>&1 | tee e2e-output.log
+        # pipefail: without it `| tee` reported success whatever e2e-browser.js returned, so a DIFF
+        # never failed the build.
+        run: |
+          set -o pipefail
+          node test/e2e-browser.js 2>&1 | tee e2e-output.log
 
       # Job log downloads need admin rights on this repo, which this workflow's own token doesn't
       # have — an artifact is the one way to actually read what this step printed when it fails
@@ -456,9 +465,10 @@ jobs:
       # (Settings -> Secrets and variables -> Actions), populated once from android.keystore's own
       # local android.keystore.readme (gitignored, never committed) and unrelated to Gradle's
       # own debug-keystore auto-signing above, which needs none of this.
+      # Secret names: this repo's ANDROID_* or dg-twa's KEYSTORE_* — whichever set exists.
       - name: Decode release keystore
         env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 || secrets.KEYSTORE_BASE64 }}
         run: |
           if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
             echo "ANDROID_KEYSTORE_BASE64 secret not set — skipping the release build this run."
@@ -472,9 +482,9 @@ jobs:
         if: env.skip != 'true'
         working-directory: android
         env:
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD || secrets.KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || secrets.KEYSTORE_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD || secrets.KEY_PASSWORD }}
         run: ./gradlew assembleRelease --stacktrace
 
       - name: Upload release APK artifact
@@ -495,9 +505,9 @@ jobs:
         if: env.skip != 'true'
         working-directory: android
         env:
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD || secrets.KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || secrets.KEYSTORE_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD || secrets.KEY_PASSWORD }}
         run: ./gradlew bundleRelease --stacktrace
 
       - name: Upload release AAB artifact

@@ -50,6 +50,8 @@ const ASSETS = [
     { url: '/assets/js/dict-mode-shared.js', sources: [f('public/overrides/js/dict-mode-shared.js')] },
     // Lazy-loaded by autopali.js for fuzzy Pali suggestions.
     { url: '/assets/js/pali-skeleton.js', sources: [f('public/overrides/js/pali-skeleton.js')] },
+    // Imported by the offline worker for ?script= conversion (Devanagari, Thai, ...).
+    { url: '/assets/js/pali-script.js', sources: [f('public/overrides/js/pali-script.js')] },
     { url: '/manifest.json', sources: [f('configs/manifest.json')] },
     { url: '/nodejs/res/menu-links.json', sources: [f('configs/search/menu-links.json')] },
     { url: '/assets/img/favico-noglass.png', sources: [l('img/favico-noglass.png')] },

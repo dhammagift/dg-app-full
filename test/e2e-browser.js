@@ -18,7 +18,7 @@ const { chromium } = require(PLAYWRIGHT);
 // history for why that stopped being safe to assume).
 const BROWSER = process.env.DG_CHROMIUM || chromium.executablePath();
 
-const SNAPSHOTS = path.join(__dirname, 'snapshots', 'site');
+const SNAPSHOTS = process.env.DG_SNAPSHOTS || path.join(__dirname, 'snapshots', 'site');
 const BASE = process.env.DG_BASE_URL || 'http://localhost:8097';
 
 // The same request matrix capture.js uses, minus the ones served from static snapshots.
@@ -183,8 +183,12 @@ const CASES = [
         } else {
             differing.push(name);
             console.log('DIFF  ' + name);
-            console.log('   site: ' + a.slice(0, 260));
-            console.log('   app : ' + b.slice(0, 260));
+            // Around the first differing character, not the (usually identical) head of the JSON.
+            let i = 0; while (i < a.length && a[i] === b[i]) i++;
+            const from = Math.max(0, i - 120);
+            console.log(`   first difference at char ${i}`);
+            console.log('   site: ' + a.slice(from, i + 160));
+            console.log('   app : ' + b.slice(from, i + 160));
         }
     }
     console.log(`\n${same}/${CASES.length} identical to the site` +
