@@ -578,14 +578,10 @@
                 .catch(function () { /* nothing to show; the row stays empty */ });
         }
 
-        var App = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
-        if (App && typeof App.getInfo === 'function') {
-            App.getInfo()
-                .then(function (info) { show('v' + info.version + ' (' + info.build + ')'); })
-                .catch(function (e) { console.error('[dg-version] App.getInfo failed', e); fromBuildFile(); });
-        } else {
-            fromBuildFile();
-        }
+        // Only the build file: settings opens in an iframe over the page, where App.getInfo() never
+        // answered and the row stayed blank on a device. The file is written from the same
+        // build.gradle versionName/versionCode, so it is the same answer.
+        fromBuildFile();
     }
 
     // Settings → "Recent texts in app shortcuts" switch (row injected by build-assets.js).
