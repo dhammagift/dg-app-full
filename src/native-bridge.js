@@ -380,7 +380,8 @@
     // Shared with the click listener further down so both agree on what "not bundled" means.
     // /memo is NOT here any more: it ships inside the app (see copyMemoApp in build-assets.js).
     // /memorize is: that is the legacy PHP reader in memorisation mode, and it cannot run here.
-    var NOT_BUNDLED_RE = /^\/(ru\/)?(dict|memorize|login|docs)(\/|$)/;
+    // read/d/rev/frev/ml, r.php, history.php: the legacy PHP reading modes the menus link to, never bundled.
+    var NOT_BUNDLED_RE = /^\/(ru\/)?(dict|memorize|login|docs|read|d|rev|frev|ml)(\/|$)|^\/(ru\/)?(r|history)\.php$/;
 
     // Where a link has to go outside this WebView, or null when it opens here. /4nt (the edition
     // comparison) is never bundled; its online copy is s.dhamma.gift without the /4nt prefix, the
@@ -492,9 +493,12 @@
         var a = e.target.closest('a[href]');
         if (a) {
             var href = a.getAttribute('href');
-            if (NOT_BUNDLED_RE.test(href) || /^\/4nt(\/|$)/.test(href)) {
+            // By pathname, not the raw href: the reading-mode menus build absolute
+            // https://localhost/read/ links, which a regex on the raw href never matched.
+            var mapped = onlineUrlFor(href);
+            if (mapped && new URL(href, location.href).origin === location.origin) {
                 e.preventDefault();
-                openExternal(onlineUrlFor(href));
+                openExternal(mapped);
             }
             return;
         }
