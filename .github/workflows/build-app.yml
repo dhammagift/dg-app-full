@@ -475,6 +475,9 @@ jobs:
             echo "skip=true" >> "$GITHUB_ENV"
           else
             echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+            # Which keystore the secret holds, without revealing it: compare with
+            # `sha256sum android.keystore | cut -c1-16` next to the readme (gift.dhamma.mobile's own key).
+            echo "keystore: $(stat -c %s "$RUNNER_TEMP/release.keystore") bytes, sha256 $(sha256sum "$RUNNER_TEMP/release.keystore" | cut -c1-16)"
             echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
           fi
 

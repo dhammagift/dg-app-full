@@ -23,13 +23,14 @@ android {
     // falls through to unsigned, exactly like this project has always behaved before this key
     // existed, rather than failing the whole build for a dev machine that isn't set up to sign.
     def releaseKeystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
+    // trim(): a secret pasted with a trailing newline reads as "keystore password was incorrect".
     if (releaseKeystorePath) {
         signingConfigs {
             release {
                 storeFile file(releaseKeystorePath)
-                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
-                keyAlias System.getenv("ANDROID_KEY_ALIAS")
-                keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")?.trim()
+                keyAlias System.getenv("ANDROID_KEY_ALIAS")?.trim()
+                keyPassword System.getenv("ANDROID_KEY_PASSWORD")?.trim()
             }
         }
     }
