@@ -41,8 +41,15 @@ on:
         description: 'dg-node branch or tag to build the UI from (default: contents of DG_NODE_REF)'
         required: false
         type: string
+      online_origin:
+        description: 'Site the app talks to (default: test.dhamma.gift; tags build for dhamma.gift)'
+        required: false
+        type: string
 
 env:
+  # Everyday builds are test APKs against test.dhamma.gift, so app work never needs a prod deploy
+  # first. A tag push (a real release, the AAB for Google Play) targets dhamma.gift.
+  DG_ONLINE_ORIGIN: ${{ inputs.online_origin || (startsWith(github.ref, 'refs/tags/') && 'https://dhamma.gift') || 'https://test.dhamma.gift' }}
   REPOS_ROOT: ${{ github.workspace }}/repos
   DG_NODE_PATH: /var/www/html/nodejs
   # Port dg-fastify.js is started on for the TOC snapshot — see that step for why it is pinned.

@@ -24,7 +24,8 @@
 (function () {
     'use strict';
 
-    var ONLINE_ORIGIN = 'https://dhamma.gift';
+    // Test APKs are built with DG_ONLINE_ORIGIN=https://test.dhamma.gift (build-assets.js prepends it).
+    var ONLINE_ORIGIN = window.DG_ONLINE_ORIGIN || 'https://dhamma.gift';
     var STATE_KEY = 'dg.offline.state';
     var WANT_DATA_KEY = 'dg.offline.wantData';
     var DECLINED_KEY = 'dg.app.downloadDeclined';

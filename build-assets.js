@@ -489,14 +489,25 @@ function copyOfflineLayer() {
     copyTree(from, to);
     // The native platform wins: the page loads /offline/platform.js first, and dg-node's browser
     // copy (already in `to`) returns early because window.dgPlatform exists.
-    fs.copyFileSync(path.join(SRC, 'platform.js'), path.join(to, 'platform.js'));
+    copyNative('platform.js', path.join(to, 'platform.js'));
     return fs.readdirSync(to).length;
+}
+
+// DG_ONLINE_ORIGIN=https://test.dhamma.gift makes a test APK download the library, call the online
+// API and open site-only pages on the test site. Unset = https://dhamma.gift (the files' default).
+const ONLINE_ORIGIN = process.env.DG_ONLINE_ORIGIN || '';
+if (ONLINE_ORIGIN && !/^https:\/\/([a-z0-9-]+\.)*dhamma\.gift$/.test(ONLINE_ORIGIN)) {
+    throw new Error(`DG_ONLINE_ORIGIN must be https://[sub.]dhamma.gift, got "${ONLINE_ORIGIN}"`);
+}
+function copyNative(name, to) {
+    const head = ONLINE_ORIGIN ? `window.DG_ONLINE_ORIGIN = ${JSON.stringify(ONLINE_ORIGIN)};\n` : '';
+    fs.writeFileSync(to, head + fs.readFileSync(path.join(SRC, name), 'utf8'));
 }
 
 // The app's own web files. Everything else the page needs (the whole offline data layer, the
 // reader, the search UI) is copied from dg-node — see copyOfflineLayer above and ASSETS.
 function copyNativeFiles() {
-    fs.copyFileSync(path.join(SRC, 'native-bridge.js'), path.join(WWW, 'native-bridge.js'));
+    copyNative('native-bridge.js', path.join(WWW, 'native-bridge.js'));
     return 1;
 }
 

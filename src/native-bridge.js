@@ -39,7 +39,7 @@
         // be undefined here, since this runs at parse time.
         var EXTERNAL_ROUTES = /^\/(ru\/)?(dict|memorize|login|docs)(\/|$)/;
         if (EXTERNAL_ROUTES.test(route)) {
-            openExternal('https://dhamma.gift' + route);
+            openExternal((window.DG_ONLINE_ORIGIN || 'https://dhamma.gift') + route);
             return;
         }
         // The memorisation app IS bundled now (build-assets.js copies siteroot/memo), and it is a
@@ -416,7 +416,7 @@
             var u = new URL(url, location.href);
             if (u.origin !== location.origin) return /^javascript:/i.test(u.href) ? null : u.href;
             if (/^\/4nt(\/|$)/.test(u.pathname)) return 'https://s.dhamma.gift' + u.pathname.replace(/^\/4nt/, '') + u.search + u.hash;
-            if (NOT_BUNDLED_RE.test(u.pathname)) return 'https://dhamma.gift' + u.pathname + u.search + u.hash;
+            if (NOT_BUNDLED_RE.test(u.pathname)) return ONLINE_ORIGIN + u.pathname + u.search + u.hash;
         } catch (e) { /* not a URL */ }
         return null;
     }
@@ -516,7 +516,8 @@
     // (target="_blank" on these same-origin-relative links would otherwise just try to navigate
     // the WebView to a path that doesn't exist locally — see build-assets.js/app.js's "/toc/..."
     // 404 comments).
-    var ONLINE_ORIGIN = 'https://dhamma.gift';
+    // Shared/copied links (toSiteUrls) stay on dhamma.gift; only the app's own trips follow a test origin.
+    var ONLINE_ORIGIN = window.DG_ONLINE_ORIGIN || 'https://dhamma.gift';
     // A bundled directory (/memo/) is a folder with an index.html; Capacitor answers the folder URL
     // itself with the app's root index.html, so the reader got a search for "memo" instead.
     var BUNDLED_DIRS = ['/memo/', '/assets/diff/'];
