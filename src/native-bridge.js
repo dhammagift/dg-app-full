@@ -171,33 +171,56 @@
     // Sharing out: the Web Share API, backed by the native share sheet
     // ---------------------------------------------------------------------------------------
 
-    // Android's WebView does expose navigator.share on recent versions, but only when the app
-    // declares the intent filters it needs, and it has been unreliable across WebView builds;
-    // iOS's WKWebView exposes it behind its own quirks. Capacitor's Share plugin goes through the
-    // platform's own sheet (Android ACTION_SEND chooser / iOS UIActivityViewController) and needs
-    // nothing from the page. Defined only when the platform's own API is missing, so on a device
-    // where navigator.share works the site's existing code keeps using it unchanged.
-    (function installWebShareFallback() {
+    // A link shared or copied out of the app has to work for whoever receives it. The page's own
+    // origin is https://localhost, which exists only inside this app (issue #8: a shared
+    // "https://localhost/an3.1:1.1?s=…"). Every way out — the share sheet, the clipboard API and a
+    // plain copy — carries the real site's address instead.
+    var APP_ORIGIN_RE = new RegExp(location.origin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+    function toSiteUrls(text) {
+        return typeof text === 'string' ? text.replace(APP_ORIGIN_RE, 'https://dhamma.gift') : text;
+    }
+
+    // The WebView's own navigator.share is preferred when it exists (it was unreliable across
+    // builds, hence the fallback); either way the shared data is rewritten first. Capacitor's Share
+    // plugin goes through the platform's own sheet (Android ACTION_SEND chooser).
+    (function installWebShare() {
         var Share = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Share;
-        if (!Share || typeof Share.share !== 'function') return;
-        if (typeof navigator.share === 'function') return;
+        var nativeShare = typeof navigator.share === 'function' ? navigator.share.bind(navigator) : null;
+        if (!nativeShare && !(Share && typeof Share.share === 'function')) return;
         try {
             Object.defineProperty(navigator, 'share', {
                 configurable: true,
                 writable: true,
                 value: function (data) {
-                    var payload = data || {};
-                    return Share.share({
-                        title: payload.title,
-                        text: payload.text,
-                        url: payload.url,
-                        dialogTitle: payload.title,
-                    }).then(function () { return undefined; });
+                    var p = data || {};
+                    var out = { title: p.title, text: toSiteUrls(p.text), url: toSiteUrls(p.url) };
+                    if (nativeShare) return nativeShare(out);
+                    return Share.share({ title: out.title, text: out.text, url: out.url, dialogTitle: out.title })
+                        .then(function () { return undefined; });
                 },
             });
         } catch (e) {
             console.log('[dg-share] could not install navigator.share:', (e && e.message) || e);
         }
+    })();
+
+    (function rewriteCopiedLinks() {
+        var cb = navigator.clipboard;
+        if (cb && typeof cb.writeText === 'function') {
+            var write = cb.writeText.bind(cb);
+            try { cb.writeText = function (text) { return write(toSiteUrls(text)); }; } catch (e) { /* read-only */ }
+        }
+        // copyToClipboard.js falls back to execCommand('copy') on a selection: fixed on the way out.
+        document.addEventListener('copy', function (e) {
+            var el = document.activeElement;
+            var sel = (el && /^(TEXTAREA|INPUT)$/.test(el.tagName) && typeof el.selectionStart === 'number')
+                ? el.value.slice(el.selectionStart, el.selectionEnd)
+                : String(window.getSelection ? window.getSelection() : '');
+            var fixed = toSiteUrls(sel);
+            if (!sel || fixed === sel || !e.clipboardData) return;
+            e.clipboardData.setData('text/plain', fixed);
+            e.preventDefault();
+        }, true);
     })();
 
     // ---------------------------------------------------------------------------------------
