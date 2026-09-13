@@ -46,6 +46,10 @@ const ASSETS = [
     // ---- head, eager ----
     { url: '/assets/js/dhamma-i18n.js', sources: [f('public/overrides/js/dhamma-i18n.js')] },
     { url: '/assets/js/mirror-link.js', sources: [f('public/overrides/js/mirror-link.js')] },
+    { url: '/assets/js/ai-search.js', sources: [f('public/overrides/js/ai-search.js')] },
+    { url: '/assets/js/dict-mode-shared.js', sources: [f('public/overrides/js/dict-mode-shared.js')] },
+    // Lazy-loaded by autopali.js for fuzzy Pali suggestions.
+    { url: '/assets/js/pali-skeleton.js', sources: [f('public/overrides/js/pali-skeleton.js')] },
     { url: '/manifest.json', sources: [f('configs/manifest.json')] },
     { url: '/nodejs/res/menu-links.json', sources: [f('configs/search/menu-links.json')] },
     { url: '/assets/img/favico-noglass.png', sources: [l('img/favico-noglass.png')] },
@@ -332,6 +336,10 @@ function injectAppVersionRow() {
   </section>`;
     const withRow = `<div class="row-control"><button class="btn btn-danger" type="button" id="resetAllBtn">Сбросить</button></div>
       </div>
+      <div class="row" id="dgDynShortcutsRow">
+        <div><p class="row-title" id="dgDynShortcutsTitle">Recent texts in app shortcuts</p><p class="row-desc" id="dgDynShortcutsDesc">Long-press the app icon.</p></div>
+        <div class="row-control"><span class="switch"><input type="checkbox" id="dgDynShortcuts" checked><span class="track"></span><span class="thumb"></span></span></div>
+      </div>
       <div class="row" id="dgAppVersionRow" style="cursor:pointer">
         <div><p class="row-title" id="dgAppVersionTitle">App version</p><p class="row-desc" id="dgAppVersionDesc">&nbsp;</p></div>
       </div>
@@ -556,6 +564,8 @@ const REFERENCE_EXCEPTIONS = [
     /^\/assets\/materials\/(cases|conjugations|pali_cases_ru)\.html$/,
     /^\/assets\/grammar\/numerals(_declension)?\.html$/,
     /^\/assets\/common\/modalsSC\.html$/,
+    // Named only in a search-core comment: AI drafts are for lbl.html and never shipped (owner).
+    /^\/assets\/texts\/ai\//,
 ];
 
 // The check that would have caught History/Materials/grammar before a device did. It walks the

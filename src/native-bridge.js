@@ -67,6 +67,9 @@
     // bare commands and memo recordings, none of them a text — and the designed shortcuts were
     // pushed out of the menu entirely.)
     var SHORTCUTS_MAX = 2;
+    // Settings switch "Recent texts in app shortcuts" (dg-app-full#4). 'off' disables them; any
+    // other value (including none) keeps the default, on. Static shortcuts are unaffected.
+    var SHORTCUTS_FLAG = 'dgDynamicShortcuts';
 
     function isRu() {
         return (localStorage.getItem('dhammaLanguage') || localStorage.getItem('siteLanguage') || 'en') === 'ru';
@@ -104,6 +107,8 @@
     }
 
     function collectRecent() {
+        // An empty list is still pushed, and that is what removes the ones already in the launcher.
+        if (localStorage.getItem(SHORTCUTS_FLAG) === 'off') return [];
         var items = [];
         var seen = {};
         function push(id, label, route, rank) {
@@ -583,6 +588,21 @@
         }
     }
 
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fillVersionRow);
-    else fillVersionRow();
+    // Settings → "Recent texts in app shortcuts" switch (row injected by build-assets.js).
+    function wireShortcutsToggle() {
+        var box = document.getElementById('dgDynShortcuts');
+        if (!box) return;
+        var ru = isRu();
+        document.getElementById('dgDynShortcutsTitle').textContent = ru ? 'Недавние тексты в ярлыках' : 'Recent texts in app shortcuts';
+        document.getElementById('dgDynShortcutsDesc').textContent = ru ? 'Меню долгого нажатия на значок приложения.' : 'Long-press menu of the app icon.';
+        box.checked = localStorage.getItem(SHORTCUTS_FLAG) !== 'off';
+        box.addEventListener('change', function () {
+            localStorage.setItem(SHORTCUTS_FLAG, box.checked ? 'on' : 'off');
+            pushDynamicShortcuts();
+        });
+    }
+
+    function onReady() { fillVersionRow(); wireShortcutsToggle(); }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onReady);
+    else onReady();
 })();

@@ -37,9 +37,9 @@ const LEGACY_ASSETS = resolveLegacyAssets();
 // Fail loudly and with the fix in the message — a missing dg-node checkout otherwise surfaces as
 // a pile of "MISSING: /assets/..." warnings that look like a content problem, not a setup one.
 function requireNodeRoot() {
-    if (!fs.existsSync(path.join(NODEJS_ROOT, 'dg-light.js'))) {
+    if (!fs.existsSync(path.join(NODEJS_ROOT, 'dg-fastify.js'))) {
         throw new Error(
-            `dg-node not found at ${NODEJS_ROOT} (no dg-light.js there).\n` +
+            `dg-node not found at ${NODEJS_ROOT} (no dg-fastify.js there).\n` +
             `Point DG_NODE_PATH at a dg-node checkout, e.g. DG_NODE_PATH=../dg-node npm run build-assets`
         );
     }

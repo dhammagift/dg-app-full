@@ -4,8 +4,8 @@
      Icons come from dg-twa (owner: "шорткаты и иконки неактуальные возьми из dg-twa там последняя
      версия") — drawable-*/shortcut_N.png, mirrored here.
 
-     The order below is the owner's and matches the site manifest (docs/PWA_SHORTCUTS.md):
-     Contents, Favorites & history, Dictionary, Memo. It has to be STATIC — the first attempt kept
+     The order below is dg-twa's (app/build.gradle twaManifest.shortcuts, owner: "twa актуальнее"):
+     Contents, Dictionary, Favorites & history, Memo. It has to be STATIC — the first attempt kept
      Contents/Favorites as dynamic shortcuts with rank 0/1, on the assumption that Android lists
      dynamic ones above static ones. On the owner's launcher the opposite happens: the static pair
      (Dictionary, Memo) came first and the pinned two fell to the bottom, which is exactly the
@@ -38,19 +38,6 @@
         </intent>
     </shortcut>
     <shortcut
-        android:shortcutId="favorites_history"
-        android:enabled="true"
-        android:icon="@drawable/shortcut_0"
-        android:shortcutShortLabel="@string/shortcut_fav_short"
-        android:shortcutLongLabel="@string/shortcut_fav_long">
-        <intent
-            android:action="android.intent.action.MAIN"
-            android:targetPackage="gift.dhamma.mobile"
-            android:targetClass="gift.dhamma.mobile.MainActivity">
-            <extra android:name="route" android:value="/4as" />
-        </intent>
-    </shortcut>
-    <shortcut
         android:shortcutId="dictionary"
         android:enabled="true"
         android:icon="@drawable/shortcut_1"
@@ -61,6 +48,19 @@
             android:targetPackage="gift.dhamma.mobile"
             android:targetClass="gift.dhamma.mobile.MainActivity">
             <extra android:name="route" android:value="/dict" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="favorites_history"
+        android:enabled="true"
+        android:icon="@drawable/shortcut_0"
+        android:shortcutShortLabel="@string/shortcut_fav_short"
+        android:shortcutLongLabel="@string/shortcut_fav_long">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="gift.dhamma.mobile"
+            android:targetClass="gift.dhamma.mobile.MainActivity">
+            <extra android:name="route" android:value="/4as" />
         </intent>
     </shortcut>
     <shortcut
