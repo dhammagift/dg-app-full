@@ -30,6 +30,8 @@ const SETTLE = +(process.env.DG_LINK_SETTLE || 2500);
 const LEGACY = /^\/(ru\/)?(read|r|d|ml|mt|multi|mlth|memorize|th)(\/|$)|^\/(ru\/)?(read|history)\.php$/;
 
 function verdict(link, o) {
+    // Links that exist only in some state of the page (an opened sheet) cannot be clicked from a clean load.
+    if (o.error === 'link no longer on the page') return ['SKIP', o.error];
     if (o.error) return ['FAIL', 'probe error: ' + o.error];
     if (o.pageErrors.length) return ['FAIL', 'JS error: ' + o.pageErrors[0]];
     if (o.popups.length) return ['FAIL', 'opened a second window: ' + o.popups[0]];
@@ -56,10 +58,14 @@ function verdict(link, o) {
 }
 
 async function ready(page, url) {
+    // A dotted route (/sn56.11) cannot be loaded directly on the device either: open it the way
+    // MainActivity does, through the root with _nativeRoute (native-bridge.js).
+    const last = url.split('?')[0].replace(/\/+$/, '').split('/').pop();
+    const target = BASE + (last.includes('.') && !/\.html?$/.test(last) ? '/?_nativeRoute=' + encodeURIComponent(url) : url);
     // A clicked link may still be reloading the page: that navigation interrupts ours, so go again.
-    await page.goto(BASE + url, { waitUntil: 'domcontentloaded', timeout: 60000 })
+    await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 60000 })
         .catch((e) => /interrupted by another navigation/.test(e.message)
-            ? page.goto(BASE + url, { waitUntil: 'domcontentloaded', timeout: 60000 })
+            ? page.goto(target, { waitUntil: 'domcontentloaded', timeout: 60000 })
             : Promise.reject(e));
     await page.evaluate(() => window.dgOfflineLibrary).catch(() => {});
     await page.waitForTimeout(SETTLE);
@@ -99,7 +105,7 @@ async function ready(page, url) {
     let page = attach(ctx.pages()[0] || await ctx.newPage());
 
     const seen = new Set();
-    const counts = { OK: 0, NOOP: 0, FAIL: 0 };
+    const counts = { OK: 0, NOOP: 0, SKIP: 0, FAIL: 0 };
     const fails = [];
     for (const pageUrl of PAGES) {
         await ready(page, pageUrl);
@@ -156,7 +162,7 @@ async function ready(page, url) {
         }
     }
     await ctx.close();
-    console.log(`\n${counts.OK} ok, ${counts.NOOP} did nothing, ${counts.FAIL} failed`);
+    console.log(`\n${counts.OK} ok, ${counts.NOOP} did nothing, ${counts.SKIP} skipped, ${counts.FAIL} failed`);
     if (fails.length) console.log('\nFAILED:\n' + fails.join('\n'));
     process.exit(fails.length ? 1 : 0);
 })().catch((e) => { console.error('links.js crashed:', e); process.exit(1); });
