@@ -404,7 +404,8 @@
     // /memo is NOT here any more: it ships inside the app (see copyMemoApp in build-assets.js).
     // /memorize is: that is the legacy PHP reader in memorisation mode, and it cannot run here.
     // read/d/rev/frev/ml, r.php, history.php: the legacy PHP reading modes the menus link to, never bundled.
-    var NOT_BUNDLED_RE = /^\/(ru\/)?(dict|memorize|login|docs|read|d|rev|frev|ml)(\/|$)|^\/(ru\/)?(r|history)\.php$/;
+    // documents (PDFs), legacy.suttacentral.net, th, assets/br and the timers are site-only too.
+    var NOT_BUNDLED_RE = /^\/(ru\/)?(dict|memorize|login|docs|read|d|rev|frev|ml|documents|legacy\.suttacentral\.net|th)(\/|$)|^\/(ru\/)?(r|history)\.php$|^\/(ru\/)?assets\/(br|repeat-timer|pomodoro-timer)(\/|$)/;
 
     // Where a link has to go outside this WebView, or null when it opens here. /4nt (the edition
     // comparison) is never bundled; its online copy is s.dhamma.gift without the /4nt prefix, the
@@ -440,6 +441,8 @@
         if (ext) { openExternal(ext); return true; }
         var dirIndex = bundledIndexFor(url);
         if (dirIndex) { location.href = dirIndex; return true; }
+        var pm = /^\/(ru\/)?(bi)?pm\.php$/.exec(new URL(url, location.href).pathname);
+        if (pm) url = '/toc/' + (pm[2] ? 'bipm' : 'pm');
         try {
             var u = new URL(url, location.href);
             // A real file (a bundled page such as /assets/common/history.html or
@@ -547,6 +550,11 @@
             if (dirIndex) {
                 e.preventDefault();
                 location.href = dirIndex;
+                return;
+            }
+            if (/^\/(ru\/)?(bi)?pm\.php(\?|$)/.test(href)) {
+                e.preventDefault();
+                openInPlace(href);
                 return;
             }
             // By pathname, not the raw href: the reading-mode menus build absolute

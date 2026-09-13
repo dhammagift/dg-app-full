@@ -107,6 +107,13 @@
     // decline, and the 'offline-data-download-declined' rejection lands in app.js's
     // dgOfflineLibrary promise, not here — so app.js dispatches this event on that exact
     // rejection (small site-side hook) and the flag is remembered.
+    // A library the reader deleted in Settings must not come straight back: without this the next
+    // launch saw "nothing stored, never declined" and started the 216 MB download on its own. The
+    // same flag as a decline; it clears once a library is present again (Settings → Download).
+    window.addEventListener('message', function (event) {
+        if (event.origin !== location.origin || !event.data || !event.data.dgOfflineDeleteRequest) return;
+        try { localStorage.setItem(DECLINED_KEY, '1'); localStorage.removeItem(WANT_DATA_KEY); } catch (e) { /* private mode */ }
+    });
     window.addEventListener('dg:download-declined', function () {
         try { localStorage.setItem(DECLINED_KEY, '1'); } catch (e) { /* ignore */ }
     });
