@@ -28,14 +28,11 @@ src/                     the app's own web files (committed)
   offline-library-settings.js
 paths.js                 where dg-node and the legacy asset tree live (DG_NODE_PATH)
 build-page.js            www/index.html      <- dg-node's search/index.html + 2 declarative edits
-build-core-bundle.js     www/core-bundle.mjs <- dg-node's core/search-core.js, made WebView-loadable
-build-assets.js          www/assets, www/reader, ... <- dg-node + legacy assets + src/ + sqlite-wasm
-build-toc-snapshot.js    www/api-snapshots/*.json <- a running dg-light.js
-build-app-db.js          dist/dg-mobile.db   <- a language slice of dg-node's dg.db
+build-assets.js          www/assets, www/reader, ... <- dg-node (incl. its built offline layer) + legacy assets + src/
+build-toc-snapshot.js    www/api-snapshots/*.json <- a running dg-fastify.js
 android/                 Capacitor Android project, incl. hand-written native source
 test/                    the fixture, the site snapshots, and the parity checks
 www/                     GENERATED, gitignored
-dist/                    GENERATED, gitignored (~170 MB)
 ```
 
 ## How the app works at runtime
@@ -44,7 +41,7 @@ There is no server on the device, and no Node runtime either.
 
 `src/app.js` replaces `window.fetch` before any other script on the page can run. What answers
 those calls is **dg-node's own `core/search-core.js`** — the same module the site runs — bundled
-by `build-core-bundle.js` and executing in `src/db-worker.js` over a slice of the same database
+by dg-node's `npm run build-offline` and executing in its `public/offline/db-worker.js` over the same database
 the server queries. The frontend cannot tell the difference, and neither can a diff:
 `test/e2e-browser.js` compares 24 responses against captures from the live site.
 
@@ -57,14 +54,13 @@ the server queries. The frontend cannot tell the difference, and neither can a d
 | everything else | the real fetch (local files) |
 
 The database lives in a Worker because OPFS hands out synchronous access handles only there — and
-synchronous access is what lets SQLite read a ~170 MB file from storage instead of holding it in
+synchronous access is what lets SQLite read a ~600 MB file from storage instead of holding it in
 memory, and what lets the core, written against `node:sqlite`, run unchanged.
 
-It is **not** bundled in the APK (~12 MB). On first launch it is streamed from
-`dhamma.gift/mobile-data/dg-mobile.db` straight into OPFS, chunk by chunk, and stays there.
-
-The name is deliberate: the server's own database is `dg.db` and sits on the same machine. Calling
-the app's slice by the same name is how a symlink ends up pointing every language at a phone.
+It is **not** bundled in the APK. It is prod's own `dg.db`, published as
+`dhamma.gift/mobile-data/dg.db.gz` (~216 MB) with `db-manifest.json`. The worker downloads the archive
+into OPFS, continuing any interruption with a Range request, and only then unpacks it. The Android
+side (DgDownloadService) keeps the process alive and shows progress in a notification.
 
 ## Building locally
 
@@ -77,12 +73,11 @@ npm install
 export DG_NODE_PATH=../dg-node          # default: /var/www/html/nodejs
 export DG_LEGACY_ASSETS=../dg/assets    # default: $DG_NODE_PATH/siteroot/assets
 
-# 1. dg-node builds its skeleton and its database, and must have run once so its
+# 1. dg-node builds its database and its offline layer, and must have run once so its
 #    generated settings/*.json exist (build-assets.js copies them):
-(cd "$DG_NODE_PATH" && npm run build-db && npm run build-search-db && npm start &)
+(cd "$DG_NODE_PATH" && npm run build-search-db && npm run build-offline && npm run start:fastify &)
 
-# 2. the app's slice of that database, and the TOC snapshot (needs a server on :3000)
-npm run build-app-db -- --langs=ru,en
+# 2. the TOC snapshot (needs a server on :3000)
 npm run build-toc-snapshot
 
 # 3. the web bundle: page, then the core, then everything they reference
@@ -122,22 +117,13 @@ is pinned in **`DG_NODE_REF`** (a branch name or tag); a `workflow_dispatch` run
 ## Known debt
 
 - **`build-assets.js`'s asset list is hand-maintained** — a new `<script>` on the site must be
-  added there too. Planned replacement: crawl a running dg-light.js and save every 200 response at
+  added there too. Planned replacement: crawl a running dg-fastify.js and save every 200 response at
   its own URL path. The page itself no longer has this problem (`build-page.js` generates it).
-- **The download does not survive the app being backgrounded.** It used to run through a
-  DgDownloader plugin over Android's own DownloadManager for exactly that reason, but on real
-  devices DownloadManager itself proved unreliable — seen: `STATUS_PENDING` forever with no error
-  on one MIUI-class ROM, and a stall mid-transfer on another with no way to tell the two apart from
-  the outside. Reverted: the worker fetches the file itself, the same code path a browser runs,
-  now hardened against a network that goes silent mid-stream (see `STALL_MS` in `db-worker.js`) —
-  a working download that cannot survive backgrounding beats an unreliable one that can.
-- **Updates are whole-file, not incremental.** Every published database now records what it
-  contains — a `meta` table with a `build_id`, and a `chunks` table hashing each
-  (sutta, kind, lang, translator) — and `db-manifest.json` is published beside it, so a device asks
-  "is there anything new for me?" for a few hundred bytes and is offered the current build through
-  Settings. What it cannot yet do is take just the difference: the `chunks` tables of two builds
-  are exactly the patch, and computing one needs neither the old 170MB file nor the corpus, but
-  nothing builds or applies them yet. `manifest.patches` is the empty list they will arrive in.
+- **Download on a real network** is what a phone release must still confirm: resume after a dropped
+  connection and after the app is killed, then unpack (tested in Chromium by dg-node's
+  `test/offline-resume.js`, both plain and gzip).
+- **Updates are whole-file, not incremental.** `db-manifest.json` carries the build id, so a device
+  learns about a new build for a few hundred bytes, but takes the whole archive.
 - **`filterPreferredTranslators` still decides by file path**, so the core synthesises one from
   `DG_OFFLINE` and the bundle has to shim `path.join`. It should decide on the `source` column the
   database already carries.
@@ -147,6 +133,6 @@ is pinned in **`DG_NODE_REF`** (a branch name or tag); a `workflow_dispatch` run
   Python under Pyodide on the server. This was already true before.
 - **iOS has not been started** — `npx cap add ios` has never been run. Nothing about the data
   layer is Android-specific, so this is packaging work rather than a port.
-- **Never run on a real device or emulator.** Everything above is verified in Chromium on a
-  desktop. OPFS behaviour in Capacitor's WebView, storage limits, and the App Shortcuts are the
-  open questions a first install answers.
+- **Parity snapshots are from 2026-09-05** (`test/snapshots/site`, a fixture database). CI compares the
+  app against them and does not fail on DIFF, so text and several search answers are not proven equal
+  to the current site.
