@@ -378,17 +378,16 @@ jobs:
           fi
 
 
-      # The offline library, built by dg-node (the app is no longer a source of database code — see
-      # docs/OFFLINE_PWA_PLAN.md). ~509MB, a couple of minutes, and it is BOTH what the browser
-      # checks below download and what this run publishes as the database artifact, so the thing
-      # tested and the thing shipped are literally the same file.
-      - name: Build the offline library (dg-node)
+      # The offline library: the dg.db built above, published as dg.db.gz + db-manifest.json exactly
+      # like prod (--no-build: no second build). It is BOTH what the browser checks below download
+      # and what this run uploads, so the thing tested and the thing shipped are the same file.
+      - name: Publish the offline library (dg-node)
         working-directory: /var/www/html/nodejs
-        run: npm run build-mobile-db
+        run: node build-search-db.js --no-build
 
       - name: List the offline library
         working-directory: /var/www/html/nodejs
-        run: ls -lah siteroot/mobile-data/ || { echo "::error::build-mobile-db produced nothing"; exit 1; }
+        run: ls -lah siteroot/mobile-data/ || { echo "::error::publishing the offline library produced nothing"; exit 1; }
 
       - name: Serve the built app and its database
         run: |
@@ -518,7 +517,7 @@ jobs:
         with:
           name: dg-app-full-db-${{ github.run_number }}
           path: |
-            /var/www/html/nodejs/siteroot/mobile-data/dg-mobile.db
+            /var/www/html/nodejs/siteroot/mobile-data/dg.db.gz
             /var/www/html/nodejs/siteroot/mobile-data/db-manifest.json
           if-no-files-found: error
           retention-days: 30
@@ -531,7 +530,7 @@ jobs:
             android/app/build/outputs/apk/debug/app-debug.apk
             android/app/build/outputs/apk/release/*.apk
             android/app/build/outputs/bundle/release/*.aab
-            /var/www/html/nodejs/siteroot/mobile-data/dg-mobile.db
+            /var/www/html/nodejs/siteroot/mobile-data/dg.db.gz
             /var/www/html/nodejs/siteroot/mobile-data/db-manifest.json
           body: |
             UI built from dg-node@${{ steps.pin.outputs.ref }}.
