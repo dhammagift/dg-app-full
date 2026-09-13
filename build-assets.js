@@ -646,10 +646,11 @@ function verifyTocSnapshot() {
 const ROOT_FILES = [
     { url: '/read/js/voice.js', sources: ['public/overrides/read/js/voice.js'] },
     { url: '/read/css/voice.css', sources: ['public/overrides/read/css/voice.css'] },
-    // The line-by-line tools and the memo app load these from the legacy reader tree.
-    { url: '/read/js/ranges.js', sources: ['read/js/ranges.js'], root: true },
-    { url: '/read/js/voice-mem.js', sources: ['read/js/voice-mem.js'], root: true },
-    { url: '/read/js/reader-rus-translations.js', sources: ['read/js/reader-rus-translations.js'], root: true },
+    // The line-by-line tools and the memo app load these; dg-node carries its own copies now
+    // (public/overrides/read/js), the legacy reader tree is no longer a source.
+    { url: '/read/js/ranges.js', sources: ['public/overrides/read/js/ranges.js'] },
+    { url: '/read/js/voice-mem.js', sources: ['public/overrides/read/js/voice-mem.js'] },
+    { url: '/read/js/reader-rus-translations.js', sources: ['public/overrides/read/js/reader-rus-translations.js'] },
     { url: '/assets/img/albumart.png', sources: ['img/albumart.png'], legacy: true },
 ];
 
