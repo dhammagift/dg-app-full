@@ -471,6 +471,7 @@ jobs:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 || secrets.KEYSTORE_BASE64 }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
             echo "ANDROID_KEYSTORE_BASE64 secret not set — skipping the release build this run."
@@ -481,11 +482,13 @@ jobs:
             # `sha256sum android.keystore | cut -c1-16` next to the readme (gift.dhamma.mobile's own key).
             echo "keystore: $(stat -c %s "$RUNNER_TEMP/release.keystore") bytes, sha256 $(sha256sum "$RUNNER_TEMP/release.keystore" | cut -c1-16)"
             # Which password secret opens it (yes/no only, never the value).
-            for name in ANDROID_KEYSTORE_PASSWORD KEYSTORE_PASSWORD; do
+            for name in ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_PASSWORD KEYSTORE_PASSWORD; do
               v="${!name}"; [ -z "$v" ] && { echo "$name: not set"; continue; }
+              echo "$name: ${#v} chars"
               keytool -list -keystore "$RUNNER_TEMP/release.keystore" -storepass "$(printf %s "$v" | tr -d '\r\n')" >/dev/null 2>&1 \
                 && echo "$name: opens the keystore" || echo "$name: does NOT open the keystore"
             done
+            [ "$ANDROID_KEYSTORE_PASSWORD" = "$ANDROID_KEY_PASSWORD" ] && echo "store and key password secrets: same" || echo "store and key password secrets: different"
             echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
           fi
 
