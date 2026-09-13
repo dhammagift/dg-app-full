@@ -56,8 +56,11 @@ module.exports = {
     // mount (dg-fastify.js: public/overrides first, then siteroot/assets): the app used to ship 44
     // stale legacy copies (openRu.js, openFdg.js, styles.css, ...) of files dg-node had replaced.
     f: rel => path.join(NODEJS_ROOT, rel),
+    // Files only: the mount merges file by file, so a folder with one override (img/read) must not
+    // replace the whole legacy folder.
     l: rel => {
         const override = path.join(NODEJS_ROOT, 'public', 'overrides', rel);
-        return !rel.startsWith('..') && fs.existsSync(override) ? override : path.join(LEGACY_ASSETS, rel);
+        const isFile = !rel.startsWith('..') && fs.existsSync(override) && fs.statSync(override).isFile();
+        return isFile ? override : path.join(LEGACY_ASSETS, rel);
     },
 };

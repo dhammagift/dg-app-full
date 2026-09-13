@@ -669,6 +669,8 @@ const ROOT_FILES = [
 // set (132KB; the legacy tree keeps it as assets/img/read) and several bundled tools point at it.
 const ROOT_TREES = [
     { url: '/read/images', from: 'img/read', legacy: true },
+    // dg-node's own /read mount (public/overrides/read) on top: assets/diff asks for its icons there.
+    { url: '/read/images', from: 'public/overrides/read/images' },
 ];
 
 function copyRootTrees() {
