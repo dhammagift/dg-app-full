@@ -496,7 +496,10 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD || secrets.KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || secrets.KEYSTORE_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD || secrets.KEY_PASSWORD }}
-        run: ./gradlew assembleRelease --stacktrace
+        # The signing certificate's SHA-256 is public: it is what assetlinks.json must list for gift.dhamma.mobile.
+        run: |
+          ./gradlew assembleRelease --stacktrace
+          keytool -printcert -jarfile app/build/outputs/apk/release/app-release.apk | grep -m1 'SHA256:' | sed 's/^/release cert /'
 
       - name: Upload release APK artifact
         if: success() && env.skip != 'true'
