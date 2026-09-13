@@ -423,6 +423,20 @@ jobs:
           set -o pipefail
           node test/e2e-browser.js 2>&1 | tee e2e-output.log
 
+      # Every link on the home page, search results, the reader (several modes), the TOC and
+      # Settings, clicked for real against a server that resolves paths the way Capacitor does
+      # (test/serve-local.js) — a link that is dead on the tablet fails here.
+      - name: Click every link the way the device would
+        # Reporting only until the first findings are fixed (/assets/lbl.html throws on load);
+        # then drop this line so a dead link fails the build.
+        continue-on-error: true
+        env:
+          DG_PLAYWRIGHT: ${{ github.workspace }}/node_modules/playwright-core
+          PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
+        run: |
+          set -o pipefail
+          node test/links.js 2>&1 | tee links-output.log
+
       # Job log downloads need admin rights on this repo, which this workflow's own token doesn't
       # have — an artifact is the one way to actually read what this step printed when it fails
       # without that. Only uploaded on failure: the log is redundant with the console output on a

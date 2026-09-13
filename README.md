@@ -106,9 +106,15 @@ npm run test-parity
 # and the whole app, in a browser: its worker downloads the database into OPFS and answers
 node test/serve-local.js www dist 8097 &
 npm run test-e2e
+
+# every link on home, results, reader (modes), TOC and Settings, clicked for real
+node test/links.js
 ```
 
-Both compare against `test/snapshots/site` and print a per-case SAME/DIFF. A DIFF is either a bug
+`test/serve-local.js` resolves paths like Capacitor does (a dotted path with no file is a 404, a
+folder gets the root index.html), so `test/links.js` fails on links that are dead on the device.
+
+The first two compare against `test/snapshots/site` and print a per-case SAME/DIFF. A DIFF is either a bug
 or a decision someone has to make on purpose — which is the point of having the files.
 
 CI does exactly this — see `.github/workflows/build-app.yml`. Which dg-node commit it builds from

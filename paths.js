@@ -52,7 +52,12 @@ module.exports = {
     SRC: path.join(__dirname, 'src'),
     DIST: path.join(__dirname, 'dist'),
     requireNodeRoot,
-    // Resolve a path inside dg-node / inside the legacy asset tree.
+    // Resolve a path inside dg-node / inside the /assets tree. l() follows the site's own /assets
+    // mount (dg-fastify.js: public/overrides first, then siteroot/assets): the app used to ship 44
+    // stale legacy copies (openRu.js, openFdg.js, styles.css, ...) of files dg-node had replaced.
     f: rel => path.join(NODEJS_ROOT, rel),
-    l: rel => path.join(LEGACY_ASSETS, rel),
+    l: rel => {
+        const override = path.join(NODEJS_ROOT, 'public', 'overrides', rel);
+        return !rel.startsWith('..') && fs.existsSync(override) ? override : path.join(LEGACY_ASSETS, rel);
+    },
 };

@@ -405,7 +405,8 @@
     // /memorize is: that is the legacy PHP reader in memorisation mode, and it cannot run here.
     // read/d/rev/frev/ml, r.php, history.php: the legacy PHP reading modes the menus link to, never bundled.
     // documents (PDFs), legacy.suttacentral.net, th, assets/br and the timers are site-only too.
-    var NOT_BUNDLED_RE = /^\/(ru\/)?(dict|memorize|login|docs|read|d|rev|frev|ml|documents|legacy\.suttacentral\.net|th)(\/|$)|^\/(ru\/)?(r|history)\.php$|^\/(ru\/)?assets\/(br|repeat-timer|pomodoro-timer)(\/|$)/;
+    // theravada.ru / tipitaka.theravada.su: the site's local mirrors behind the results' "Ru" links (openRu.js).
+    var NOT_BUNDLED_RE = /^\/(ru\/)?(dict|memorize|login|docs|read|d|rev|frev|ml|documents|legacy\.suttacentral\.net|th|theravada\.ru|theravada\.rf|tipitaka\.theravada\.su)(\/|$)|^\/(ru\/)?(r|history)\.php$|^\/(ru\/)?assets\/(br|repeat-timer|pomodoro-timer)(\/|$)/;
 
     // Where a link has to go outside this WebView, or null when it opens here. /4nt (the edition
     // comparison) is never bundled; its online copy is s.dhamma.gift without the /4nt prefix, the

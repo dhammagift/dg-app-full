@@ -30,6 +30,70 @@
     var WANT_DATA_KEY = 'dg.offline.wantData';
     var DECLINED_KEY = 'dg.app.downloadDeclined';
 
+    // Error reports to the site (dg-node POST /api/app-log): what broke on a reader's phone, seen
+    // without adb. Nothing waits on it: reports collect in memory, repeats are dropped, one
+    // sendBeacon carries the batch a few seconds later or when the app is hidden, and reports made
+    // offline stay in localStorage until the next flush.
+    (function installErrorReports() {
+        var KEY = 'dg.app.errorQueue';
+        var seen = {};
+        var seenCount = 0;
+        var queue = [];
+        var version = '';
+        var timer = null;
+        try { queue = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { queue = []; }
+        function save() {
+            try { localStorage.setItem(KEY, JSON.stringify(queue.slice(-50))); } catch (e) { /* storage blocked or full */ }
+        }
+        function flush() {
+            timer = null;
+            // Empty: leave storage alone — another page of the app may have queued reports there.
+            if (!queue.length) return;
+            if (navigator.onLine === false || !navigator.sendBeacon) return save();
+            var batch = queue.splice(0, 50);
+            // Stamped at send time: an error during startup is queued before app-version.json is read.
+            batch.forEach(function (r) { if (!r.app) r.app = version; });
+            var sent = navigator.sendBeacon(ONLINE_ORIGIN + '/api/app-log', new Blob([JSON.stringify(batch)], { type: 'text/plain' }));
+            if (!sent) queue = batch.concat(queue);
+            save();
+        }
+        function report(kind, msg, where) {
+            msg = String(msg || '').slice(0, 800);
+            var key = kind + '|' + msg;
+            if (seen[key] || seenCount >= 30) return; // one page load never sends more than 30 distinct reports
+            seen[key] = true;
+            seenCount++;
+            queue.push({ kind: kind, msg: msg, where: where || '', page: location.pathname + location.search,
+                app: version, ua: navigator.userAgent, t: Date.now() });
+            if (!timer) timer = setTimeout(flush, 5000);
+        }
+        fetch('/app-version.json').then(function (r) { return r.json(); })
+            .then(function (v) { version = v.version + ' (' + v.build + ')'; }, function () {});
+        window.addEventListener('error', function (e) {
+            var el = e.target;
+            if (el && el !== window && (el.src || el.href)) return report('resource', el.src || el.href); // a <script>/<link>/<img> that failed
+            report('error', e.message, (e.filename || '') + ':' + (e.lineno || 0) + ':' + (e.colno || 0));
+        }, true);
+        window.addEventListener('unhandledrejection', function (e) {
+            var r = e.reason;
+            report('rejection', (r && (r.stack || r.message)) || r);
+        });
+        var consoleError = console.error;
+        console.error = function () {
+            try {
+                report('console', Array.prototype.map.call(arguments, function (a) {
+                    if (a && a.stack) return a.stack;
+                    try { return typeof a === 'object' ? JSON.stringify(a) : String(a); } catch (e) { return String(a); }
+                }).join(' '));
+            } catch (e) { /* never let reporting break logging */ }
+            return consoleError.apply(console, arguments);
+        };
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'hidden') flush();
+        });
+        if (queue.length) timer = setTimeout(flush, 5000);
+    })();
+
     // search/index.html's quote popup / "open in new tab" check this to take their app branch (a
     // phone has no server behind a second copy of the page); nothing set it since app.js moved to dg-node.
     window.dgOfflineReady = true;
