@@ -23,6 +23,7 @@ public class MainActivity extends BridgeActivity {
         // Download progress in the status bar, so backgrounding the app doesn't hide the 509MB
         // transfer (the page keeps reporting it; this only mirrors it natively).
         registerPlugin(DgProgressPlugin.class);
+        registerPlugin(DgTtsPlugin.class);
         super.onCreate(savedInstanceState);
         // Deliberately no handleIntent() here — see handledIntent above.
 

@@ -104,4 +104,10 @@
     <!-- Read by the Network plugin (hasNetworkConsent in app.js) to tell Wi-Fi from cellular
          before asking about the library download. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Android 11+ package visibility: without this the TextToSpeech engine (DgTtsPlugin) is not found. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
 </manifest>
