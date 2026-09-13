@@ -125,7 +125,7 @@
         readJson('dg_favorites').forEach(function (fav) {
             if (!fav) return;
             var route = (fav.path && fav.search) ? (fav.path + fav.search) : ('/' + (fav.slug || ''));
-            if (fav.id && fav.id !== fav.slug) route += '#' + fav.id;
+            if (fav.id && fav.id !== fav.slug && route.indexOf('#') === -1) route += '#' + fav.id;
             if (!isTextRoute(route)) return;
             push('dg-recent-fav-' + items.length, fav.title || fav.slug, route, 10 + items.length);
         });
@@ -438,6 +438,8 @@
     function openInPlace(url) {
         var ext = onlineUrlFor(url);
         if (ext) { openExternal(ext); return true; }
+        var dirIndex = bundledIndexFor(url);
+        if (dirIndex) { location.href = dirIndex; return true; }
         try {
             var u = new URL(url, location.href);
             // A real file (a bundled page such as /assets/common/history.html or
@@ -512,10 +514,41 @@
     // the WebView to a path that doesn't exist locally — see build-assets.js/app.js's "/toc/..."
     // 404 comments).
     var ONLINE_ORIGIN = 'https://dhamma.gift';
+    // A bundled directory (/memo/) is a folder with an index.html; Capacitor answers the folder URL
+    // itself with the app's root index.html, so the reader got a search for "memo" instead.
+    var BUNDLED_DIRS = ['/memo/', '/assets/diff/'];
+    function bundledIndexFor(url) {
+        try {
+            var u = new URL(url, location.href);
+            if (u.origin !== location.origin) return null;
+            var dir = u.pathname.replace(/^\/ru\//, '/').replace(/\/?$/, '/');
+            return BUNDLED_DIRS.indexOf(dir) !== -1 ? dir + 'index.html' + u.search + u.hash : null;
+        } catch (e) { return null; }
+    }
+
+    // Late, bubble-phase twin of the capture handler above: openDicts.js's openWithQuery() swaps a
+    // javascript:void(0) href for the real one INSIDE the click, after the capture handler already
+    // let the link go, and the WebView then opened nothing (the home sheets' dictionary rows).
+    window.addEventListener('click', function (e) {
+        if (e.defaultPrevented || !e.target.closest) return;
+        var a = e.target.closest('a[target="_blank"][href]');
+        var href = a && a.getAttribute('href');
+        if (!href || href.charAt(0) === '#' || /^javascript:/i.test(href)) return;
+        e.preventDefault();
+        openInPlace(href);
+    });
+
     document.addEventListener('click', function (e) {
+        if (e.defaultPrevented) return; // already routed by the capture handler above (/docs opened twice)
         var a = e.target.closest('a[href]');
         if (a) {
             var href = a.getAttribute('href');
+            var dirIndex = bundledIndexFor(href);
+            if (dirIndex) {
+                e.preventDefault();
+                location.href = dirIndex;
+                return;
+            }
             // By pathname, not the raw href: the reading-mode menus build absolute
             // https://localhost/read/ links, which a regex on the raw href never matched.
             var mapped = onlineUrlFor(href);
@@ -540,7 +573,7 @@
         if (e.target.closest('#cloudBtn')) {
             e.preventDefault();
             e.stopPropagation();
-            location.href = '/?sacca=true';
+            (window.top || window).location.href = '/?sacca=true'; // settings opens in an iframe sheet
         }
         // settings/index.html's "Voice and reading speed" -> "Open" button: same
         // location.href-from-onclick shape as #cloudBtn above, pointed at /read/ (or /ru/read/)

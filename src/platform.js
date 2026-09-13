@@ -29,6 +29,9 @@
     var WANT_DATA_KEY = 'dg.offline.wantData';
     var DECLINED_KEY = 'dg.app.downloadDeclined';
 
+    // search/index.html's quote popup / "open in new tab" check this to take their app branch (a
+    // phone has no server behind a second copy of the page); nothing set it since app.js moved to dg-node.
+    window.dgOfflineReady = true;
     window.dgPlatform = {
         name: 'native',
         distBase: window.DG_DIST_BASE || (ONLINE_ORIGIN + '/mobile-data'),
