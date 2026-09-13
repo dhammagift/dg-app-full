@@ -366,6 +366,10 @@
 
     function openExternal(url) {
         var Browser = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
+        // A Custom Tab only shows web pages. An app link (the lookup popup's dttp://, goldendict://,
+        // dpd://, mdict:// dictionaries, mailto:) is an Android intent: a plain navigation hands it
+        // to Capacitor, which launches it.
+        if (!/^https?:/i.test(url)) { window.location.href = url; return; }
         if (Browser) Browser.open({ url: url });
         else window.location.href = url; // plain-browser fallback (local dev/testing, no Capacitor runtime)
     }
@@ -378,11 +382,22 @@
     // /memorize is: that is the legacy PHP reader in memorisation mode, and it cannot run here.
     var NOT_BUNDLED_RE = /^\/(ru\/)?(dict|memorize|login|docs)(\/|$)/;
 
-    function isExternal(url) {
+    // Where a link has to go outside this WebView, or null when it opens here. /4nt (the edition
+    // comparison) is never bundled; its online copy is s.dhamma.gift without the /4nt prefix, the
+    // mapping megareader.js and search-render.js already use — the reader's and the results'
+    // "Compare" menus keep the local /4nt path on https://localhost and opened nothing.
+    function onlineUrlFor(url) {
         try {
-            var parsed = new URL(url, location.href);
-            return parsed.origin !== location.origin || NOT_BUNDLED_RE.test(parsed.pathname);
-        } catch (e) { return false; }
+            var u = new URL(url, location.href);
+            if (u.origin !== location.origin) return /^javascript:/i.test(u.href) ? null : u.href;
+            if (/^\/4nt(\/|$)/.test(u.pathname)) return 'https://s.dhamma.gift' + u.pathname.replace(/^\/4nt/, '') + u.search + u.hash;
+            if (NOT_BUNDLED_RE.test(u.pathname)) return 'https://dhamma.gift' + u.pathname + u.search + u.hash;
+        } catch (e) { /* not a URL */ }
+        return null;
+    }
+
+    function isExternal(url) {
+        return onlineUrlFor(url) !== null;
     }
 
     // mirror-link.js (public/overrides/js/mirror-link.js) already resolves 4nt/TBW/Th.ru/Th.su
@@ -397,9 +412,10 @@
     // was killing the app (owner, screenshots). Every search result link is target="_blank", so
     // this was the normal way to open a text, not an edge case.
     function openInPlace(url) {
+        var ext = onlineUrlFor(url);
+        if (ext) { openExternal(ext); return true; }
         try {
             var u = new URL(url, location.href);
-            if (u.origin !== location.origin) { openExternal(url); return true; }
             // A real file (a bundled page such as /assets/common/history.html or
             // /settings/index.html) is an ordinary navigation: the file exists, Capacitor serves
             // it, and back works because it is a normal history entry in the same WebView. A
@@ -422,12 +438,10 @@
         var a = e.target.closest ? e.target.closest('a[target="_blank"][href]') : null;
         if (!a) return;
         var href = a.getAttribute('href');
-        if (!href || href.charAt(0) === '#') return;
-        // External links keep their own path below (the Browser bridge / mirror-link.js).
-        try {
-            if (new URL(href, location.href).origin !== location.origin) return;
-        } catch (err) { return; }
-        if (NOT_BUNDLED_RE.test(href)) return; // memo/dict/login/docs go to the real site
+        if (!href || href.charAt(0) === '#' || /^javascript:/i.test(href)) return;
+        // Cross-origin, /4nt and not-bundled sections go outside (openInPlace decides); a
+        // target="_blank" link left to the WebView opened nothing — the lookup popup's
+        // dict.dhamma.gift links were exactly that.
         e.preventDefault();
         e.stopPropagation();
         openInPlace(href);
@@ -452,8 +466,7 @@
             // be resolved against the REAL site, not this app's own https://localhost, or the
             // Browser plugin would just try to open a Custom Tab on a host that doesn't exist
             // outside this app's own WebView.
-            var resolved = new URL(url, location.href);
-            openExternal(resolved.origin === location.origin ? ONLINE_ORIGIN + resolved.pathname + resolved.search + resolved.hash : url);
+            openExternal(onlineUrlFor(url));
             return null;
         }
         // Same-origin and bundled: in place, never a second WebView (see openInPlace).
@@ -479,9 +492,9 @@
         var a = e.target.closest('a[href]');
         if (a) {
             var href = a.getAttribute('href');
-            if (NOT_BUNDLED_RE.test(href)) {
+            if (NOT_BUNDLED_RE.test(href) || /^\/4nt(\/|$)/.test(href)) {
                 e.preventDefault();
-                openExternal(ONLINE_ORIGIN + href);
+                openExternal(onlineUrlFor(href));
             }
             return;
         }
