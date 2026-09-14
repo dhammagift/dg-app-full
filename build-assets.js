@@ -140,6 +140,9 @@ const ASSETS = [
     { url: '/reader/translator-priority.json', sources: [f('configs/reader/translator-priority.json')] },
     { url: '/reader/lang_ru.json', sources: [f('configs/reader/lang_ru.json')] },
     { url: '/reader/lang_en.json', sources: [f('configs/reader/lang_en.json')] },
+    // Thai interface (the menu's "DG (th)", /?lang=th): without these the app fell back to English and
+    // reported "Unable to load localization config (404)" (app error log, the tablet).
+    { url: '/reader/lang_th.json', sources: [f('configs/reader/lang_th.json')] },
     { url: '/reader/bu-pm-fragment.html', sources: [f('reader/bu-pm-fragment.html')] },
     { url: '/reader/bi-pm-fragment.html', sources: [f('reader/bi-pm-fragment.html')] },
     { url: '/assets/js/translators.json', sources: [l('js/translators.json')] },
@@ -151,6 +154,8 @@ const ASSETS = [
     { url: '/nodejs/res/lang_en.json', sources: [f('configs/search/lang_en.json')] },
     { url: '/assets/i18n/lang_global_en.json', sources: [f('public/overrides/i18n/lang_global_en.json')] },
     { url: '/assets/i18n/lang_global_ru.json', sources: [f('public/overrides/i18n/lang_global_ru.json')] },
+    { url: '/nodejs/res/lang_th.json', sources: [f('configs/search/lang_th.json')] },
+    { url: '/assets/i18n/lang_global_th.json', sources: [f('public/overrides/i18n/lang_global_th.json')] },
     { url: '/nodejs/res/slides.json', sources: [f('configs/search/slides.json')] },
     { url: '/nodejs/res/announcements.json', sources: [f('configs/search/announcements.json')] },
     { url: '/nodejs/res/dict-modes.json', sources: [f('configs/search/dict-modes.json')] },
@@ -546,7 +551,8 @@ function copyNative(name, to) {
 // reader, the search UI) is copied from dg-node — see copyOfflineLayer above and ASSETS.
 function copyNativeFiles() {
     copyNative('native-bridge.js', path.join(WWW, 'native-bridge.js'));
-    return 1;
+    fs.copyFileSync(path.join(SRC, 'tts.js'), path.join(WWW, 'tts.js'));
+    return 2;
 }
 
 // The ASSETS list above is hand-maintained, so a NEW <script>/<link> added to the site is copied
@@ -799,11 +805,17 @@ function injectBridgeIntoPages() {
             }
             if (!entry.name.endsWith('.html')) continue;
             let html = fs.readFileSync(full, 'utf8');
-            if (html.includes('native-bridge.js')) continue;
+            const before = html;
+            // The voice player needs the speechSynthesis stand-in loaded ahead of it (src/tts.js).
+            if (html.includes('/read/js/voice.js') && !html.includes('/tts.js')) {
+                html = html.replace(/<script[^>]*src="\/read\/js\/voice\.js"/, m => '<script src="/tts.js"></script>\n' + m);
+            }
             // Fragments inserted with innerHTML (reader/*-pm-fragment.html) have no </body>; a
             // script tag inside them would never execute, so skipping them loses nothing.
-            if (!html.includes('</body>')) continue;
-            html = html.replace('</body>', tag + '\n</body>');
+            if (!html.includes('native-bridge.js') && html.includes('</body>')) {
+                html = html.replace('</body>', tag + '\n</body>');
+            }
+            if (html === before) continue;
             fs.writeFileSync(full, html, 'utf8');
             patched++;
         }

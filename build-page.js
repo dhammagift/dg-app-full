@@ -34,6 +34,8 @@ const APP_SCRIPTS = `<!-- Offline data shim: installs window.fetch interception 
 <!-- Native platform first: sets window.dgPlatform (see src/platform.js) so dg-node's browser
      platform.js, loaded right after, is a documented no-op. -->
 <script src="/offline/platform.js"></script>
+<!-- speechSynthesis over Android TextToSpeech (src/tts.js), before the page's voice player. -->
+<script src="/tts.js"></script>
 <script src="/offline/app.js"></script>
 <script src="/offline/offline-status.js"></script>
 <!-- Routes memo/login/mirror-link's external opens through the device's real browser instead of
