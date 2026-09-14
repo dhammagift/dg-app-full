@@ -85,6 +85,48 @@
     })();
 
     // ---------------------------------------------------------------------------------------
+    // PDF export (the reader footer's PDF icon)
+    // ---------------------------------------------------------------------------------------
+
+    // pdfmake's download() is a blob download, and Android's WebView drops those silently: the icon
+    // did nothing (tablet test). In the app the file goes to the cache directory and the system share
+    // sheet opens with it — "save to Files", Drive, a messenger, a PDF viewer. pdfmake is loaded on
+    // demand (settings.js), so its global is patched the moment the library assigns it.
+    (function sharePdfDownloads() {
+        var Plugins = window.Capacitor && window.Capacitor.Plugins;
+        if (!Plugins || !Plugins.Filesystem || !Plugins.Share) return;
+        function patch(pm) {
+            if (!pm || typeof pm.createPdf !== 'function' || pm.__dgShared) return pm;
+            var create = pm.createPdf;
+            pm.createPdf = function () {
+                var doc = create.apply(pm, arguments);
+                doc.download = function (name) {
+                    var file = String(name || 'document.pdf').replace(/[\\/:*?"<>|]+/g, '_');
+                    doc.getBase64(function (data) {
+                        Plugins.Filesystem.writeFile({ path: file, data: data, directory: 'CACHE' })
+                            .then(function (written) { return Plugins.Share.share({ title: file, files: [written.uri] }); })
+                            .catch(function (e) {
+                                var msg = (e && e.message) || String(e);
+                                if (!/cancel/i.test(msg)) console.error('[dg-pdf] could not share the PDF:', msg);
+                            });
+                    });
+                };
+                return doc;
+            };
+            pm.__dgShared = true;
+            return pm;
+        }
+        var current = patch(window.pdfMake);
+        try {
+            Object.defineProperty(window, 'pdfMake', {
+                configurable: true,
+                get: function () { return current; },
+                set: function (v) { current = patch(v); },
+            });
+        } catch (e) { /* a non-configurable global: leave pdfmake as it is */ }
+    })();
+
+    // ---------------------------------------------------------------------------------------
     // Native route handoff: App Shortcuts and dhamma.gift deep links
     // ---------------------------------------------------------------------------------------
 
