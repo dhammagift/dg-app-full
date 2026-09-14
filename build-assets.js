@@ -621,6 +621,8 @@ const REFERENCE_EXCEPTIONS = [
     /^\/assets\/materials\/(cases|conjugations|pali_cases_ru)\.html$/,
     /^\/assets\/grammar\/numerals(_declension)?\.html$/,
     /^\/assets\/common\/modalsSC\.html$/,
+    // login/index.html asks for it, but the file exists nowhere — the site answers 404 as well.
+    /^\/assets\/js\/fontawesome\.6\.1\.all\.js$/,
     // Named only in a search-core comment: AI drafts are for lbl.html and never shipped (owner).
     /^\/assets\/texts\/ai\//,
 ];
@@ -756,6 +758,16 @@ function copyMemoApp() {
     // memo.js takes its language from the path (/ru/memo/ → Russian), and the Favorites sheet's Memo
     // tab opens /ru/memo/index.html for a Russian interface — the site serves the same folder there.
     copyTree(from, path.join(WWW, 'ru', 'memo'));
+    // The sign-in page (siteroot/login), opened in the app the way the site opens it (owner). Passphrase
+    // sign-in works inside the WebView; Google blocks its popup sign-in in embedded WebViews. The same
+    // /ru/ copy as memo: login.js takes its language from the path. sso.html is a debug page, not shipped.
+    const login = path.join(NODEJS_ROOT, 'siteroot', 'login');
+    if (fs.existsSync(path.join(login, 'index.html'))) {
+        for (const dest of [path.join(WWW, 'login'), path.join(WWW, 'ru', 'login')]) {
+            copyTree(login, dest);
+            fs.rmSync(path.join(dest, 'sso.html'), { force: true });
+        }
+    }
     return fs.readdirSync(path.join(WWW, 'memo')).length;
 }
 
@@ -764,7 +776,7 @@ function copyMemoApp() {
 // Settings once did the same (see native-bridge.js / DgTextRouter.settingsUrl). Rewritten to the
 // explicit file, in every bundled page, because the memo app links to /memo/ itself.
 function resolveDirectoryLinksEverywhere() {
-    const DIRS = ['memo', 'settings'];
+    const DIRS = ['memo', 'settings', 'login'];
     let patched = 0;
     const walk = (dir) => {
         for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {

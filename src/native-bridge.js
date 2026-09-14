@@ -149,15 +149,18 @@
         // when tapped inside the page (NOT_BUNDLED_RE below).
         // The literal origin, not ONLINE_ORIGIN: that var is declared further down and would still
         // be undefined here, since this runs at parse time.
-        var EXTERNAL_ROUTES = /^\/(ru\/)?(dict|memorize|login|docs)(\/|$)/;
+        var EXTERNAL_ROUTES = /^\/(ru\/)?(dict|memorize|docs)(\/|$)/; // login is bundled now (below)
         if (EXTERNAL_ROUTES.test(route)) {
             openExternal((window.DG_ONLINE_ORIGIN || 'https://dhamma.gift') + route);
             return;
         }
         // The memorisation app IS bundled now (build-assets.js copies siteroot/memo), and it is a
         // real file: Capacitor cannot resolve the /memo/ directory, so the shortcut points at it.
-        if (route === '/memo' || route === '/memo/') {
-            history.replaceState(null, '', '/memo/index.html');
+        // Pages of their own (not SPA routes) are loaded as files. replaceState only renamed the address
+        // and left the home page on screen: the Memo shortcut and a dhamma.gift/memo link opened search.
+        var page = /^\/(ru\/)?(memo|login)\/?$/.exec(route);
+        if (page) {
+            location.replace('/' + (page[1] || '') + page[2] + '/index.html');
             return;
         }
         history.replaceState(null, '', route);
@@ -518,7 +521,7 @@
     // read/d/rev/frev/ml, r.php, history.php: the legacy PHP reading modes the menus link to, never bundled.
     // documents (PDFs), legacy.suttacentral.net, th, assets/br and the timers are site-only too.
     // theravada.ru / tipitaka.theravada.su: the site's local mirrors behind the results' "Ru" links (openRu.js).
-    var NOT_BUNDLED_RE = /^\/(ru\/)?(dict|memorize|login|docs|read|d|rev|frev|ml|documents|legacy\.suttacentral\.net|th|theravada\.ru|theravada\.rf|tipitaka\.theravada\.su)(\/|$)|^\/(ru\/)?(r|history)\.php$|^\/(ru\/)?assets\/(br|repeat-timer|pomodoro-timer)(\/|$)/;
+    var NOT_BUNDLED_RE = /^\/(ru\/)?(dict|memorize|docs|read|d|rev|frev|ml|documents|legacy\.suttacentral\.net|th|theravada\.ru|theravada\.rf|tipitaka\.theravada\.su)(\/|$)|^\/(ru\/)?(r|history)\.php$|^\/(ru\/)?assets\/(br|repeat-timer|pomodoro-timer)(\/|$)/;
 
     // Where a link has to go outside this WebView, or null when it opens here. /4nt (the edition
     // comparison) is never bundled; its online copy is s.dhamma.gift without the /4nt prefix, the
@@ -635,7 +638,7 @@
     var ONLINE_ORIGIN = window.DG_ONLINE_ORIGIN || 'https://dhamma.gift';
     // A bundled directory (/memo/) is a folder with an index.html; Capacitor answers the folder URL
     // itself with the app's root index.html, so the reader got a search for "memo" instead.
-    var BUNDLED_DIRS = ['/memo/', '/assets/diff/'];
+    var BUNDLED_DIRS = ['/memo/', '/assets/diff/', '/login/'];
     function bundledIndexFor(url) {
         try {
             var u = new URL(url, location.href);
@@ -707,7 +710,10 @@
         if (e.target.closest('#cloudBtn')) {
             e.preventDefault();
             e.stopPropagation();
-            (window.top || window).location.href = '/?sacca=true'; // settings opens in an iframe sheet
+            // Owner: "Log in" opens the sign-in page, as on the site — now bundled (build-assets.js), so
+            // it runs in this WebView and its passphrase sign-in reaches this app's own storage.
+            var ruLogin = (localStorage.getItem('dhammaLanguage') || localStorage.getItem('siteLanguage') || 'en') === 'ru';
+            (window.top || window).location.href = ruLogin ? '/ru/login/index.html' : '/login/index.html'; // settings is an iframe sheet
         }
         // settings/index.html's "Voice and reading speed" -> "Open" button: same
         // location.href-from-onclick shape as #cloudBtn above, pointed at /read/ (or /ru/read/)
