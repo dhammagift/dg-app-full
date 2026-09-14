@@ -674,12 +674,8 @@
         // see shortcuts.xml's own comment: its logic was never ported to the offline shim). Left
         // unhandled, this just silently loaded a blank 404 in the app's own WebView with nothing
         // in the console to explain why — no fetch involved, so app.js's shim never even sees it.
-        if (e.target.closest('#voiceBtn')) {
-            e.preventDefault();
-            e.stopPropagation();
-            var ru = (localStorage.getItem('dhammaLanguage') || localStorage.getItem('siteLanguage') || 'en') === 'ru';
-            openExternal(ONLINE_ORIGIN + (ru ? '/ru/read/' : '/read/'));
-        }
+        // #voiceBtn is no longer intercepted: settings/index.html opens the reader's own voice panel
+        // (the legacy /read/ page it used to send the reader to redirects to the home page now).
     }, true);
 
     // Owner (real usage): "не работают переходы назад — кнопка Android назад или свайп назад".

@@ -753,6 +753,9 @@ function copyMemoApp() {
         throw new Error(`${from}/index.html not found — did the memorisation app move in dg-node?`);
     }
     copyTree(from, path.join(WWW, 'memo'));
+    // memo.js takes its language from the path (/ru/memo/ → Russian), and the Favorites sheet's Memo
+    // tab opens /ru/memo/index.html for a Russian interface — the site serves the same folder there.
+    copyTree(from, path.join(WWW, 'ru', 'memo'));
     return fs.readdirSync(path.join(WWW, 'memo')).length;
 }
 

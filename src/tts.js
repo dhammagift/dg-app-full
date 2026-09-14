@@ -10,16 +10,29 @@
     var P = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.DgTts;
     if (window.speechSynthesis || !P) return;
     var voices = [], pending = {}, seq = 0, listeners = [];
-    function fire(u, handler, ev) { if (typeof handler === 'function') handler.call(u, ev); }
+    // Both styles Web Speech callers use: utterance.onend = … (voice.js) and
+    // utterance.addEventListener('start', …) (memo.js — "addEventListener is not a function" on Play).
+    function fire(u, type, ev) {
+        ev.type = type;
+        if (typeof u['on' + type] === 'function') u['on' + type].call(u, ev);
+        (u._listeners[type] || []).slice().forEach(function (f) { f.call(u, ev); });
+    }
     P.addListener('tts', function (e) {
         var u = pending[e.id];
         if (!u) return; // cancelled: Web Speech callers null their handlers before cancel anyway
         delete pending[e.id];
-        fire(u, e.type === 'end' ? u.onend : u.onerror, { utterance: u, error: e.error });
+        fire(u, e.type === 'end' ? 'end' : 'error', { utterance: u, error: e.error });
     });
     window.SpeechSynthesisUtterance = function (text) {
         this.text = text || ''; this.lang = ''; this.rate = 1; this.voice = null;
-        this.onend = null; this.onerror = null;
+        this.onstart = null; this.onend = null; this.onerror = null;
+        this._listeners = {};
+    };
+    window.SpeechSynthesisUtterance.prototype.addEventListener = function (type, f) {
+        (this._listeners[type] = this._listeners[type] || []).push(f);
+    };
+    window.SpeechSynthesisUtterance.prototype.removeEventListener = function (type, f) {
+        this._listeners[type] = (this._listeners[type] || []).filter(function (x) { return x !== f; });
     };
     var synth = window.speechSynthesis = {
         onvoiceschanged: null,
