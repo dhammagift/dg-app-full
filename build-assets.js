@@ -412,9 +412,22 @@ function copyAssetTrees() {
         if (fs.existsSync(override)) copyTree(override, dest);
         done++;
     }
-    // The old help pages are the site's redirects now, not pages: native-bridge.js opens them online.
-    for (const url of SITE_ONLY_PATHS) fs.rmSync(path.join(WWW, url), { force: true });
+    // Site-only pages (native-bridge.js opens them online), a test page and a library's demo page come
+    // along with the trees; server-side leftovers (.php, *Bak*) are not pages at all (owner).
+    for (const url of SITE_ONLY_PATHS.concat(['/assets/diff/test.html', '/assets/js/dark-mode-switch/index.html'])) {
+        fs.rmSync(path.join(WWW, url), { force: true });
+    }
+    for (const rel of ASSET_TREES) removeLeftovers(path.join(WWW, 'assets', rel));
     return done;
+}
+
+function removeLeftovers(dir) {
+    if (!fs.existsSync(dir)) return;
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const p = path.join(dir, entry.name);
+        if (entry.isDirectory()) removeLeftovers(p);
+        else if (/\.php$|Bak/.test(entry.name)) fs.rmSync(p);
+    }
 }
 
 // Small pages/scripts that live outside those trees and are linked from the UI (or from a page
@@ -423,7 +436,7 @@ function copyAssetTrees() {
 const ASSET_LOOSE_FILES = [
     'lbl.html', 'lbl-en.html',
     'listdiff.html', 'makelist.html', 'rr.html',
-    'texts/abbr.html', 'texts/dn2.9.html', 'rrbi.html',
+    'rrbi.html', // texts/abbr.html is common/abbr.html now; texts/dn2.9.html stays on the site (owner)
     // The memorisation app loads the same theme script as the rest of the site, plus its audio
     // player and the two album covers it shows while playing.
     'js/themeswitch.js', 'js/jsPlayer.js',
@@ -519,7 +532,10 @@ const SITE_ONLY_PATHS = (() => {
     const src = fs.readFileSync(f('dg-fastify.js'), 'utf8');
     const block = /const LEGACY_HELP_REDIRECTS = \{([\s\S]*?)\};/.exec(src);
     return block ? [...block[1].matchAll(/'([\w.-]+\.html)'\s*:/g)].map(m => '/assets/common/' + m[1]) : [];
-})();
+})().concat([
+    // Kept on the site, not in the app (owner): the old multi-tool and a page only Memo links to.
+    '/assets/common/multiTool.html', '/assets/common/multiToolRu.html', '/assets/texts/dn2.9.html',
+]);
 function copyNative(name, to) {
     const head = (ONLINE_ORIGIN ? `window.DG_ONLINE_ORIGIN = ${JSON.stringify(ONLINE_ORIGIN)};\n` : '') +
         `window.DG_SITE_ONLY_PATHS = ${JSON.stringify(SITE_ONLY_PATHS)};\n`;
