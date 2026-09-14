@@ -239,13 +239,22 @@ function buildModeTable(langs) {
 }
 
 function copySvgIcons() {
-    const srcDir = path.join(LEGACY_ASSETS, 'svg');
     const destDir = path.join(WWW, 'assets', 'svg');
     fs.mkdirSync(destDir, { recursive: true });
-    for (const name of fs.readdirSync(srcDir)) {
-        fs.copyFileSync(path.join(srcDir, name), path.join(destDir, name));
+    // Legacy icons first, dg-node's public/overrides/svg on top — the site's /assets mount order.
+    // Only the legacy set was copied, so a new icon added in dg-node (table-list.svg for the nav bar)
+    // was missing from the app and failed verifyReferencedAssets.
+    let count = 0;
+    for (const srcDir of [path.join(LEGACY_ASSETS, 'svg'), f('public/overrides/svg')]) {
+        if (!fs.existsSync(srcDir)) continue;
+        for (const name of fs.readdirSync(srcDir)) {
+            const from = path.join(srcDir, name);
+            if (!fs.statSync(from).isFile()) continue;
+            fs.copyFileSync(from, path.join(destDir, name));
+            count++;
+        }
     }
-    return fs.readdirSync(srcDir).length;
+    return count;
 }
 
 function copyReaderImages() {
@@ -410,7 +419,7 @@ function copyAssetTrees() {
 // inside a tree). Same reasoning as ASSET_TREES — each one was a "tapping it opens the search page"
 // bug on the device.
 const ASSET_LOOSE_FILES = [
-    'lbl.html', 'lbl-en.html', 'linebyline.html', 'readylinebyline.html',
+    'lbl.html', 'lbl-en.html', 'readylinebyline.html',
     'listdiff.html', 'makelist.html', 'rr.html',
     'texts/abbr.html', 'texts/dn2.9.html', 'rrbi.html',
     // The memorisation app loads the same theme script as the rest of the site, plus its audio
