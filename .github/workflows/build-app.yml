@@ -427,9 +427,6 @@ jobs:
       # Settings, clicked for real against a server that resolves paths the way Capacitor does
       # (test/serve-local.js) — a link that is dead on the tablet fails here.
       - name: Click every link the way the device would
-        # Reporting only until the first findings are fixed (/assets/lbl.html throws on load);
-        # then drop this line so a dead link fails the build.
-        continue-on-error: true
         env:
           DG_PLAYWRIGHT: ${{ github.workspace }}/node_modules/playwright-core
           PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers

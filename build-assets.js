@@ -434,6 +434,8 @@ const ASSET_LOOSE_FILES = [
     'img/dictSettings.png', 'img/buttons/pwa-cta.png', 'img/multi-tool-512x512.png',
     'img/find-dhamma-512x512.png', 'img/albumart512.png', 'img/favicon-sc.png',
     'img/gray-white.png', 'img/icon-192x192.png',
+    // Found by the app's error reports, not by verifyReferencedAssets (legacy pages it does not parse).
+    'img/dictSettingsRu.jpg', 'img/dhammafindlogo.webp',
 ];
 
 function copyAssetLooseFiles() {
