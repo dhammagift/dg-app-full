@@ -161,6 +161,19 @@ async function ready(page, url) {
             if (o.docs.length || o.after !== o.before || o.popups.length) await ready(page, pageUrl);
         }
     }
+
+    // Back to a dotted reader route from another document (Log in) reloads that entry: on the
+    // device /sn56.11 itself cannot be loaded, so it must come back through the root.
+    await ready(page, '/sn56.11');
+    await page.evaluate(() => { location.href = '/login/index.html'; });
+    await page.waitForURL(/\/login\//);
+    const back = await page.goBack({ waitUntil: 'domcontentloaded' }).catch((e) => ({ status: () => e.message }));
+    const backPath = new URL(page.url()).pathname;
+    if (!back || back.status() !== 200 || backPath !== '/sn56.11') {
+        fails.push(`Back from /login to /sn56.11  FAIL  status ${back && back.status()}, landed on ${backPath}`);
+    } else {
+        console.log('\nOK    Back from /login to /sn56.11');
+    }
     await ctx.close();
     console.log(`\n${counts.OK} ok, ${counts.NOOP} did nothing, ${counts.SKIP} skipped, ${counts.FAIL} failed`);
     if (fails.length) console.log('\nFAILED:\n' + fails.join('\n'));

@@ -166,6 +166,16 @@
         history.replaceState(null, '', route);
     })();
 
+    // The reader pushState's clean URLs like /sn22.56. Going Back to one from another document
+    // (Log in, Memo) or reloading it makes Capacitor load that path as a file: the dot reads as an
+    // extension and the WebView shows ERR_INVALID_RESPONSE. On the way out, park the entry on the
+    // root with the same _nativeRoute handoff, which the page rewrites back on load (above).
+    window.addEventListener('pagehide', function () {
+        var last = location.pathname.split('/').pop();
+        if (last.indexOf('.') === -1 || /\.html?$/.test(last)) return;
+        history.replaceState(history.state, '', '/?_nativeRoute=' + encodeURIComponent(location.pathname + location.search + location.hash));
+    });
+
     // ---------------------------------------------------------------------------------------
     // Dynamic shortcuts: "recently read" in the launcher's long-press menu
     // ---------------------------------------------------------------------------------------
