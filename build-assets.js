@@ -412,6 +412,8 @@ function copyAssetTrees() {
         if (fs.existsSync(override)) copyTree(override, dest);
         done++;
     }
+    // The old help pages are the site's redirects now, not pages: native-bridge.js opens them online.
+    for (const url of SITE_ONLY_PATHS) fs.rmSync(path.join(WWW, url), { force: true });
     return done;
 }
 
@@ -419,7 +421,7 @@ function copyAssetTrees() {
 // inside a tree). Same reasoning as ASSET_TREES — each one was a "tapping it opens the search page"
 // bug on the device.
 const ASSET_LOOSE_FILES = [
-    'lbl.html', 'lbl-en.html', 'readylinebyline.html',
+    'lbl.html', 'lbl-en.html',
     'listdiff.html', 'makelist.html', 'rr.html',
     'texts/abbr.html', 'texts/dn2.9.html', 'rrbi.html',
     // The memorisation app loads the same theme script as the rest of the site, plus its audio
@@ -510,8 +512,17 @@ const ONLINE_ORIGIN = process.env.DG_ONLINE_ORIGIN || '';
 if (ONLINE_ORIGIN && !/^https:\/\/([a-z0-9-]+\.)*dhamma\.gift$/.test(ONLINE_ORIGIN)) {
     throw new Error(`DG_ONLINE_ORIGIN must be https://[sub.]dhamma.gift, got "${ONLINE_ORIGIN}"`);
 }
+// Old help pages the site now 301s to the docs (dg-fastify.js LEGACY_HELP_REDIRECTS). Read from the
+// server itself so the list cannot drift: they are left out of www/ and native-bridge.js opens them
+// on the site, which redirects to the docs page.
+const SITE_ONLY_PATHS = (() => {
+    const src = fs.readFileSync(f('dg-fastify.js'), 'utf8');
+    const block = /const LEGACY_HELP_REDIRECTS = \{([\s\S]*?)\};/.exec(src);
+    return block ? [...block[1].matchAll(/'([\w.-]+\.html)'\s*:/g)].map(m => '/assets/common/' + m[1]) : [];
+})();
 function copyNative(name, to) {
-    const head = ONLINE_ORIGIN ? `window.DG_ONLINE_ORIGIN = ${JSON.stringify(ONLINE_ORIGIN)};\n` : '';
+    const head = (ONLINE_ORIGIN ? `window.DG_ONLINE_ORIGIN = ${JSON.stringify(ONLINE_ORIGIN)};\n` : '') +
+        `window.DG_SITE_ONLY_PATHS = ${JSON.stringify(SITE_ONLY_PATHS)};\n`;
     fs.writeFileSync(to, head + fs.readFileSync(path.join(SRC, name), 'utf8'));
 }
 
@@ -627,7 +638,8 @@ function verifyReferencedAssets() {
     };
     walk(WWW);
 
-    const real = [...missing.entries()].filter(([url]) => !REFERENCE_EXCEPTIONS.some(re => re.test(url)));
+    const real = [...missing.entries()].filter(([url]) => !REFERENCE_EXCEPTIONS.some(re => re.test(url)) &&
+        !SITE_ONLY_PATHS.includes(url)); // left out on purpose, opened on the site (see SITE_ONLY_PATHS)
     if (real.length) {
         throw new Error(
             'build-assets.js: the built bundle references site files that are not in www/:\n  - ' +

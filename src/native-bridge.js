@@ -488,6 +488,8 @@
             if (u.origin !== location.origin) return /^javascript:/i.test(u.href) ? null : u.href;
             if (/^\/4nt(\/|$)/.test(u.pathname)) return 'https://s.dhamma.gift' + u.pathname.replace(/^\/4nt/, '') + u.search + u.hash;
             if (NOT_BUNDLED_RE.test(u.pathname)) return ONLINE_ORIGIN + u.pathname + u.search + u.hash;
+            // Old help pages the site redirects to the docs (list baked in by build-assets.js).
+            if ((window.DG_SITE_ONLY_PATHS || []).indexOf(u.pathname) !== -1) return ONLINE_ORIGIN + u.pathname + u.search + u.hash;
         } catch (e) { /* not a URL */ }
         return null;
     }
