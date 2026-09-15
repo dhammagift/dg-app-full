@@ -52,41 +52,53 @@
             return null;
         },
 
-        askConsent: function (info) {
+        askConsent: function () {
             var Network = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Network;
             if (!Network) return Promise.resolve(true);
-            return Promise.all([Network.getStatus(), manifestBytes(info)]).then(function (out) {
+            return Promise.all([Network.getStatus(), readManifest()]).then(function (out) {
                 var status = out[0];
-                var bytes = out[1];
+                var m = out[1] || {};
                 if (status.connectionType === 'wifi') return true;
                 if (status.connected === false) return true; // the download itself will fail visibly
-                var Dialog = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Dialog;
-                if (!Dialog) return true;
-                var ru = (localStorage.getItem('dhammaLanguage') || localStorage.getItem('siteLanguage') || 'en') === 'ru';
-                var mb = bytes ? Math.round(bytes / (1024 * 1024)) : null;
-                var msg = ru
-                    ? 'Скачать офлайн-библиотеку' + (mb ? ' (' + mb + ' МБ)' : '') + ' через мобильный интернет?'
-                    : 'Download the offline library' + (mb ? ' (' + mb + ' MB)' : '') + ' over mobile data?';
-                return Dialog.confirm({
-                    title: ru ? 'Офлайн-библиотека' : 'Offline library',
-                    message: msg,
-                    okButtonTitle: ru ? 'Скачать' : 'Download',
-                    cancelButtonTitle: ru ? 'Не сейчас' : 'Not now',
-                }).then(function (v) { return !!v.value; });
+                // The site's own consent sheet (dg-node offline-status.js, 'dg:need-consent'): themed,
+                // both figures — the archive that downloads and the database on the device. The native
+                // AlertDialog showed only the on-device size ("584 MB"), which read as the download.
+                return new Promise(function (resolve) {
+                    var answered = false;
+                    window.dispatchEvent(new CustomEvent('dg:need-consent', { detail: {
+                        bytes: m.bytes, bytesGz: m.bytes_gz, langs: m.langs,
+                        resolve: function (p) { answered = true; resolve(p); },
+                    } }));
+                    if (!answered) resolve(nativeConsent(m));
+                });
             }).catch(function () { return true; });
         },
     };
 
-    // The published manifest carries the real size of the file that is about to be transferred.
-    // dg-node's app.js calls askConsent({}) — its own consent is a Settings button with the size
-    // written next to it, so it has no reason to fetch anything. Here the question IS the dialog,
-    // so the number has to come from somewhere: the manifest is a few hundred bytes.
-    function manifestBytes(info) {
-        if (info && info.bytes) return Promise.resolve(info.bytes);
+    // Fallback for a page without offline-status.js.
+    function nativeConsent(m) {
+        var Dialog = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Dialog;
+        if (!Dialog) return true;
+        var ru = (localStorage.getItem('dhammaLanguage') || localStorage.getItem('siteLanguage') || 'en') === 'ru';
+        var mb = function (b) { return Math.round(b / 1048576) + (ru ? ' МБ' : ' MB'); };
+        var size = m.bytes_gz && m.bytes
+            ? (ru ? ' (скачать ' + mb(m.bytes_gz) + ', на устройстве ' + mb(m.bytes) + ')' : ' (' + mb(m.bytes_gz) + ' download, ' + mb(m.bytes) + ' on device)')
+            : '';
+        return Dialog.confirm({
+            title: ru ? 'Офлайн-библиотека' : 'Offline library',
+            message: ru ? 'Скачать офлайн-библиотеку' + size + ' через мобильный интернет?'
+                        : 'Download the offline library' + size + ' over mobile data?',
+            okButtonTitle: ru ? 'Скачать' : 'Download',
+            cancelButtonTitle: ru ? 'Не сейчас' : 'Not now',
+        }).then(function (v) { return !!v.value; });
+    }
+
+    // The published manifest carries the real sizes: bytes_gz is what crosses the connection, bytes is
+    // the database it unpacks into. A few hundred bytes.
+    function readManifest() {
         var base = (window.dgPlatform && window.dgPlatform.distBase) || (ONLINE_ORIGIN + '/mobile-data');
         return fetch(base.replace(/\/$/, '') + '/db-manifest.json')
             .then(function (r) { return r.ok ? r.json() : null; })
-            .then(function (m) { return m && m.bytes ? m.bytes : null; })
             .catch(function () { return null; });
     }
 
