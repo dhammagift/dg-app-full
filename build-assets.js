@@ -82,10 +82,8 @@ const ASSETS = [
     // it works off 3 plain JS data files (dpd_i2h/dpd_deconstructor/dpd_ebts, ~24MB for both
     // langs), no dict.dhamma.gift involved at all. Those 3 were the actual missing piece.
     { url: '/assets/js/paliLookup.js', sources: [f('public/overrides/js/paliLookup.js')] },
-    { url: '/assets/js/standalone-dpd/dpd_i2h.js', sources: [l('js/standalone-dpd/dpd_i2h.js')] },
-    { url: '/assets/js/standalone-dpd/dpd_deconstructor.js', sources: [l('js/standalone-dpd/dpd_deconstructor.js')] },
-    { url: '/assets/js/standalone-dpd/dpd_ebts.js', sources: [l('js/standalone-dpd/dpd_ebts.js')] },
-    { url: '/assets/js/standalone-dpd/ru/dpd_ebts.js', sources: [l('js/standalone-dpd/ru/dpd_ebts.js')] },
+    // The dictionary data (standalone-dpd/*, ~24MB) is NOT bundled any more: it is updated regularly, so the
+    // app fetches it from the site and caches it for offline use (native-bridge.js dictionaryFromSite).
     // Lazy-loaded by settings.js's toggleQuickModal() stub (script.src = "/assets/js/quickModal.js")
     // on first Quick Menu open — was missing here entirely, so that fetch 404'd and History/
     // Favorites/Quick search never rendered offline (the stub silently swallows script.onerror).

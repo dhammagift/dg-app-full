@@ -125,6 +125,62 @@
         };
     })();
 
+    // The lookup popup's Pali dictionary (DPD: dpd_i2h, dpd_deconstructor, dpd_ebts, ru/dpd_ebts, ~24MB) is not
+    // in the APK: it is updated regularly, so it comes from the site like the library (owner). It lives in the
+    // Cache API for offline use; with a network the first use per launch revalidates it (ETag — a 304 costs
+    // nothing) and a changed file replaces the cached copy. paliLookup.js asks through window.dgDictScript.
+    (function dictionaryFromSite() {
+        if (!window.caches) return;
+        var origin = window.DG_ONLINE_ORIGIN || 'https://dhamma.gift';
+        var CACHE = 'dg-dict';
+        var FILES = ['/assets/js/standalone-dpd/dpd_i2h.js', '/assets/js/standalone-dpd/dpd_deconstructor.js',
+                     '/assets/js/standalone-dpd/dpd_ebts.js', '/assets/js/standalone-dpd/ru/dpd_ebts.js'];
+        var checked = {};
+
+        // Resolves to the newest Response available: the site's when it changed, else the cached one.
+        function fromSite(cache, src, cached) {
+            if (checked[src] || navigator.onLine === false) return Promise.resolve(cached);
+            checked[src] = true;
+            return fetch(origin + src, { cache: 'no-cache' }).then(function (res) {
+                if (!res.ok) return cached;
+                var etag = res.headers.get('etag');
+                if (cached && etag && cached.headers.get('etag') === etag) return cached;
+                return cache.put(src, res.clone()).then(function () { return res; });
+            }).catch(function () { checked[src] = false; return cached; });
+        }
+
+        window.dgDictScript = function (src) {
+            return caches.open(CACHE).then(function (cache) {
+                return cache.match(src).then(function (hit) {
+                    if (hit) {
+                        fromSite(cache, src, hit.clone()); // refresh in the background; this tap uses the cached copy
+                        return hit.text();
+                    }
+                    return fromSite(cache, src, null).then(function (res) {
+                        if (!res) throw new Error('dictionary is not downloaded yet and there is no network: ' + src);
+                        return res.text();
+                    });
+                });
+            });
+        };
+
+        // With the offline library installed, get the dictionary too, so the first tap without a network works.
+        if (window.dgOfflineLibrary && typeof window.dgOfflineLibrary.then === 'function') {
+            window.dgOfflineLibrary.then(function (state) {
+                if (!state || !state.local) return;
+                setTimeout(function () {
+                    caches.open(CACHE).then(function (cache) {
+                        return FILES.reduce(function (chain, src) {
+                            return chain.then(function () {
+                                return cache.match(src).then(function (hit) { return fromSite(cache, src, hit || null); });
+                            });
+                        }, Promise.resolve());
+                    }).catch(function (e) { console.warn('[dg-dict] could not cache the dictionary:', e && e.message); });
+                }, 5000);
+            }, function () { /* no library: the dictionary still loads on first use */ });
+        }
+    })();
+
     (function sharePdfDownloads() {
         var Plugins = window.Capacitor && window.Capacitor.Plugins;
         if (!Plugins || !Plugins.Filesystem || !Plugins.Share) return;
