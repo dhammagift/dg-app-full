@@ -16,12 +16,27 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        // Before super.onCreate(), which is where the bridge is built and reads its plugin list.
-        // DgDownloader hands the 170MB library download to Android's DownloadManager so it
-        // survives the app being backgrounded and draws progress in the notification shade.
-        registerPlugin(DgDownloader.class);
+        // Before super.onCreate(): Capacitor collects the registered plugins while the bridge
+        // itself is being created. DgShortcuts is the dynamic-shortcuts bridge (recently read) —
+        // see its own comment for why dynamic shortcuts are the reason this app is Capacitor.
+        registerPlugin(DgShortcutsPlugin.class);
+        // Download progress in the status bar, so backgrounding the app doesn't hide the 509MB
+        // transfer (the page keeps reporting it; this only mirrors it natively).
+        registerPlugin(DgProgressPlugin.class);
+        registerPlugin(DgTtsPlugin.class);
         super.onCreate(savedInstanceState);
         // Deliberately no handleIntent() here — see handledIntent above.
+
+        // And no second WebView, ever. With multiple windows enabled, any target="_blank" or
+        // window.open() made Capacitor open another WebView, which loads the same local origin —
+        // and this origin has no server behind paths like /sn56.48:1.4, so the reader got Chrome's
+        // "Webpage not available (net::ERR_INVALID_RESPONSE)" in a window that also had no back
+        // handling: the only way out was killing the app (owner, screenshots). native-bridge.js now
+        // rewrites those navigations in place (openInPlace); this is the belt to that suspenders —
+        // if anything still asks for a window, the WebView loads it in the current view instead.
+        if (getBridge() != null && getBridge().getWebView() != null) {
+            getBridge().getWebView().getSettings().setSupportMultipleWindows(false);
+        }
     }
 
     @Override
@@ -36,11 +51,12 @@ public class MainActivity extends BridgeActivity {
         handleIntent(intent);
     }
 
-    // Turns the two ways this activity can be launched with extra data — a shared-text Intent
-    // (Web Share Target equivalent, see AndroidManifest.xml's ACTION_SEND filter) or a static App
-    // Shortcut's "route" extra (res/xml/shortcuts.xml) — into a URL the WebView loads. Neither is
-    // wired up automatically here the way it would be for a Trusted Web Activity reading the
-    // site's web manifest; this is the Capacitor equivalent.
+    // Turns the three ways this activity can be launched with extra data — a shared-text Intent
+    // (Web Share Target equivalent, see AndroidManifest.xml's ACTION_SEND filter), a dhamma.gift
+    // deep link (ACTION_VIEW filter, same file), or a static App Shortcut's "route" extra
+    // (res/xml/shortcuts.xml) — into a URL the WebView loads. None of these are wired up
+    // automatically here the way they would be for a Trusted Web Activity reading the site's web
+    // manifest; this is the Capacitor equivalent.
     //
     // https://localhost is Capacitor's default local-server origin (capacitor.config.json sets no
     // custom server.hostname/androidScheme) — hardcoded rather than derived because the bridge/
@@ -64,16 +80,43 @@ public class MainActivity extends BridgeActivity {
         if (Intent.ACTION_SEND.equals(intent.getAction()) && "text/plain".equals(intent.getType())) {
             String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
             if (sharedText != null && !sharedText.isEmpty()) {
+                // RAW text, deliberately: the shared payload ("<text>" plus the source page's URL,
+                // sometimes with a #:~:text= fragment) is cleaned by the SITE, in
+                // search/index.html's `?q=` handling — the same code path a web share_target and a
+                // plain link already go through, and the same thing dg-twa's LauncherActivity does
+                // (it too just passes EXTRA_TEXT through). Cleaning here as well meant two
+                // implementations to fix every time Android's share format changed; the copy that
+                // used to live in this file was removed for exactly that reason. Nothing about
+                // incoming shares belongs in a wrapper.
                 url = "https://localhost/?q=" + Uri.encode(sharedText);
             }
+        } else if (Intent.ACTION_VIEW.equals(intent.getAction()) && intent.getData() != null) {
+            // A dhamma.gift/f.dhamma.gift/find.dhamma.gift link opened from outside the app (see
+            // the VIEW intent-filter in AndroidManifest.xml) — same _nativeRoute handoff as the
+            // App Shortcuts below, just built from the tapped URL's own path+query instead of a
+            // fixed extra.
+            Uri data = intent.getData();
+            String path = data.getPath();
+            String route = (path == null || path.isEmpty() ? "/" : path)
+                + (data.getQuery() != null ? "?" + data.getQuery() : "");
+            url = "https://localhost/?_nativeRoute=" + Uri.encode(route);
         } else {
             String route = intent.getStringExtra("route");
             if (route != null) {
                 url = "https://localhost/?_nativeRoute=" + Uri.encode(route);
             } else if (intent.getStringExtra("openQuickModal") != null) {
-                // <extra> in shortcuts.xml always yields a String extra (no boolean type there),
-                // so this is checked for presence, not parsed as a boolean.
-                url = "https://localhost/?_openQuickModal=1";
+                // The extra's VALUE is the Quick Modal tab key itself (e.g. "tab-fav",
+                // "tab-4as") — settings-bundle.js already listens for exactly this shape on
+                // DOMContentLoaded (its own hook, used by the site's "Быстрое окно" doc page), so
+                // it needs no shim of its own here beyond forwarding the value through.
+                //
+                // A custom app.js `_openQuickModal` + `window.addEventListener('load', ...)` used
+                // to do this instead, and reportedly just opened the home screen on real devices
+                // — `load` waits on every subresource and isn't guaranteed to fire promptly (or
+                // to still be pending when the listener attaches) in this WebView, while
+                // settings-bundle.js's own hook fires on DOMContentLoaded, which is both earlier
+                // and already proven to work for this exact purpose on the live site.
+                url = "https://localhost/?action=" + Uri.encode(intent.getStringExtra("openQuickModal"));
             }
         }
         if (url == null) return;
@@ -83,4 +126,11 @@ public class MainActivity extends BridgeActivity {
             bridge.getWebView().post(() -> bridge.getWebView().loadUrl(finalUrl));
         }
     }
+
+    // cleanSharedText() used to live here. Removed on purpose: the site cleans `?q=` itself
+    // (search/index.html — strips a trailing source URL, then one wrapping quote pair), which is
+    // the one place that also serves the web share_target, the PWA and the TWA. Keeping a second
+    // copy in the wrapper is how the two drift apart, and Android's share format is not stable
+    // enough for "fix it in every shell" to be a plan. dg-twa's LauncherActivity does the same:
+    // it passes EXTRA_TEXT straight through.
 }

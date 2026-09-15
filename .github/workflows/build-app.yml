@@ -6,7 +6,7 @@ name: Build App
 #
 # THE UI IS NOT IN THIS REPOSITORY. It is generated at build time from a dg-node checkout:
 # build-page.js turns dg-node's search/index.html into www/index.html, build-assets.js copies
-# every asset that page references, build-toc-snapshot.js snapshots a running dg-light.js.
+# every asset that page references, build-toc-snapshot.js snapshots a running dg-fastify.js.
 # Which dg-node commit is used is pinned by the DG_NODE_REF file at this repo's root (a branch
 # name or tag), overridable per-run via the workflow_dispatch input below.
 #
@@ -31,25 +31,39 @@ name: Build App
 # All repos are public, so no token needed for the checkouts.
 
 on:
+  # Every push builds — no tag needed to get an installable APK artifact (see the "Upload APK
+  # artifact" step, which runs on every run). Tags/releases are for when there is actually
+  # something to release: push one deliberately, don't tag routine work-in-progress commits.
   push:
-    tags:
-      - 'v*'
   workflow_dispatch:
     inputs:
       dg_node_ref:
         description: 'dg-node branch or tag to build the UI from (default: contents of DG_NODE_REF)'
         required: false
         type: string
+      online_origin:
+        description: 'Site the app talks to (default: test.dhamma.gift; tags build for dhamma.gift)'
+        required: false
+        type: string
 
 env:
+  # Everyday builds are test APKs against test.dhamma.gift, so app work never needs a prod deploy
+  # first. A tag push (a real release, the AAB for Google Play) targets dhamma.gift.
+  DG_ONLINE_ORIGIN: ${{ inputs.online_origin || (startsWith(github.ref, 'refs/tags/') && 'https://dhamma.gift') || 'https://test.dhamma.gift' }}
   REPOS_ROOT: ${{ github.workspace }}/repos
   DG_NODE_PATH: /var/www/html/nodejs
-  # Port dg-light.js is started on for the TOC snapshot — see that step for why it is pinned.
+  # Port dg-fastify.js is started on for the TOC snapshot — see that step for why it is pinned.
   DG_SERVER_PORT: '3000'
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    # The default GITHUB_TOKEN is read-only on this org; action-gh-release below needs
+    # contents: write to create a release on a tag push, and fails with a 403 without it (never
+    # caught before because every prior CI run here was workflow_dispatch, which the Create
+    # Release step skips entirely).
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout this repo (the app)
@@ -86,14 +100,24 @@ jobs:
       #
       # "read" is checked out alongside assets/* — reader/css/index.css's relative symlink needs
       # /var/www/html/read/css/index.css to exist.
-      - name: Checkout legacy dg (assets + read only)
+      - name: Checkout legacy dg (the asset trees the app copies)
         working-directory: /var/www/html
         run: |
           git init -q
           git remote add origin https://github.com/dhammagift/dg.git
           git config core.sparseCheckout true
           git sparse-checkout init --cone
-          git sparse-checkout set assets/img assets/css assets/js assets/svg assets/texts read
+          # build-assets.js copies whole trees (ASSET_TREES/ASSET_LOOSE_FILES) for the pages the
+          # app's menu links to — common/, grammar/, materials/, diff/, repeat-timer/ — and
+          # verifies afterwards that every referenced file is in www/. A tree that this checkout
+          # does not fetch is therefore a hard build failure, not a warning: that is exactly how
+          # the first CI run of this workflow failed (assets/common and assets/grammar were
+          # missing and the verification listed the History page and the grammar pages as
+          # unreachable). Keep this list in step with build-assets.js.
+          git sparse-checkout set \
+            assets/img assets/css assets/js assets/svg assets/texts \
+            assets/common assets/grammar assets/materials assets/diff assets/repeat-timer \
+            read
           git fetch --depth 1 origin main -q
           git checkout -q FETCH_HEAD
 
@@ -110,7 +134,7 @@ jobs:
           git checkout -q FETCH_HEAD
           echo "dg-node@${{ steps.pin.outputs.ref }} = $(git rev-parse HEAD)"
 
-      # structure/tree is NOT optional — dg-light.js's TOC_TREE_ROOT reads
+      # structure/tree is NOT optional — dg-fastify.js's TOC_TREE_ROOT reads
       # .../sc-data/structure/tree/{sutta,vinaya,abhidhamma}/{code}-tree.json for every single
       # /api/toc/book/:code request. Missing it doesn't error at checkout time (sc_bilara_data
       # alone builds a perfectly valid skeleton/offline-db) — every book lookup just 404s at
@@ -180,9 +204,9 @@ jobs:
         working-directory: /var/www/html/nodejs
         run: |
           test -d siteroot/data/suttacentral.net/sc-data/sc_bilara_data/root || { echo "::error::sc-data did not land where siteroot/data/suttacentral.net/sc-data expects it"; exit 1; }
-          test -d siteroot/data/suttacentral.net/sc-data/structure/tree/sutta || { echo "::error::sc-data's structure/tree missing — every /api/toc/book/:code request 404s without it (TOC_TREE_ROOT in dg-light.js)"; exit 1; }
+          test -d siteroot/data/suttacentral.net/sc-data/structure/tree/sutta || { echo "::error::sc-data's structure/tree missing — every /api/toc/book/:code request 404s without it (TOC_TREE_ROOT in dg-fastify.js)"; exit 1; }
           test -d siteroot/data/dhammagift/translation/en || { echo "::error::offline-data did not land where siteroot/data/dhammagift expects it"; exit 1; }
-          test -f /var/www/html/assets/js/textinfo.json || { echo "::error::legacy assets/js missing (textinfo.json) — dblight.js needs it"; exit 1; }
+          test -f /var/www/html/assets/js/textinfo.json || { echo "::error::legacy assets/js missing (textinfo.json) — build-search-db.js needs it"; exit 1; }
           test -f reader/images/favicon-name-black.png || { echo "::error::reader/images relative symlink didn't resolve — dg and dg-node must be checked out at their real absolute prod paths (see workflow header)"; exit 1; }
           test -f reader/css/index.css || { echo "::error::reader/css/index.css relative symlink didn't resolve — needs /var/www/html/read/css/index.css, check dg's sparse-checkout includes 'read'"; exit 1; }
           echo "Data layout OK."
@@ -217,8 +241,10 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          api-level: 36
-          build-tools-version: 36.0.0
+          # The action's default package list includes the legacy "tools" package, which Google has
+          # dropped from the SDK repository (sdkmanager: "Failed to find package 'tools'"), so the
+          # step failed. Install only what the build needs.
+          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
 
       - name: Install dg-node dependencies
         working-directory: /var/www/html/nodejs
@@ -234,12 +260,6 @@ jobs:
         working-directory: /var/www/html/nodejs
         run: npm run build-icons
 
-      # Skeleton (dg_db_light.json) is gitignored in dg-node — each environment builds its own.
-      # It is build-search-db.js's input, and dg-light.js needs it to boot for the TOC snapshot.
-      - name: Build skeleton (dg_db_light.json)
-        working-directory: /var/www/html/nodejs
-        run: npm run build-db
-
       # The app no longer builds a database of its own. dg-node builds dg.db from the corpus —
       # the same file the site queries — and the app cuts a language slice out of it. That is
       # what makes the two provably the same data rather than two readings of the same files.
@@ -247,105 +267,145 @@ jobs:
         working-directory: /var/www/html/nodejs
         run: npm run build-search-db
 
-      - name: Cut the app's language slice
-        run: npm run build-app-db -- --from=/var/www/html/nodejs/dg.db --langs=ru,en --out=dist/dg-mobile.db
+      # The offline layer (fetch shim, data worker, core bundle, sqlite-wasm) is built in dg-node and
+      # copied into the app verbatim — see docs/OFFLINE_PWA_PLAN.md, "Этап 2". Building it here rather
+      # than in the app is what keeps one core bundle for the site, the PWA and the app: the app's own
+      # build-core-bundle.js is gone, and build-assets.js fails loudly if this step did not run.
+      - name: Build the offline layer (dg-node)
+        working-directory: /var/www/html/nodejs
+        run: npm run build-offline
 
-      # dg-mobile.db IS the offline library — the app fetches it from DIST_BASE at first launch and
-      # streams it into OPFS. Listing it makes its size visible in the log; the upload below makes
-      # it retrievable.
-      - name: List offline database output
-        run: ls -lah dist/ || { echo "::error::no dist/ — the slice was not produced"; exit 1; }
-
-      # The check that would have caught the one real divergence this slice ever had: it was
-      # indexed under a plain trigram tokenizer over pre-folded text, so the stored side folded
-      # diacritics and the query side did not, and searching for "kacchapānaṁ" as the word is
-      # actually written found nothing in the app and two suttas on the site. Cheap, needs no
-      # corpus and no device — it compares the slice's index definition against dg.db's and then
-      # exercises the folding on rows it builds itself.
-      - name: Check the slice folds like dg.db
-        env:
-          DG_NODE_PATH: /var/www/html/nodejs
-        run: node test/fts-fold.test.js dist/dg-mobile.db
-
-      # dg-light.js's app.listen() accepts connections immediately, while its async initServer()
+      # dg-fastify.js is what prod actually runs (dg-light.js was its predecessor, replaced there
+      # entirely) — using it here too, not dg-light.js, means the TOC snapshot and the generated
+      # settings/*.json files this build bakes in come from the SAME code path that answers the
+      # live site, not a second, unmaintained implementation that can silently drift from it.
+      # It needs dg.db to boot (throws if missing) — already built two steps above — which is also
+      # why dblight.js's dg_db_light.json skeleton is gone from this workflow entirely: dg-fastify
+      # reads its own skeleton out of dg.db directly, that file was only ever dg-light.js's input.
+      #
+      # app.listen() accepts connections immediately, while its async initServer()
       # (buildSettingsDemoCache — Aksharamukha conversion for every script — then
       # buildScriptListCache/buildLangCountsCache/buildTranslatorCatalogCache) keeps running in
       # the background and writes settings/{scripts,demo-data,lang-counts,translator-catalog}.json
-      # only once done. Measured: /api/toc answers in ~6s but translator-catalog.json — the LAST
-      # file in that sequence — doesn't land until ~36s. Killing the server before then froze
-      # initServer() mid-way and left "Build assets" with permanently missing inputs. Waiting on
-      # translator-catalog.json, not just /api/toc, closes that window.
+      # only once done. Measured on dg-light.js: /api/toc answers in ~6s but translator-catalog.
+      # json — the LAST file in that sequence — doesn't land until ~36s; killing the server before
+      # then froze initServer() mid-way and left "Build assets" with permanently missing inputs.
+      # Waiting on translator-catalog.json, not just /api/toc, closes that window — dg-fastify.js
+      # runs the identical four functions in the identical order, so the same wait applies.
       #
-      # PORT is set explicitly rather than relying on dg-light.js's default: that default has
-      # already moved (3000 -> 3001, with dg-fastify.js now on 3000), and a hardcoded 3000 here
-      # is what made this step time out — the server was up the whole time, just on another port.
-      # dg-light.js reads process.env.PORT, so pinning it makes the two agree by construction.
-      #
-      # Still dg-light.js and not dg-fastify.js: Fastify serves from dg.db, which this build has
-      # no reason to produce (the app ships its own database). The grep server needs only the
-      # corpus checkouts above, and both answer /api/toc identically.
-      - name: Start dg-light.js (for the TOC snapshot and the generated settings files)
+      # PORT is set explicitly rather than relying on the default: dg-fastify.js's own default
+      # (3000) happens to already match DG_SERVER_PORT, but pinning it here makes that agreement
+      # explicit instead of coincidental.
+      - name: Start dg-fastify.js (for the TOC snapshot and the generated settings files)
         working-directory: /var/www/html/nodejs
         env:
           PORT: ${{ env.DG_SERVER_PORT }}
         run: |
-          npm start > /tmp/dg-light.log 2>&1 &
-          echo $! > /tmp/dg-light.pid
+          npm run start:fastify > /tmp/dg-fastify.log 2>&1 &
+          echo $! > /tmp/dg-fastify.pid
           for i in $(seq 1 45); do
             if curl -sf "http://localhost:$PORT/api/toc" > /dev/null 2>&1 && [ -f settings/translator-catalog.json ]; then
-              echo "dg-light.js is up on port $PORT and fully initialized (attempt $i)."
+              echo "dg-fastify.js is up on port $PORT and fully initialized (attempt $i)."
               exit 0
             fi
             echo "Attempt $i/45..."
             sleep 2
           done
-          echo "::error::dg-light.js did not become fully ready within 90s on port $PORT"
-          cat /tmp/dg-light.log
+          echo "::error::dg-fastify.js did not become fully ready within 90s on port $PORT"
+          cat /tmp/dg-fastify.log
           exit 1
 
-      - name: Build TOC snapshot
-        run: npm run build-toc-snapshot -- --base=http://localhost:${{ env.DG_SERVER_PORT }}
-
-      - name: Stop dg-light.js
-        if: always()
-        run: |
-          if [ -f /tmp/dg-light.pid ]; then
-            PID=$(cat /tmp/dg-light.pid)
-            kill "$PID" 2>/dev/null || true
-            sleep 1
-            kill -9 "$PID" 2>/dev/null || true
-          fi
-
-      # MUST run after dg-light.js has booted at least once: settings/{scripts,demo-data,
+      # MUST run after dg-fastify.js has booted at least once: settings/{scripts,demo-data,
       # lang-counts,translator-catalog}.json are gitignored and written by the server at startup,
       # so on a fresh checkout they don't exist until it has run.
       #
-      # `npm run build` = build-page.js (www/index.html from dg-node's search/index.html),
-      # build-core-bundle.js (dg-node's search core, made loadable in a WebView), then
-      # build-assets.js (every asset that page references, plus src/ and sqlite-wasm).
-      - name: Build web bundle (page + assets)
-        run: npm run build
+      # The bundle is built in TWO phases on purpose, with the TOC snapshot in between: the page
+      # first (build-page.js — dg-node's search/index.html with the native platform and bridge
+      # injected), then the snapshot, then build-assets.js. build-assets.js refuses to run without
+      # www/api-snapshots/toc.json now — the navigator answers /api/toc from it, and when it went
+      # missing the app showed "Failed to load TOC: /api/toc: HTTP 404" on a device.
+      - name: Build the page (www/index.html)
+        run: node build-page.js
+
+      - name: Snapshot the offline TOC (needs dg-fastify.js from the previous step)
+        run: npm run build-toc-snapshot -- --base=http://localhost:${{ env.DG_SERVER_PORT }}
+
+      - name: Build web assets (www/**)
+        run: node build-assets.js
+
+
 
       # The checks that run against the BUILT page in a real browser. They belong here and not
       # only on a workstation: the app once shipped with its data worker dead — every search and
       # every reader request failing on the device — because these ran in one place and CI ran
       # none of them. test/serve-local.js is deliberately no more permissive about MIME types than
       # Capacitor's asset server, so a module that would not load on a phone does not load here.
+      # Used to rely on ubuntu-latest's pre-installed /usr/bin/google-chrome instead of installing
+      # one — worked for months, then this exact step started failing this check near-instantly
+      # (page errors, no diff output) with no code change anywhere near it, timing consistent with
+      # chromium.launch() itself throwing rather than anything in the page. A system browser
+      # nobody here pins the version of is exactly the kind of thing a runner-image update changes
+      # out from under a workflow without any warning. `playwright install` pins an EXACT Chromium
+      # build matched to this playwright-core version instead, the same guarantee build-app.yml
+      # already gives every other dependency (npm's lockfile, DG_NODE_REF, the JDK/SDK versions).
       - name: Install a browser driver for the end-to-end checks
-        run: npm install --no-save playwright-core@1.49.1
-
-      # A FIXTURE, not dist/. The snapshots these checks diff against were captured from a server
-      # running on this same fixture, so serving the real 170MB slice here would fail on the
-      # difference in corpus rather than on anything being wrong. make-fixture-db.js is
-      # deterministic — the file it writes is byte-identical to the one the snapshots came from.
-      - name: Build the fixture database the snapshots were captured from
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
         run: |
-          node test/make-fixture-db.js test/fixture.db
-          node build-app-db.js --from=test/fixture.db --langs=ru,en --out=test-dist/dg-mobile.db
+          npm install --no-save playwright-core@1.49.1
+          # The CLI's `install` subcommand lives in the "playwright" package, not the
+          # library-only "playwright-core" this repo actually requires at runtime (confirmed
+          # locally: `npx --package=playwright-core ... playwright install` fails instantly with
+          # "playwright: not found" — playwright-core ships no such binary at all). Same version
+          # pin either way, so both packages agree on which Chromium revision to fetch/resolve.
+          npx --yes playwright@1.49.1 install --with-deps chromium
+
+      # The app's own checks, run in dg-node against the server that is already up: every bundled
+      # page compared with the live site (the "tile opens the search page" family — a missing path
+      # is not a 404 in a WebView, it is index.html), and no referenced-but-absent file.
+      - name: Check the app's pages against the site
+        env:
+          DG_APP_PATH: ${{ github.workspace }}
+          DG_SITE_URL: http://localhost:${{ env.DG_SERVER_PORT }}
+          DG_PLAYWRIGHT: ${{ github.workspace }}/node_modules/playwright-core
+          PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
+        working-directory: /var/www/html/nodejs
+        run: |
+          node test/app-ui/check-pages.js
+          node test/app-ui/check-assets.js
+
+      # The parity reference: what THIS server answers, on the dg.db this run publishes below. The
+      # committed test/snapshots/site came from a 2026-09-05 fixture database and no longer matched.
+      - name: Capture the site's answers (parity reference)
+        run: node test/capture.js --base=http://localhost:${{ env.DG_SERVER_PORT }} --out=test/snapshots/site
+
+      # Only now: the page checks above compare the app against this server, and the TOC snapshot
+      # came from it. Stopping it earlier left the checks with nothing to compare against.
+      - name: Stop dg-fastify.js
+        if: always()
+        run: |
+          if [ -f /tmp/dg-fastify.pid ]; then
+            PID=$(cat /tmp/dg-fastify.pid)
+            kill "$PID" 2>/dev/null || true
+            sleep 1
+            kill -9 "$PID" 2>/dev/null || true
+          fi
+
+
+      # The offline library: the dg.db built above, published as dg.db.gz + db-manifest.json exactly
+      # like prod (--no-build: no second build). It is BOTH what the browser checks below download
+      # and what this run uploads, so the thing tested and the thing shipped are the same file.
+      - name: Publish the offline library (dg-node)
+        working-directory: /var/www/html/nodejs
+        run: node build-search-db.js --no-build
+
+      - name: List the offline library
+        working-directory: /var/www/html/nodejs
+        run: ls -lah siteroot/mobile-data/ || { echo "::error::publishing the offline library produced nothing"; exit 1; }
 
       - name: Serve the built app and its database
         run: |
-          node test/serve-local.js www test-dist 8097 &
+          node test/serve-local.js www /var/www/html/nodejs/siteroot/mobile-data 8097 &
           for i in $(seq 1 20); do
             curl -sf http://localhost:8097/ >/dev/null && break
             sleep 0.5
@@ -358,16 +418,36 @@ jobs:
       - name: Check the app answers exactly like the site
         env:
           DG_PLAYWRIGHT: ${{ github.workspace }}/node_modules/playwright-core
-          DG_CHROMIUM: /usr/bin/google-chrome
-        run: node test/e2e-browser.js
+          PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
+        # pipefail: without it `| tee` reported success whatever e2e-browser.js returned, so a DIFF
+        # never failed the build.
+        run: |
+          set -o pipefail
+          node test/e2e-browser.js 2>&1 | tee e2e-output.log
 
-      # The JavaScript half of the DownloadManager path, with the Java stubbed: polling to
-      # completion, handing the file to the worker, and deleting the temporary copy.
-      - name: Check the native download path
+      # Every link on the home page, search results, the reader (several modes), the TOC and
+      # Settings, clicked for real against a server that resolves paths the way Capacitor does
+      # (test/serve-local.js) — a link that is dead on the tablet fails here.
+      - name: Click every link the way the device would
         env:
           DG_PLAYWRIGHT: ${{ github.workspace }}/node_modules/playwright-core
-          DG_CHROMIUM: /usr/bin/google-chrome
-        run: node test/native-download.js
+          PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
+        run: |
+          set -o pipefail
+          node test/links.js 2>&1 | tee links-output.log
+
+      # Job log downloads need admin rights on this repo, which this workflow's own token doesn't
+      # have — an artifact is the one way to actually read what this step printed when it fails
+      # without that. Only uploaded on failure: the log is redundant with the console output on a
+      # normal green run, and would otherwise pile up 30 days of identical "24/24 identical"
+      # files for nothing.
+      - name: Upload e2e output on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-output-${{ github.run_number }}
+          path: e2e-output.log
+          retention-days: 7
 
       - name: Sync Capacitor
         run: npx cap sync android
@@ -375,9 +455,10 @@ jobs:
       - name: Grant gradlew permissions
         run: chmod +x android/gradlew
 
-      # assembleRelease has no signingConfig in app/build.gradle — it would produce
-      # app-release-unsigned.apk, not installable without a separate signing step. assembleDebug
-      # is auto-signed with the Android debug keystore (no secrets needed).
+      # assembleDebug is auto-signed with the Android debug keystore (no secrets needed) — quick
+      # to install for throwaway testing, but its signature can never match assetlinks.json
+      # (see AndroidManifest.xml's autoVerify comment), so deep links on it always fall back to
+      # the disambiguation chooser at best.
       - name: Build Android Debug APK
         working-directory: android
         run: ./gradlew assembleDebug --stacktrace
@@ -398,6 +479,69 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      # Release-signed build: the ONLY kind that can pass Android App Links verification (see
+      # AndroidManifest.xml's autoVerify comment) — install this one, not the debug APK above, to
+      # actually test deep links opening without the chooser dialog. Secrets are repo-level
+      # (Settings -> Secrets and variables -> Actions), populated once from android.keystore's own
+      # local android.keystore.readme (gitignored, never committed) and unrelated to Gradle's
+      # own debug-keystore auto-signing above, which needs none of this.
+      # Secret names: this repo's ANDROID_* or dg-twa's KEYSTORE_* — whichever set exists.
+      - name: Decode release keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 || secrets.KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "ANDROID_KEYSTORE_BASE64 secret not set — skipping the release build this run."
+            echo "skip=true" >> "$GITHUB_ENV"
+          else
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+            echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build Android Release APK
+        if: env.skip != 'true'
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD || secrets.KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || secrets.KEYSTORE_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD || secrets.KEY_PASSWORD }}
+        # The signing certificate's SHA-256 is public: it is what assetlinks.json must list for gift.dhamma.mobile.
+        run: |
+          ./gradlew assembleRelease --stacktrace
+          "$ANDROID_HOME"/build-tools/36.0.0/apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk | grep -m1 'SHA-256'
+
+      - name: Upload release APK artifact
+        if: success() && env.skip != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dg-app-full-apk-release-${{ github.run_number }}
+          path: android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      # The AAB is what Google Play takes — an APK built from this same project cannot be uploaded
+      # there, and until now the workflow produced only APKs (owner: "поправишь где надо git action
+      # на сборку апок и aab"). Same keystore, same buildType: `bundleRelease` runs the identical
+      # release variant and only changes the output packaging, so the AAB and the APK are the same
+      # code signed by the same key.
+      - name: Build Android Release AAB (Google Play)
+        if: env.skip != 'true'
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD || secrets.KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || secrets.KEYSTORE_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD || secrets.KEY_PASSWORD }}
+        run: ./gradlew bundleRelease --stacktrace
+
+      - name: Upload release AAB artifact
+        if: success() && env.skip != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dg-app-full-aab-release-${{ github.run_number }}
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 30
+
       # Kept as an artifact rather than committed anywhere, and attached to the release below on
       # tags so a tagged build is self-contained: the APK plus the exact database it expects.
       - name: Upload offline database
@@ -406,8 +550,8 @@ jobs:
         with:
           name: dg-app-full-db-${{ github.run_number }}
           path: |
-            dist/*.db
-            dist/db-manifest.json
+            /var/www/html/nodejs/siteroot/mobile-data/dg.db.gz
+            /var/www/html/nodejs/siteroot/mobile-data/db-manifest.json
           if-no-files-found: error
           retention-days: 30
 
@@ -417,8 +561,10 @@ jobs:
         with:
           files: |
             android/app/build/outputs/apk/debug/app-debug.apk
-            dist/dg-mobile.db
-            dist/db-manifest.json
+            android/app/build/outputs/apk/release/*.apk
+            android/app/build/outputs/bundle/release/*.aab
+            /var/www/html/nodejs/siteroot/mobile-data/dg.db.gz
+            /var/www/html/nodejs/siteroot/mobile-data/db-manifest.json
           body: |
             UI built from dg-node@${{ steps.pin.outputs.ref }}.
           token: ${{ secrets.GITHUB_TOKEN }}

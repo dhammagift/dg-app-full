@@ -23,33 +23,612 @@
    "lb": 0,
    "la": 0,
    "exactMatch": false,
-   "totalFiles": 1,
-   "totalMatches": 1,
+   "totalFiles": 10,
+   "totalMatches": 37,
    "hasVariantMatch": false
   },
   "data": {
-   "dn22": {
-    "sutta_id": "dn22",
+   "dn2": {
+    "sutta_id": "dn2",
     "category": "dhamma",
     "dir_path": "pli/ms/sutta/dn",
     "titles": {
-     "root": "Dīgha Nikāya 22",
-     "ru_o": "Дигха Никая 22",
-     "en_thanissaro": "DN 22"
+     "root": "Sāmaññaphalasutta ",
+     "en_thanissaro": "The Fruits of the Contemplative Life ",
+     "ru_syrkin+edited+o": "Самана Пхала Сутта "
     },
-    "mr": 12,
-    "count": 1,
+    "mr": 30,
+    "count": 3,
+    "unique_words": [
+     "черепахах"
+    ],
+    "segments": [
+     {
+      "segment": "dn2:57.2",
+      "root_text": "Seyyathidaṁ—maṇilakkhaṇaṁ vatthalakkhaṇaṁ daṇḍalakkhaṇaṁ satthalakkhaṇaṁ asilakkhaṇaṁ usulakkhaṇaṁ dhanulakkhaṇaṁ āvudhalakkhaṇaṁ itthilakkhaṇaṁ purisalakkhaṇaṁ kumāralakkhaṇaṁ kumārilakkhaṇaṁ dāsalakkhaṇaṁ dāsilakkhaṇaṁ hatthilakkhaṇaṁ assalakkhaṇaṁ mahiṁsalakkhaṇaṁ usabhalakkhaṇaṁ golakkhaṇaṁ ajalakkhaṇaṁ meṇḍalakkhaṇaṁ kukkuṭalakkhaṇaṁ vaṭṭakalakkhaṇaṁ godhālakkhaṇaṁ kaṇṇikalakkhaṇaṁ kacchapalakkhaṇaṁ migalakkhaṇaṁ ",
+      "variant": "",
+      "translations": {
+       "ru_khantibalo": "а именно: истолковывая знаки на драгоценностях, знаки на палках, знаки на одеждах, знаки на мечах, знаки на стрелах, знаки на луках, знаки на оружии, знаки на женщинах, знаки на мужчинах, знаки на юношах, знаки на девушках, знаки на рабах, знаки на рабынях, знаки на слонах, знаки на конях, знаки на буйволах, знаки на быках, знаки на коровах, знаки на козлах, знаки на баранах, знаки на петухах, знаки на перепелах, знаки на ящерицах, знаки на длинноухих животных, знаки на черепахах, знаки на диких зверях, – ",
+       "ru_syrkin+edited+o": "а именно: [истолковывая] знаки на драгоценностях, знаки на палках, знаки на одеждах, знаки на мечах, знаки на стрелах, знаки на луках, знаки на оружии, знаки на женщинах, знаки на мужчинах, знаки на юношах, знаки на девушках, знаки на рабах, знаки на рабынях, знаки на слонах, знаки на конях, знаки на буйволах, знаки на быках, знаки на коровах, знаки на козлах, знаки на баранах, знаки на петухах, знаки на перепелах, знаки на ящерицах, знаки на длинноухих животных, знаки на черепахах, знаки на диких зверях, — ",
+       "ru_syrkin": "а именно: [истолковывая] знаки на драгоценностях, знаки на палках, знаки на одеждах, знаки на мечах, знаки на стрелах, знаки на луках, знаки на оружии, знаки на женщинах, знаки на мужчинах, знаки на юношах, знаки на девушках, знаки на рабах, знаки на рабынях, знаки на слонах, знаки на конях, знаки на буйволах, знаки на быках, знаки на коровах, знаки на козлах, знаки на баранах, знаки на петухах, знаки на перепелах, знаки на ящерицах, знаки на длинноухих животных, знаки на черепахах, знаки на диких зверях, — ",
+       "en_thanissaro": "as: determining lucky & unlucky gems, staffs, garments, swords, arrows, bows, & other weapons; women, men, boys, girls, male slaves, female slaves; elephants, horses, buffaloes, bulls, cows, goats, rams, fowl, quails, lizards, rabbits, tortoises, & other animals—he abstains from wrong livelihood, from “animal” arts such as these. "
+      },
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "mn23": {
+    "sutta_id": "mn23",
+    "category": "dhamma",
+    "dir_path": "pli/ms/sutta/mn",
+    "titles": {
+     "root": "Vammikasutta ",
+     "en_sujato": "The Termite Mound ",
+     "ru_sv+edited+o": "Муравейник "
+    },
+    "mr": 13,
+    "count": 6,
     "unique_words": [
      "черепаха"
     ],
     "segments": [
      {
-      "segment": "dn22:1.3",
-      "root_text": "Seyyathāpi kacchapo aṅgāni sake kapāle samodahati.",
-      "variant": "kacchapo → kacchapa",
+      "segment": "mn23:2.25",
+      "root_text": "‘Kummo, bhadante’ti. ",
+      "variant": "",
       "translations": {
-       "ru_o": "Подобно тому, как черепаха втягивает конечности в панцирь.",
-       "en_thanissaro": "Just as a tortoise gathers its limbs in its own shell."
+       "ru_sv": "«Черепаха, о почтенный».",
+       "ru_sv+edited+o": "“Черепаха, о почтенный”.",
+       "en_sujato": "‘A tortoise, sir!’ "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "mn23:3.10",
+      "root_text": "Ko nu kho, bhante, vammiko, kā rattiṁ dhūmāyanā, kā divā pajjalanā, ko brāhmaṇo, ko sumedho, kiṁ satthaṁ, kiṁ abhikkhaṇaṁ, kā laṅgī, kā uddhumāyikā, ko dvidhāpatho, kiṁ caṅgavāraṁ, ko kummo, kā asisūnā, kā maṁsapesi, ko nāgo”ti? ",
+      "variant": "",
+      "translations": {
+       "ru_sv": "– Уважаемый, что такое «муравейник», что такое «дымление ночью», и что такое «полыхание днём»? Кто такой «брахман», «мудрейший»? Что такое «нож», что такое «рытьё», что такое «засов», что такое «жаба», «что такое рогатина», что такое «сито», что такое «черепаха», что такое «мясницкий нож и колода», что такое «кусок мяса», что такое «Нага-змея»? ",
+       "ru_sv+edited+o": "– уважаемый, что такое “муравейник”, что такое “дымление ночью”, и что такое “полыхание днём”? Кто такой “брахман”, “мудрейший”? Что такое “нож”, что такое “рытьё”, что такое “засов”, что такое “жаба”, “что такое рогатина”, что такое “сито”, что такое “черепаха”, что такое “мясницкий нож и колода”, что такое “кусок мяса”, что такое “Нага-змея”? ",
+       "en_sujato": "“Sir, what is the termite mound? What is the fuming by night and flaming by day? Who is the brahmin, and who the clever one? What are the sword, the digging, the sticking point, the bullfrog, the forked path, the filter of ash, the tortoise, the butcher’s knife and chopping board, and the scrap of meat? And what is the king cobra?” "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "mn23:4.23",
+      "root_text": "‘Kummo’ti kho, bhikkhu, pañcannetaṁ upādānakkhandhānaṁ adhivacanaṁ, seyyathidaṁ—",
+      "variant": "",
+      "translations": {
+       "ru_sv": "Черепаха – это обозначение пяти совокупностей, подверженных цеплянию, то есть, ",
+       "ru_sv+edited+o": "Черепаха – это обозначение пяти совокупностей, подверженных цеплянию, то есть, ",
+       "en_sujato": "‘Tortoise’ is a term for the five grasping aggregates, that is: "
+      },
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "mn129": {
+    "sutta_id": "mn129",
+    "category": "dhamma",
+    "dir_path": "pli/ms/sutta/mn",
+    "titles": {
+     "root": "Bālapaṇḍitasutta ",
+     "en_sujato": "The Foolish and the Astute ",
+     "ru_sv+edited+o": "Глупцы и мудрецы "
+    },
+    "mr": 13,
+    "count": 6,
+    "unique_words": [
+     "черепаха"
+    ],
+    "segments": [
+     {
+      "segment": "mn129:24.3",
+      "root_text": "Tatrāssa kāṇo kacchapo, so vassasatassa vassasatassa accayena sakiṁ ummujjeyya. ",
+      "variant": "vassasatassa → …pe… (bj); vassasatassa (sya-all, km, pts1ed) ",
+      "translations": {
+       "ru_sv": "И представьте, что там была бы слепая морская черепаха, которая всплывала бы на поверхность один раз в сто лет.  ",
+       "ru_sv+edited+o": "И, там была бы слепая морская черепаха, которая всплывала бы на поверхность один раз в сто лет.  ",
+       "en_sujato": "And there was a one-eyed turtle who popped up once every hundred years. "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "mn129:24.5",
+      "root_text": "api nu so kāṇo kacchapo amusmiṁ ekacchiggale yuge gīvaṁ paveseyyā”ti? ",
+      "variant": "",
+      "translations": {
+       "ru_sv": "Могла бы эта слепая черепаха просунуть голову в это ярмо с единственным отверстием в нём?» ",
+       "ru_sv+edited+o": "Могла бы эта слепая черепаха просунуть голову в это ярмо с единственным отверстием в нём?” ",
+       "en_sujato": "Would that one-eyed turtle still poke its neck through the hole in that yoke?” "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "mn129:24.8",
+      "root_text": "“Khippataraṁ kho so, bhikkhave, kāṇo kacchapo amusmiṁ ekacchiggale yuge gīvaṁ paveseyya, ato dullabhatarāhaṁ, bhikkhave, manussattaṁ vadāmi sakiṁ vinipātagatena bālena. ",
+      "variant": "",
+      "translations": {
+       "ru_sv": "«Монахи, быстрее эта слепая черепаха сумела бы просунуть голову в это ярмо с единственным отверстием в нём, чем дурак, который однажды отправился в погибель [нижних миров], смог обрести бы вновь человеческое состояние.  ",
+       "ru_sv+edited+o": "“Монахи, быстрее эта слепая черепаха сумела бы просунуть голову в это ярмо с единственным отверстием в нём, чем дурак, который однажды отправился в погибель [нижних миров], смог обрести бы вновь человеческое состояние.  ",
+       "en_sujato": "“That one-eyed turtle would poke its neck through the hole in that yoke sooner than a fool who has fallen to the underworld would be reborn as a human being, I say. "
+      },
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "sn17.3": {
+    "sutta_id": "sn17.3",
+    "category": "dhamma",
+    "dir_path": "pli/ms/sutta/sn/sn17",
+    "titles": {
+     "root": "Kummasutta ",
+     "en_thanissaro": "Sutta The Turtle ",
+     "ru_o": "Сутта Черепаха  (o)"
+    },
+    "mr": 3,
+    "count": 22,
+    "unique_words": [
+     "черепаха"
+    ],
+    "segments": [
+     {
+      "segment": "sn17.3:0.3",
+      "root_text": "Kummasutta ",
+      "variant": "",
+      "translations": {
+       "ru_o": "Сутта Черепаха ",
+       "ru_sv": "Сутта Черепаха",
+       "en_thanissaro": "Sutta The Turtle "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "sn17.3:1.4",
+      "root_text": "Atha kho, bhikkhave, aññataro kummo aññataraṁ kummaṁ etadavoca: ",
+      "variant": "",
+      "translations": {
+       "ru_o": "И тогда, монахи, некая черепаха другой черепахе это сказала: ",
+       "ru_sv": "И одна черепаха сказала другой: ",
+       "en_thanissaro": "Then one turtle said to another, "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "sn17.3:1.5",
+      "root_text": "‘mā kho tvaṁ, tāta kumma, etaṁ padesaṁ agamāsī’ti. ",
+      "variant": "",
+      "translations": {
+       "ru_o": "‘Не ходи ты, дорогая черепаха, в ту сторону (то место)’. ",
+       "ru_sv": "“Дорогая черепаха, не ходи в такую-то местность”. ",
+       "en_thanissaro": "‘My dear turtle, don’t go to that area.’ "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "sn17.3:1.6",
+      "root_text": "Agamāsi kho, bhikkhave, so kummo taṁ padesaṁ. ",
+      "variant": "",
+      "translations": {
+       "ru_o": "Но пошла, монахи, та черепаха в ту сторону. ",
+       "ru_sv": "Но та черепаха отправилась в эту местность, ",
+       "en_thanissaro": "But the turtle went to that area, "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "sn17.3:1.8",
+      "root_text": "Atha kho, bhikkhave, so kummo yena so kummo tenupasaṅkami. ",
+      "variant": "",
+      "translations": {
+       "ru_o": "И тогда, монахи, та черепаха, где та черепаха, туда приблизилась. ",
+       "ru_sv": "И тогда та черепаха отправилась к первой. ",
+       "en_thanissaro": "So he went back to the first turtle. "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "sn17.3:1.9",
+      "root_text": "Addasā kho, bhikkhave, so kummo taṁ kummaṁ dūratova āgacchantaṁ. ",
+      "variant": "",
+      "translations": {
+       "ru_o": "И увидела, монахи, та черепаха ту черепаху издали приближающуюся. ",
+       "en_thanissaro": "The first turtle saw him coming from afar, "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "sn17.3:1.11",
+      "root_text": "‘kacci tvaṁ, tāta kumma, na taṁ padesaṁ agamāsī’ti? ",
+      "variant": "",
+      "translations": {
+       "ru_o": "‘Надеюсь ты, дорогая черепаха, в то место не пошла?’ ",
+       "ru_sv": "“Я надеюсь, дорогая черепаха, что ты не ходила в ту местность”.",
+       "en_thanissaro": "‘I hope, dear turtle, that you didn’t go to area.’ "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "sn17.3:1.12",
+      "root_text": "‘Agamāsiṁ khvāhaṁ, tāta kumma, taṁ padesan’ti. ",
+      "variant": "",
+      "translations": {
+       "ru_o": "‘Вот сходила я, дорогая черепаха, в то место’. ",
+       "en_thanissaro": "“‘I went to that area, dear turtle.’ "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "sn17.3:1.13",
+      "root_text": "‘Kacci panāsi, tāta kumma, akkhato anupahato’ti? ",
+      "variant": "",
+      "translations": {
+       "ru_o": "‘Надеюсь ты, дорогая черепаха, не ранена, не повреждена?’ ",
+       "en_thanissaro": "“‘Then I hope you haven’t been wounded or hurt.’ "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "sn17.3:1.14",
+      "root_text": "‘Akkhato khomhi, tāta kumma, anupahato, atthi ca me idaṁ suttakaṁ piṭṭhito piṭṭhito anubandhan’ti. ",
+      "variant": "",
+      "translations": {
+       "ru_o": "‘Не ранена я, дорогая черепаха, не повреждена, но есть у меня эта верёвочка, сзади-сзади привязавшаяся’. ",
+       "en_thanissaro": "“‘I haven’t been wounded or hurt, but there’s this cord that keeps dragging behind me.’ "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "sn17.3:1.15",
+      "root_text": "‘Tagghasi, tāta kumma, khato, taggha upahato. ",
+      "variant": "",
+      "translations": {
+       "ru_o": "‘Воистину, дорогая черепаха, ты ранена, воистину повреждена. ",
+       "ru_sv": "“В самом деле, пронзили тебя, дорогая черепаха, в самом деле, пронзили! ",
+       "en_thanissaro": "“‘Yes, dear turtle, you’re wounded, you’re hurt. "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "sn17.3:1.16",
+      "root_text": "Etena hi te, tāta kumma, suttakena pitaro ca pitāmahā ca anayaṁ āpannā byasanaṁ āpannā. ",
+      "variant": "",
+      "translations": {
+       "ru_o": "Ведь этой верёвочкой, дорогая черепаха, отцы и деды в несчастье попали, в беду попали. ",
+       "en_thanissaro": "It was because of that cord that your father & grandfather fell into misfortune & disaster. "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "sn17.3:1.17",
+      "root_text": "Gaccha dāni tvaṁ, tāta kumma, na dāni tvaṁ amhākan’ti. ",
+      "variant": "",
+      "translations": {
+       "ru_o": "Иди теперь ты, дорогая черепаха, теперь ты не наша’. ",
+       "ru_sv": "Уходи, дорогая черепаха, ты больше не одна из нас”.",
+       "en_thanissaro": "Now go, dear turtle. You are no longer one of us.’ "
+      },
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "dn1": {
+    "sutta_id": "dn1",
+    "category": "dhamma",
+    "dir_path": "pli/ms/sutta/dn",
+    "titles": {
+     "root": "Brahmajālasutta ",
+     "en_thanissaro": "The Brahmā Net ",
+     "ru_syrkin+edited+o": "Брахмаджала Сутта "
+    },
+    "mr": 2,
+    "count": 3,
+    "unique_words": [
+     "черепахах"
+    ],
+    "segments": [
+     {
+      "segment": "dn1:1.22.2",
+      "root_text": "seyyathidaṁ—maṇilakkhaṇaṁ vatthalakkhaṇaṁ daṇḍalakkhaṇaṁ satthalakkhaṇaṁ asilakkhaṇaṁ usulakkhaṇaṁ dhanulakkhaṇaṁ āvudhalakkhaṇaṁ itthilakkhaṇaṁ purisalakkhaṇaṁ kumāralakkhaṇaṁ kumārilakkhaṇaṁ dāsalakkhaṇaṁ dāsilakkhaṇaṁ hatthilakkhaṇaṁ assalakkhaṇaṁ mahiṁsalakkhaṇaṁ usabhalakkhaṇaṁ golakkhaṇaṁ ajalakkhaṇaṁ meṇḍalakkhaṇaṁ kukkuṭalakkhaṇaṁ vaṭṭakalakkhaṇaṁ godhālakkhaṇaṁ kaṇṇikālakkhaṇaṁ kacchapalakkhaṇaṁ migalakkhaṇaṁ ",
+      "variant": "",
+      "translations": {
+       "ru_khantibalo": "а именно: истолковывая знаки на драгоценностях, знаки на палках, знаки на одеждах, знаки на мечах, знаки на стрелах, знаки на луках, знаки на оружии, знаки на женщинах, знаки на мужчинах, знаки на юношах, знаки на девушках, знаки на рабах, знаки на рабынях, знаки на слонах, знаки на конях, знаки на буйволах, знаки на быках, знаки на коровах, знаки на козлах, знаки на баранах, знаки на петухах, знаки на перепелах, знаки на ящерицах, знаки на длинноухих животных, знаки на черепахах, знаки на диких зверях, – ",
+       "ru_syrkin+edited+o": "а именно: [истолковывая] знаки на драгоценностях, знаки на палках, знаки на одеждах, знаки на мечах, знаки на стрелах, знаки на луках, знаки на оружии, знаки на женщинах, знаки на мужчинах, знаки на юношах, знаки на девушках, знаки на рабах, знаки на рабынях, знаки на слонах, знаки на конях, знаки на буйволах, знаки на быках, знаки на коровах, знаки на козлах, знаки на баранах, знаки на петухах, знаки на перепелах, знаки на ящерицах, знаки на длинноухих животных, знаки на черепахах, знаки на диких зверях, —  ",
+       "ru_syrkin": "а именно: [истолковывая] знаки на драгоценностях, знаки на палках, знаки на одеждах, знаки на мечах, знаки на стрелах, знаки на луках, знаки на оружии, знаки на женщинах, знаки на мужчинах, знаки на юношах, знаки на девушках, знаки на рабах, знаки на рабынях, знаки на слонах, знаки на конях, знаки на буйволах, знаки на быках, знаки на коровах, знаки на козлах, знаки на баранах, знаки на петухах, знаки на перепелах, знаки на ящерицах, знаки на длинноухих животных, знаки на черепахах, знаки на диких зверях, —  ",
+       "en_thanissaro": "as: determining lucky & unlucky gems, staffs, garments, swords, arrows, bows, & other weapons; women, men, boys, girls, male slaves, female slaves; elephants, horses, buffaloes, bulls, cows, goats, rams, fowl, quails, lizards, rabbits, tortoises, & other animals— "
+      },
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "sn35.248": {
+    "sutta_id": "sn35.248",
+    "category": "dhamma",
+    "dir_path": "pli/ms/sutta/sn/sn35",
+    "titles": {
+     "root": "Yavakalāpisutta ",
+     "en_thanissaro": "Sutta The Sheaf of Barley ",
+     "ru_sv+edited+o": "Сутта Связка Ячменя"
+    },
+    "mr": 2,
+    "count": 2,
+    "unique_words": [
+     "черепаха"
+    ],
+    "segments": [
+     {
+      "segment": "sn35.248:8.1",
+      "root_text": "Āsīviso ratho kummo, ",
+      "variant": "",
+      "translations": {
+       "ru_sv+edited+o": "Гадюка, колесница, черепаха,",
+       "ru_sv": "Гадюка, колесница, черепаха,"
+      },
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "sn35.240": {
+    "sutta_id": "sn35.240",
+    "category": "dhamma",
+    "dir_path": "pli/ms/sutta/sn/sn35",
+    "titles": {
+     "root": "Kummopamasutta ",
+     "en_thanissaro": "Sutta The Turtle ",
+     "ru_o": "Сутта Подобие Черепахи (o)"
+    },
+    "mr": 1,
+    "count": 11,
+    "unique_words": [
+     "черепаха"
+    ],
+    "segments": [
+     {
+      "segment": "sn35.240:1.1",
+      "root_text": "“Bhūtapubbaṁ, bhikkhave, kummo kacchapo sāyanhasamayaṁ anunadītīre gocarapasuto ahosi. ",
+      "variant": "",
+      "translations": {
+       "ru_o": "“В прежнюю бытность, монахи, черепаха (которая может жить и на суше и в воде) в вечернее время (время позднего дня) по берегу реки пищу искала (пастбище ищущей являлась).",
+       "ru_sv": "“Монахи, как-то раз одним вечером черепаха искала пищу вдоль берега реки. ",
+       "en_thanissaro": "“Once upon a time, monks, a hard-shelled turtle was foraging for food in the evening along the shore of a lake. "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "sn35.240:1.3",
+      "root_text": "Addasā kho, bhikkhave, kummo kacchapo siṅgālaṁ dūratova gocarapasutaṁ. ",
+      "variant": "",
+      "translations": {
+       "ru_o": "И увидела, монахи, черепаха шакала издали, пищу-ищущего,",
+       "ru_sv": "Когда черепаха увидела шакала издали, ищущего пищу, ",
+       "en_thanissaro": "The turtle saw the jackal from afar, foraging for food, "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "sn35.240:1.6",
+      "root_text": "Disvāna yena kummo kacchapo tenupasaṅkami; upasaṅkamitvā kummaṁ kacchapaṁ paccupaṭṭhito ahosi: ",
+      "variant": "",
+      "translations": {
+       "ru_o": "Увидев, где черепаха подошёл; подойдя черепахи напротив встал (напротив-стоящим стал):",
+       "en_thanissaro": "and so it went to the turtle and, on arrival, hovered around it, (thinking,) "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "sn35.240:1.7",
+      "root_text": "‘yadāyaṁ kummo kacchapo soṇḍipañcamānaṁ aṅgānaṁ aññataraṁ vā aññataraṁ vā aṅgaṁ abhininnāmessati, tattheva naṁ gahetvā uddālitvā khādissāmī’ti. ",
+      "variant": "",
+      "translations": {
+       "ru_o": "“Когда эта черепаха шею, как пятую из лап ту или другую лапу разогнёт, вот тогда её схватив, вырвав поглощу”.",
+       "ru_sv": "“Когда эта черепаха высунет одну из лап или шею, я тут же её схвачу, вытащу и съем”. ",
+       "en_thanissaro": "“As soon as the turtle stretches out one or another of its four limbs—or its neck as a fifth—I’ll seize it right there, tear it off, and eat it.” "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "sn35.240:1.8",
+      "root_text": "Yadā kho, bhikkhave, kummo kacchapo soṇḍipañcamānaṁ aṅgānaṁ aññataraṁ vā aññataraṁ vā aṅgaṁ na abhininnāmi, atha siṅgālo kummamhā nibbijja pakkāmi, otāraṁ alabhamāno. ",
+      "variant": "",
+      "translations": {
+       "ru_o": "Но когда, монахи, черепаха шею, как пятую из лап ту или другую лапу не потянула, тогда шакал от черепахи потеряв-интерес пошёл, случай не-получивший.",
+       "ru_sv": "Но поскольку черепаха не вытащила ни одной из лап или же шеи, шакал, так и не сумев добраться до неё, потерял к ней всякий интерес и ушёл.",
+       "en_thanissaro": "But when the turtle didn’t stretch out any of its four limbs—or its neck as a fifth—the jackal, not having gotten any opportunity, lost interest and left. "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "sn35.240:3.1",
+      "root_text": "Kummova aṅgāni sake kapāle, ",
+      "variant": "",
+      "translations": {
+       "ru_o": "“Точно черепаха лапа в свой панцирь,",
+       "en_thanissaro": "Like a turtle with its limbs withdrawn in its shell, "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "sn35.240:3.2",
+      "root_text": "Samodahaṁ bhikkhu manovitakke; ",
+      "variant": "",
+      "translations": {
+       "ru_sv": "Как черепаха лапы втягивает в панцирь,",
+       "en_thanissaro": "so the monk, the thoughts of the heart: ",
+       "ru_o": "Стягивающий монах умо-восприятие;"
+      },
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "sn56.47": {
+    "sutta_id": "sn56.47",
+    "category": "dhamma",
+    "dir_path": "pli/ms/sutta/sn/sn56",
+    "titles": {
+     "root": "Paṭhamachiggaḷayugasutta ",
+     "en_sujato": "A Yoke With a Hole (1st) ",
+     "ru_o": "Сутта Отверстие Ярма Первая (o)"
+    },
+    "mr": 1,
+    "count": 6,
+    "unique_words": [
+     "черепаха"
+    ],
+    "segments": [
+     {
+      "segment": "sn56.47:1.1",
+      "root_text": "“Seyyathāpi, bhikkhave, puriso mahāsamudde ekacchiggaḷaṁ yugaṁ pakkhipeyya. Tatrāpissa kāṇo kacchapo. So vassasatassa vassasatassa accayena sakiṁ sakiṁ ummujjeyya. ",
+      "variant": "ekacchiggaḷaṁ → ekacchiggalaṁ (bj) ",
+      "translations": {
+       "ru_sv": "«Монахи, представьте, как если бы человек бросил бы ярмо с единственным отверстием в нём в великий океан, и там была бы слепая морская черепаха, которая всплывала на поверхность один раз в сто лет. ",
+       "ru_o": "“Это как, монахи, человек в Великий Океан бросил бы ярмо с одним отверстием. И там бы была слепая черепаха. Она раз в сотню лет всплывала бы.",
+       "en_sujato": "“Mendicants, suppose a person were to throw a yoke with a single hole into the ocean. And there was a one-eyed turtle who popped up once every hundred years. "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "sn56.47:1.3",
+      "root_text": "api nu kho kāṇo kacchapo vassasatassa vassasatassa accayena sakiṁ sakiṁ ummujjanto amusmiṁ ekacchiggaḷe yuge gīvaṁ paveseyyā”ti? ",
+      "variant": "",
+      "translations": {
+       "ru_sv": "могла бы эта слепая черепаха, всплывающая на поверхность раз в сто лет, просунуть голову в это ярмо с единственным отверстием в нём?» ",
+       "ru_o": "возможно ли, чтобы слепая черепаха, раз в сотню лет всплывающая в то ярмо с одним отверстием шею продела”?",
+       "en_sujato": "Would that one-eyed turtle, popping up once every hundred years, still poke its neck through the hole in that yoke?” "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "sn56.47:2.1",
+      "root_text": "“Khippataraṁ kho so, bhikkhave, kāṇo kacchapo vassasatassa vassasatassa accayena sakiṁ sakiṁ ummujjanto amusmiṁ ekacchiggaḷe yuge gīvaṁ paveseyya, na tvevāhaṁ, bhikkhave, sakiṁ vinipātagatena bālena manussattaṁ vadāmi. ",
+      "variant": "vinipātagatena bālena → vinipātaṁ gatena bālena (bj); vinītagatena bahulena (mr) ",
+      "translations": {
+       "ru_sv": "«Быстрее, я говорю вам, эта слепая черепаха, всплывающая один раз в сто лет на поверхность, сумела бы просунуть голову в это ярмо с единственным отверстием в нём, чем дурак, который однажды свалился в нижние миры, (смог обрести бы вновь) человеческое рождение. ",
+       "ru_o": "“Быстрее та, монахи, слепая черепаха, раз в сотню лет всплывающая в то ярмо с одним отверстием шею продела бы, чем, монахи, раз павший ниже глупец обрел бы человеческое обличие говорю.",
+       "en_sujato": "“That one-eyed turtle might poke its neck through the hole in that yoke, but in any case it’d be sooner than a fool fallen to the underworld is reborn as a human being, I say. "
+      },
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "sn56.48": {
+    "sutta_id": "sn56.48",
+    "category": "dhamma",
+    "dir_path": "pli/ms/sutta/sn/sn56",
+    "titles": {
+     "root": "Dutiyachiggaḷayugasutta ",
+     "en_thanissaro": "Sutta The Hole ",
+     "ru_o": "Сутта Отверстие Ярма Вторая (o)"
+    },
+    "mr": 1,
+    "count": 6,
+    "unique_words": [
+     "черепаха"
+    ],
+    "segments": [
+     {
+      "segment": "sn56.48:1.4",
+      "root_text": "Tatrassa kāṇo kacchapo. So vassasatassa vassasatassa accayena sakiṁ sakiṁ ummujjeyya. ",
+      "variant": "",
+      "translations": {
+       "ru_sv": "И там была бы слепая черепаха, которая всплывала на поверхность один раз в сто лет. ",
+       "ru_o": "И там бы была слепая черепаха. Она раз в сотню лет всплывала бы.",
+       "en_thanissaro": "And suppose a blind sea turtle were there. It would come to the surface once every one hundred years. "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "sn56.48:1.6",
+      "root_text": "api nu kho kāṇo kacchapo vassasatassa vassasatassa accayena sakiṁ sakiṁ ummujjanto amusmiṁ ekacchiggaḷe yuge gīvaṁ paveseyyā”ti? ",
+      "variant": "",
+      "translations": {
+       "ru_sv": "могла бы эта слепая черепаха, всплывающая на поверхность раз в сто лет, просунуть голову в это ярмо с единственным отверстием в нём?» ",
+       "ru_o": "возможно ли, чтобы слепая черепаха, раз в сотню лет всплывающая в то ярмо с одним отверстием шею продела”?",
+       "en_thanissaro": "Would that blind sea turtle, coming to the surface once every one hundred years, stick his neck into the yoke with a single hole?” "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "sn56.48:1.7",
+      "root_text": "“Adhiccamidaṁ, bhante, yaṁ so kāṇo kacchapo vassasatassa vassasatassa accayena sakiṁ sakiṁ ummujjanto amusmiṁ ekacchiggaḷe yuge gīvaṁ paveseyyā”ti. ",
+      "variant": "",
+      "translations": {
+       "ru_sv": "«Это было бы случайнейшим совпадением, уважаемый, чтобы эта слепая черепаха, всплывающая на поверхность раз в сто лет, смогла просунуть голову в это ярмо с единственным отверстием в нём». ",
+       "ru_o": "“По великому совпадению, почтенный, та слепая черепаха, раз в сотню лет всплывающая в то ярмо с одним отверстием шею продела бы”.",
+       "en_thanissaro": "“It would be a sheer coincidence, lord, that the blind sea turtle, coming to the surface once every one hundred years, would stick his neck into the yoke with a single hole.” "
+      },
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "sn1.17": {
+    "sutta_id": "sn1.17",
+    "category": "dhamma",
+    "dir_path": "pli/ms/sutta/sn/sn1",
+    "titles": {
+     "root": "Dukkarasutta ",
+     "en_thanissaro": "Sutta Hard to Do ",
+     "ru_sv+edited+o": "Сутта Трудно Сделать"
+    },
+    "mr": 0,
+    "count": 2,
+    "unique_words": [
+     "черепаха"
+    ],
+    "segments": [
+     {
+      "segment": "sn1.17:3.1",
+      "root_text": "Kummova aṅgāni sake kapāle, ",
+      "variant": "",
+      "translations": {
+       "ru_sv+edited+o": "Как черепаха члены с свой панцирь,",
+       "en_thanissaro": "As a tortoise would draw its limbs into its shell, "
+      },
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "sn1.17:3.2",
+      "root_text": "Samodahaṁ bhikkhu manovitakke; ",
+      "variant": "",
+      "translations": {
+       "ru_sv": "Как черепаха в панцирь втягивает лапы, ",
+       "en_thanissaro": "so a monk should— the thoughts of his heart. ",
+       "ru_sv+edited+o": "стягивающий монах умо-восприятие;"
       },
       "lb_context": [],
       "la_context": []

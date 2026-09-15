@@ -5,13 +5,16 @@
     <string name="package_name">gift.dhamma.mobile</string>
     <string name="custom_url_scheme">gift.dhamma.mobile</string>
 
-    <!-- App Shortcuts labels (res/xml/shortcuts.xml) -->
-    <string name="shortcut_toc_short">TOC</string>
+    <!-- App Shortcuts labels (res/xml/shortcuts.xml). Same four as dg-twa's twaManifest.shortcuts
+         and the site's manifest (docs/PWA_SHORTCUTS.md): Table of Contents, Favorites & History,
+         Memo, Dictionary. Labels are not translated — the site manifest does not translate them either, and
+         the app name is Latin, so a phone in Russian shows the same four words. -->
+    <string name="shortcut_toc_short">Table of Contents</string>
     <string name="shortcut_toc_long">Table of Contents</string>
-    <string name="shortcut_bu_pm_short">Bhikkhu Pātimokkha</string>
-    <string name="shortcut_bu_pm_long">Bhikkhu Pātimokkha</string>
-    <string name="shortcut_bi_pm_short">Bhikkhuni Pātimokkha</string>
-    <string name="shortcut_bi_pm_long">Bhikkhuni Pātimokkha</string>
-    <string name="shortcut_favorites_short">Favorites</string>
-    <string name="shortcut_favorites_long">Favorites &amp; History</string>
+    <string name="shortcut_dict_short">Dictionary</string>
+    <string name="shortcut_dict_long">Dictionary</string>
+    <string name="shortcut_fav_short">Favorites &amp; History</string>
+    <string name="shortcut_fav_long">Favorites &amp; History</string>
+    <string name="shortcut_memo_short">Memo</string>
+    <string name="shortcut_memo_long">Memo</string>
 </resources>

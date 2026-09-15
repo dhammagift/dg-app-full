@@ -1,10 +1,13 @@
 {
  "status": 200,
  "body": {
-  "prev": null,
+  "prev": {
+   "slug": "dn21",
+   "title": "Sakkapañhasutta "
+  },
   "next": {
-   "slug": "sn56.11",
-   "title": "Dhammacakkappavattanasutta"
+   "slug": "dn23",
+   "title": "Pāyāsisutta "
   }
  }
 }

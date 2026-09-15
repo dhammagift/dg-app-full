@@ -14,99 +14,860 @@
    "lb": 0,
    "la": 0,
    "exactMatch": false,
-   "totalFiles": 3,
-   "totalMatches": 4,
+   "totalFiles": 32,
+   "totalMatches": 40,
    "hasVariantMatch": true
   },
   "data": {
-   "dn22": {
-    "sutta_id": "dn22",
+   "dn2": {
+    "sutta_id": "dn2",
     "category": "dhamma",
     "dir_path": "pli/ms/sutta/dn",
     "titles": {
-     "root": "Dīgha Nikāya 22",
-     "ru_o": "Дигха Никая 22",
-     "en_thanissaro": "DN 22"
+     "root": "Sāmaññaphalasutta ",
+     "en_thanissaro": "The Fruits of the Contemplative Life ",
+     "ru_syrkin+edited+o": "Самана Пхала Сутта "
     },
-    "mr": 12,
-    "count": 2,
+    "mr": 30,
+    "count": 1,
     "unique_words": [
-     "mahākacchapānaṁ",
-     "kacchapa"
+     "kacchapalakkhaṇaṁ"
     ],
     "segments": [
      {
-      "segment": "dn22:1.3",
-      "root_text": "Seyyathāpi kacchapo aṅgāni sake kapāle samodahati.",
-      "variant": "kacchapo → kacchapa",
+      "segment": "dn2:57.2",
+      "root_text": "Seyyathidaṁ—maṇilakkhaṇaṁ vatthalakkhaṇaṁ daṇḍalakkhaṇaṁ satthalakkhaṇaṁ asilakkhaṇaṁ usulakkhaṇaṁ dhanulakkhaṇaṁ āvudhalakkhaṇaṁ itthilakkhaṇaṁ purisalakkhaṇaṁ kumāralakkhaṇaṁ kumārilakkhaṇaṁ dāsalakkhaṇaṁ dāsilakkhaṇaṁ hatthilakkhaṇaṁ assalakkhaṇaṁ mahiṁsalakkhaṇaṁ usabhalakkhaṇaṁ golakkhaṇaṁ ajalakkhaṇaṁ meṇḍalakkhaṇaṁ kukkuṭalakkhaṇaṁ vaṭṭakalakkhaṇaṁ godhālakkhaṇaṁ kaṇṇikalakkhaṇaṁ kacchapalakkhaṇaṁ migalakkhaṇaṁ ",
+      "variant": "",
       "translations": {
-       "ru_o": "Подобно тому, как черепаха втягивает конечности в панцирь.",
-       "en_thanissaro": "Just as a tortoise gathers its limbs in its own shell."
+       "en_thanissaro": "as: determining lucky & unlucky gems, staffs, garments, swords, arrows, bows, & other weapons; women, men, boys, girls, male slaves, female slaves; elephants, horses, buffaloes, bulls, cows, goats, rams, fowl, quails, lizards, rabbits, tortoises, & other animals—he abstains from wrong livelihood, from “animal” arts such as these. ",
+       "ru_syrkin+edited+o": "а именно: [истолковывая] знаки на драгоценностях, знаки на палках, знаки на одеждах, знаки на мечах, знаки на стрелах, знаки на луках, знаки на оружии, знаки на женщинах, знаки на мужчинах, знаки на юношах, знаки на девушках, знаки на рабах, знаки на рабынях, знаки на слонах, знаки на конях, знаки на буйволах, знаки на быках, знаки на коровах, знаки на козлах, знаки на баранах, знаки на петухах, знаки на перепелах, знаки на ящерицах, знаки на длинноухих животных, знаки на черепахах, знаки на диких зверях, — "
+      },
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "mn129": {
+    "sutta_id": "mn129",
+    "category": "dhamma",
+    "dir_path": "pli/ms/sutta/mn",
+    "titles": {
+     "root": "Bālapaṇḍitasutta ",
+     "en_sujato": "The Foolish and the Astute ",
+     "ru_sv+edited+o": "Глупцы и мудрецы "
+    },
+    "mr": 13,
+    "count": 1,
+    "unique_words": [
+     "kacchapā"
+    ],
+    "segments": [
+     {
+      "segment": "mn129:21.3",
+      "root_text": "Macchā kacchapā susumārā, ye vā panaññepi keci tiracchānagatā pāṇā udakasmiṁ jāyanti udakasmiṁ jīyanti udakasmiṁ mīyanti. ",
+      "variant": "",
+      "translations": {
+       "en_sujato": "Fish, turtles, dolphins, and various others. ",
+       "ru_sv+edited+o": "Рыбы, черепахи, крокодилы, и другие подобные животные.  "
+      },
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "dn1": {
+    "sutta_id": "dn1",
+    "category": "dhamma",
+    "dir_path": "pli/ms/sutta/dn",
+    "titles": {
+     "root": "Brahmajālasutta ",
+     "en_thanissaro": "The Brahmā Net ",
+     "ru_syrkin+edited+o": "Брахмаджала Сутта "
+    },
+    "mr": 2,
+    "count": 1,
+    "unique_words": [
+     "kacchapalakkhaṇaṁ"
+    ],
+    "segments": [
+     {
+      "segment": "dn1:1.22.2",
+      "root_text": "seyyathidaṁ—maṇilakkhaṇaṁ vatthalakkhaṇaṁ daṇḍalakkhaṇaṁ satthalakkhaṇaṁ asilakkhaṇaṁ usulakkhaṇaṁ dhanulakkhaṇaṁ āvudhalakkhaṇaṁ itthilakkhaṇaṁ purisalakkhaṇaṁ kumāralakkhaṇaṁ kumārilakkhaṇaṁ dāsalakkhaṇaṁ dāsilakkhaṇaṁ hatthilakkhaṇaṁ assalakkhaṇaṁ mahiṁsalakkhaṇaṁ usabhalakkhaṇaṁ golakkhaṇaṁ ajalakkhaṇaṁ meṇḍalakkhaṇaṁ kukkuṭalakkhaṇaṁ vaṭṭakalakkhaṇaṁ godhālakkhaṇaṁ kaṇṇikālakkhaṇaṁ kacchapalakkhaṇaṁ migalakkhaṇaṁ ",
+      "variant": "",
+      "translations": {
+       "en_thanissaro": "as: determining lucky & unlucky gems, staffs, garments, swords, arrows, bows, & other weapons; women, men, boys, girls, male slaves, female slaves; elephants, horses, buffaloes, bulls, cows, goats, rams, fowl, quails, lizards, rabbits, tortoises, & other animals— ",
+       "ru_syrkin+edited+o": "а именно: [истолковывая] знаки на драгоценностях, знаки на палках, знаки на одеждах, знаки на мечах, знаки на стрелах, знаки на луках, знаки на оружии, знаки на женщинах, знаки на мужчинах, знаки на юношах, знаки на девушках, знаки на рабах, знаки на рабынях, знаки на слонах, знаки на конях, знаки на буйволах, знаки на быках, знаки на коровах, знаки на козлах, знаки на баранах, знаки на петухах, знаки на перепелах, знаки на ящерицах, знаки на длинноухих животных, знаки на черепахах, знаки на диких зверях, —  "
+      },
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "sn20.9": {
+    "sutta_id": "sn20.9",
+    "category": "dhamma",
+    "dir_path": "pli/ms/sutta/sn/sn20",
+    "titles": {
+     "root": "Nāgasutta ",
+     "en_thanissaro": "Sutta Bull Elephants ",
+     "ru_sv+edited+o": "Сутта Наг"
+    },
+    "mr": 1,
+    "count": 1,
+    "unique_words": [
+     "bhiṅkacchāpā"
+    ],
+    "segments": [
+     {
+      "segment": "sn20.9:3.5",
+      "root_text": "Tesaṁyeva kho pana, bhikkhave, mahānāgānaṁ anusikkhamānā taruṇā bhiṅkacchāpā taṁ sarasiṁ ogāhetvā soṇḍāya bhisamuḷālaṁ abbuhetvā na suvikkhālitaṁ vikkhāletvā sakaddamaṁ asaṅkhāditvā ajjhoharanti. ",
+      "variant": "",
+      "translations": {
+       "en_thanissaro": "“But young calf elephants, imitating them, plunged into the lake and pulled up lotus roots & stalks with their trunks. Without washing them so that they were well washed, they chewed them while they were still muddy and swallowed them. ",
+       "ru_sv+edited+o": "Их отпрыски, подражая этим огромным слонам, плюхались в озеро, срывали стебли лотосов хоботами но, тщательно не отмыв их, "
+      },
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "sn35.240": {
+    "sutta_id": "sn35.240",
+    "category": "dhamma",
+    "dir_path": "pli/ms/sutta/sn/sn35",
+    "titles": {
+     "root": "Kummopamasutta ",
+     "en_thanissaro": "Sutta The Turtle ",
+     "ru_o": "Сутта Подобие Черепахи (o)"
+    },
+    "mr": 1,
+    "count": 2,
+    "unique_words": [
+     "kacchapaṁ"
+    ],
+    "segments": [
+     {
+      "segment": "sn35.240:1.5",
+      "root_text": "Siṅgālopi kho, bhikkhave, addasa kummaṁ kacchapaṁ dūratova gocarapasutaṁ. ",
+      "variant": "",
+      "translations": {
+       "en_thanissaro": "But the jackal also saw the turtle from afar, foraging for food, ",
+       "ru_o": "И шакал тоже, монахи, увидел черепаху издали, пищу-ищущую,"
       },
       "lb_context": [],
       "la_context": []
      },
      {
-      "segment": "dn22:1.4",
-      "root_text": "Mahākacchapānaṁ pana rūpaṁ evaṁ hoti.",
+      "segment": "sn35.240:1.6",
+      "root_text": "Disvāna yena kummo kacchapo tenupasaṅkami; upasaṅkamitvā kummaṁ kacchapaṁ paccupaṭṭhito ahosi: ",
       "variant": "",
       "translations": {
-       "ru_o": "У больших черепах облик именно таков.",
-       "en_thanissaro": "Of great tortoises the form is thus."
+       "en_thanissaro": "and so it went to the turtle and, on arrival, hovered around it, (thinking,) ",
+       "ru_o": "Увидев, где черепаха подошёл; подойдя черепахи напротив встал (напротив-стоящим стал):"
       },
       "lb_context": [],
       "la_context": []
      }
     ]
    },
-   "sn56.11": {
-    "sutta_id": "sn56.11",
-    "category": "dhamma",
-    "dir_path": "pli/ms/sutta/sn/sn56",
+   "ja547": {
+    "sutta_id": "ja547",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/ja",
     "titles": {
-     "root": "Saṁyutta Nikāya 56.11",
-     "ru_o": "Саньютта Никая 56.11",
-     "en_sujato": "Linked Discourses 56.11"
+     "root": "Vessantarajātaka "
     },
-    "mr": 9,
+    "mr": 10,
     "count": 1,
     "unique_words": [
-     "kacchapānaṁ"
+     "macchakacchapabyāviddhā"
     ],
     "segments": [
      {
-      "segment": "sn56.11:2.2",
-      "root_text": "Kacchapānaṁ viya gati dukkhā hoti.",
+      "segment": "ja547:347.3",
+      "root_text": "Macchakacchapabyāviddhā, ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "ja546": {
+    "sutta_id": "ja546",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/ja",
+    "titles": {
+     "root": "Vidhurajātaka "
+    },
+    "mr": 2,
+    "count": 1,
+    "unique_words": [
+     "kacchapā"
+    ],
+    "segments": [
+     {
+      "segment": "ja546:71.2",
+      "root_text": "susumārā ca kacchapā; ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "thig16.1": {
+    "sutta_id": "thig16.1",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/thig",
+    "titles": {
+     "root": "Sumedhātherīgāthā ",
+     "en_soma": "Verses of the Elder Sumedhā ",
+     "ru_narinyanievmenenko+edited+o": "Сумедха Тхери "
+    },
+    "mr": 1,
+    "count": 1,
+    "unique_words": [
+     "kāṇakacchapaṁ"
+    ],
+    "segments": [
+     {
+      "segment": "thig16.1:53.1",
+      "root_text": "Sara kāṇakacchapaṁ pubba- ",
       "variant": "",
       "translations": {
-       "ru_o": "Участь их тяжка, словно у черепах.",
-       "en_sujato": "Their going is hard, as of turtles."
+       "en_soma": "Bear in mind the one-eyed turtle in the eastern sea, ",
+       "ru_narinyanievmenenko+edited+o": "Задумайся ты об ослепшей черепахе, "
       },
       "lb_context": [],
       "la_context": []
      }
     ]
    },
-   "pli-tv-bu-vb-pj1": {
-    "sutta_id": "pli-tv-bu-vb-pj1",
+   "cnd19": {
+    "sutta_id": "cnd19",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/cnd",
+    "titles": {
+     "root": "15. Mogharājamāṇavapucchāniddesa "
+    },
+    "mr": 0,
+    "count": 1,
+    "unique_words": [
+     "macchakacchapā"
+    ],
+    "segments": [
+     {
+      "segment": "cnd19:11.1",
+      "root_text": "Yathā ye keci macchakacchapā antamaso timitimiṅgalaṁ upādāya antomahāsamudde parivattanti, evameva sadevako loko samārako loko sabrahmako loko sassamaṇabrāhmaṇī pajā sadevamanussā antobuddhañāṇe parivattati. ",
+      "variant": "timitimiṅgalaṁ → timitipiṅgalaṁ (mr) | sabrahmako loko → sabrahmako (bj, sya-all) | sadevako → sadevako loko (mr) ",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "ja178": {
+    "sutta_id": "ja178",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/ja",
+    "titles": {
+     "root": "8. Kacchapajātaka "
+    },
+    "mr": 0,
+    "count": 2,
+    "unique_words": [
+     "kacchapajātaka",
+     "kacchapajātakaṁ"
+    ],
+    "segments": [
+     {
+      "segment": "ja178:0.4",
+      "root_text": "8. Kacchapajātaka ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "ja178:3.1",
+      "root_text": "Kacchapajātakaṁ aṭṭhamaṁ. ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "ja206": {
+    "sutta_id": "ja206",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/ja",
+    "titles": {
+     "root": "6. Kuruṅgamigajātaka "
+    },
+    "mr": 0,
+    "count": 1,
+    "unique_words": [
+     "kacchapa"
+    ],
+    "segments": [
+     {
+      "segment": "ja206:1.2",
+      "root_text": "chinda dantehi kacchapa; ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "ja215": {
+    "sutta_id": "ja215",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/ja",
+    "titles": {
+     "root": "5. Kacchapajātaka "
+    },
+    "mr": 0,
+    "count": 3,
+    "unique_words": [
+     "kacchapajātaka",
+     "kacchapaṁ",
+     "kacchapajātakaṁ"
+    ],
+    "segments": [
+     {
+      "segment": "ja215:0.4",
+      "root_text": "5. Kacchapajātaka ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "ja215:2.4",
+      "root_text": "Kacchapaṁ byasanaṁ gatan”ti. ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "ja215:3.1",
+      "root_text": "Kacchapajātakaṁ pañcamaṁ. ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "ja273": {
+    "sutta_id": "ja273",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/ja",
+    "titles": {
+     "root": "3. Kacchapajātaka "
+    },
+    "mr": 0,
+    "count": 3,
+    "unique_words": [
+     "kacchapajātaka",
+     "kacchapā",
+     "kacchapajātakaṁ"
+    ],
+    "segments": [
+     {
+      "segment": "ja273:0.4",
+      "root_text": "3. Kacchapajātaka ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "ja273:3.1",
+      "root_text": "“Kacchapā kassapā honti, ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "ja273:4.1",
+      "root_text": "Kacchapajātakaṁ tatiyaṁ. ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "ja425": {
+    "sutta_id": "ja425",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/ja",
+    "titles": {
+     "root": "9. Aṭṭhānajātaka "
+    },
+    "mr": 0,
+    "count": 1,
+    "unique_words": [
+     "kacchapalomānaṁ"
+    ],
+    "segments": [
+     {
+      "segment": "ja425:2.1",
+      "root_text": "Yadā kacchapalomānaṁ, ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "ja495": {
+    "sutta_id": "ja495",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/ja",
+    "titles": {
+     "root": "12. Dasabrāhmaṇajātaka "
+    },
+    "mr": 0,
+    "count": 1,
+    "unique_words": [
+     "macchakacchapaṁ"
+    ],
+    "segments": [
+     {
+      "segment": "ja495:38.4",
+      "root_text": "āgodhā macchakacchapaṁ. ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "ja543": {
+    "sutta_id": "ja543",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/ja",
+    "titles": {
+     "root": "6. Bhūridattajātaka "
+    },
+    "mr": 0,
+    "count": 1,
+    "unique_words": [
+     "macchakacchapā"
+    ],
+    "segments": [
+     {
+      "segment": "ja543:112.4",
+      "root_text": "mareyyuṁ macchakacchapā”. ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "mil5.1.4": {
+    "sutta_id": "mil5.1.4",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/mil",
+    "titles": {
+     "root": "4. Pathavicalanapañha ",
+     "en_kelly": "4. Question On the Shaking of the Earth "
+    },
+    "mr": 0,
+    "count": 1,
+    "unique_words": [
+     "macchakacchapā"
+    ],
+    "segments": [
+     {
+      "segment": "mil5.1.4:11.2",
+      "root_text": "Tassa evaṁ dadamānassa dhammānugatassa dhammasīsakassa dānanissandabalava vīriyavipulavipphārena heṭṭhā mahāvātā sañcalanti saṇikaṁ saṇikaṁ sakiṁ sakiṁ ākulākulā vāyanti onamanti unnamanti vinamanti, chinnapattapādapā papatanti, gumbaṁ gumbaṁ valāhakā gagane sandhāvanti, rajosañcitā vātā dāruṇā honti, gaganaṁ uppīḷitā vātā vāyanti, sahasā dhamadhamāyanti, mahābhīmo saddo niccharati, tesu vātesu kupitesu udakaṁ saṇikaṁ saṇikaṁ calati, udake calite khubbhanti macchakacchapā, yamakayamakā ūmiyo jāyanti, jalacarā sattā tasanti, jalavīci yuganaddho vattati, vīcinādo pavattati, ghorā bubbuḷā uṭṭhahanti, pheṇamālā bhavanti, uttarati mahāsamuddo, disāvidisaṁ dhāvati udakaṁ, uddhaṁsotapaṭisotamukhā sandanti saliladhārā, tasanti asurā garuḷā nāgā yakkhā, ubbijjanti ‘kiṁ nu kho, kathaṁ nu kho, sāgaro viparivattatī’ti, gamanapathamesanti bhītacittā, khubhite luḷite jaladhāre pakampati mahāpathavī sanagā sasāgarā, parivattati sinerugiri kūṭaselasikharo vinamamāno hoti, vimanā honti ahinakulabiḷārakoṭṭhukasūkaramigapakkhino, rudanti yakkhā appesakkhā, hasanti yakkhā mahesakkhā kampamānāya mahāpathaviyā. ",
+      "variant": "dhammasīsakassa → dhammāsīsakassa (mr) | dānanissandabalava → dānanissandabala (bj, pts-vp-pli1); dānabala (maku) | chinnapattapādapā → sīnapattapādapā (bj); nisinnapattā (maku); sīnapattāpādapā (pts-vp-pli1) | bubbuḷā → bubbulā (bj, maku); pubbuḷā (mr) ",
+      "translations": {
+       "en_kelly": "As he was giving thus, following the Dhamma, putting the Dhamma foremost, by the flowing force of giving and the vast expansion of effort, great winds stir below, and gradually, gradually, time after time, turbulent winds blow, bending down and rising up and swaying, trees with broken leaves and branches fall, masses of clouds rush through the sky, dust-laden winds become fierce, winds blow pressing against the sky, suddenly thundering, a great terrifying sound issues forth. When those winds are agitated, the water gradually, gradually moves; when the water moves, fish and turtles are disturbed, waves arise in pairs, aquatic beings are frightened, water waves roll connected in pairs, the sound of waves proceeds, terrible bubbles arise, there are garlands of foam, the great ocean overflows, water rushes in all directions, streams of water flow with currents going upstream and downstream, asuras, garuḍas, nāgas, and yakkhas are frightened and alarmed—‘What is this? How is this? Is the ocean turning over?’—they seek a path of escape with frightened minds. When the water realm is disturbed and stirred, the great earth with its mountains and oceans quakes, Mount Sineru with its rocky peaks revolves and bends down, animals in snake holes, mongoose burrows, and rats, pigs, deer, and birds are distressed, yakkhas of little power cry out, yakkhas of great power laugh as the great earth quakes. "
+      },
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "mil6.2.4": {
+    "sutta_id": "mil6.2.4",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/mil",
+    "titles": {
+     "root": "4. Lokenatthibhāvapañha "
+    },
+    "mr": 0,
+    "count": 1,
+    "unique_words": [
+     "tiṇalatāgaccharukkhaosadhivanappatinadīpabbatasamuddamacchakacchapā"
+    ],
+    "segments": [
+     {
+      "segment": "mil6.2.4:1.1",
+      "root_text": "“Bhante nāgasena, dissanti loke buddhā, dissanti paccekabuddhā, dissanti tathāgatassa sāvakā, dissanti cakkavattirājāno, dissanti padesarājāno, dissanti devamanussā, dissanti sadhanā, dissanti adhanā, dissanti sugatā, dissanti duggatā, dissati purisassa itthiliṅgaṁ pātubhūtaṁ, dissati itthiyā purisaliṅgaṁ pātubhūtaṁ, dissati sukataṁ dukkataṁ kammaṁ, dissanti kalyāṇapāpakānaṁ kammānaṁ vipākūpabhogino sattā, atthi loke sattā aṇḍajā jalābujā saṁsedajā opapātikā, atthi sattā apadā dvipadā catuppadā bahuppadā, atthi loke yakkhā rakkhasā kumbhaṇḍā asurā dānavā gandhabbā petā pisācā, atthi kinnarā mahoragā nāgā supaṇṇā siddhā vijjādharā, atthi hatthī assā gāvo mahiṁsā oṭṭhā gadrabhā ajā eḷakā migā sūkarā sīhā byagghā dīpī acchā kokā taracchā soṇā siṅgālā, atthi bahuvidhā sakuṇā, atthi suvaṇṇaṁ rajataṁ muttā maṇi saṅkho silā pavāḷaṁ lohitaṅko masāragallaṁ veḷuriyo vajiraṁ phalikaṁ kāḷalohaṁ tambalohaṁ vaṭṭalohaṁ kaṁsalohaṁ, atthi khomaṁ koseyyaṁ kappāsikaṁ sāṇaṁ bhaṅgaṁ kambalaṁ, atthi sāli vīhi yavo kaṅgu kudrūso varako godhūmo muggo, māso tilaṁ kulatthaṁ, atthi mūlagandho sāragandho pheggugandho tacagandho pattagandho pupphagandho phalagandho sabbagandho, atthi tiṇalatāgaccharukkhaosadhivanappatinadīpabbatasamuddamacchakacchapā sabbaṁ loke atthi. ",
+      "variant": "mahiṁsā → mahisā (bj, maku, pts-vp-pli1) ",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "mnd4": {
+    "sutta_id": "mnd4",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/mnd",
+    "titles": {
+     "root": "4. Suddhaṭṭhakasuttaniddesa "
+    },
+    "mr": 0,
+    "count": 1,
+    "unique_words": [
+     "kacchapaṁ"
+    ],
+    "segments": [
+     {
+      "segment": "mnd4:24.2",
+      "root_text": "Te kālato uṭṭhahitvā pathaviṁ āmasanti, haritaṁ āmasanti, gomayaṁ āmasanti, kacchapaṁ āmasanti, phālaṁ akkamanti, tilavāhaṁ āmasanti, phussatilaṁ khādanti, phussatelaṁ makkhenti, phussadantakaṭṭhaṁ khādanti, phussamattikāya nhāyanti, phussasāṭakaṁ nivāsenti, phussaveṭhanaṁ veṭhenti. ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "mnd8": {
+    "sutta_id": "mnd8",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/mnd",
+    "titles": {
+     "root": "8. Pasūrasuttaniddesa "
+    },
+    "mr": 0,
+    "count": 1,
+    "unique_words": [
+     "macchakacchapā"
+    ],
+    "segments": [
+     {
+      "segment": "mnd8:82.1",
+      "root_text": "Yathā ye keci macchakacchapā antamaso timitimiṅgalaṁ upādāya antomahāsamudde parivattanti; ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "mnd14": {
+    "sutta_id": "mnd14",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/mnd",
+    "titles": {
+     "root": "14. Tuvaṭakasuttaniddesa "
+    },
+    "mr": 0,
+    "count": 2,
+    "unique_words": [
+     "macchakacchapā",
+     "kacchapalakkhaṇaṁ"
+    ],
+    "segments": [
+     {
+      "segment": "mnd14:64.1",
+      "root_text": "Yathā ye keci macchakacchapā antamaso timitimiṅgalaṁ upādāya antomahāsamudde parivattanti; ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "mnd14:153.2",
+      "root_text": "maṇilakkhaṇaṁ daṇḍalakkhaṇaṁ vatthalakkhaṇaṁ asilakkhaṇaṁ usulakkhaṇaṁ dhanulakkhaṇaṁ āvudhalakkhaṇaṁ itthilakkhaṇaṁ purisalakkhaṇaṁ kumārikālakkhaṇaṁ kumāralakkhaṇaṁ dāsilakkhaṇaṁ dāsalakkhaṇaṁ hatthilakkhaṇaṁ assalakkhaṇaṁ mahiṁsalakkhaṇaṁ usabhalakkhaṇaṁ goṇalakkhaṇaṁ ajalakkhaṇaṁ meṇḍalakkhaṇaṁ kukkuṭalakkhaṇaṁ vaṭṭalakkhaṇaṁ godhālakkhaṇaṁ kaṇṇikālakkhaṇaṁ kacchapalakkhaṇaṁ migalakkhaṇaṁ iti vāti. ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "mnd16": {
+    "sutta_id": "mnd16",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/mnd",
+    "titles": {
+     "root": "16. Sāriputtasuttaniddesa "
+    },
+    "mr": 0,
+    "count": 1,
+    "unique_words": [
+     "macchakacchapā"
+    ],
+    "segments": [
+     {
+      "segment": "mnd16:30.1",
+      "root_text": "Yathā ye keci macchakacchapā antamaso timitimiṅgalaṁ upādāya antomahāsamudde parivattanti; ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "ps3.1": {
+    "sutta_id": "ps3.1",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/ps",
+    "titles": {
+     "root": "3.1. Mahāpaññākathā "
+    },
+    "mr": 0,
+    "count": 1,
+    "unique_words": [
+     "macchakacchapā"
+    ],
+    "segments": [
+     {
+      "segment": "ps3.1:28.1",
+      "root_text": "Yathā ye keci macchakacchapā, antamaso timitimiṅgalaṁ upādāya, antomahāsamudde parivattanti, evamevaṁ sadevako loko samārako sabrahmako sassamaṇabrāhmaṇī pajā sadevamanussā antobuddhañāṇe parivattati. ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "tha-ap3": {
+    "sutta_id": "tha-ap3",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/tha-ap",
+    "titles": {
+     "root": "Sāriputtattheraapadāna "
+    },
+    "mr": 0,
+    "count": 1,
+    "unique_words": [
+     "kacchapā"
+    ],
+    "segments": [
+     {
+      "segment": "tha-ap3:5.2",
+      "root_text": "susumārā ca kacchapā; ",
+      "variant": "susumārā → suṁsumārā (bj, sya1ed, sya2ed, pts-vp-pli1) ",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "tha-ap401": {
+    "sutta_id": "tha-ap401",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/tha-ap",
+    "titles": {
+     "root": "Sabbadāyakattheraapadāna "
+    },
+    "mr": 0,
+    "count": 1,
+    "unique_words": [
+     "macchakacchapasañchannā"
+    ],
+    "segments": [
+     {
+      "segment": "tha-ap401:3.1",
+      "root_text": "Macchakacchapasañchannā, ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "tha-ap407": {
+    "sutta_id": "tha-ap407",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/tha-ap",
+    "titles": {
+     "root": "5 Upasivattheraapadāna "
+    },
+    "mr": 0,
+    "count": 4,
+    "unique_words": [
+     "macchakacchapasañchannā",
+     "macchakacchapasampannā"
+    ],
+    "segments": [
+     {
+      "segment": "tha-ap407:3.3",
+      "root_text": "Macchakacchapasañchannā, ",
+      "variant": "Macchakacchapasañchannā → macchakacchapasampannā (?) ",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     },
+     {
+      "segment": "tha-ap407:24.1",
+      "root_text": "Macchakacchapasañchannā, ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "tha-ap412": {
+    "sutta_id": "tha-ap412",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/tha-ap",
+    "titles": {
+     "root": "Udenattheraapadāna "
+    },
+    "mr": 0,
+    "count": 1,
+    "unique_words": [
+     "kacchapā"
+    ],
+    "segments": [
+     {
+      "segment": "tha-ap412:17.2",
+      "root_text": "kacchapā ca gahā bahū; ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "tha-ap414": {
+    "sutta_id": "tha-ap414",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/tha-ap",
+    "titles": {
+     "root": "Ekachattiyattheraapadāna "
+    },
+    "mr": 0,
+    "count": 2,
+    "unique_words": [
+     "macchakacchapasampannā"
+    ],
+    "segments": [
+     {
+      "segment": "tha-ap414:2.3",
+      "root_text": "Macchakacchapasampannā, ",
+      "variant": "Macchakacchapasampannā → … sañchannā (mr) ",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "tha-ap553": {
+    "sutta_id": "tha-ap553",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/tha-ap",
+    "titles": {
+     "root": "Yasattheraapadāna "
+    },
+    "mr": 0,
+    "count": 1,
+    "unique_words": [
+     "macchakacchapasañchannā"
+    ],
+    "segments": [
+     {
+      "segment": "tha-ap553:3.1",
+      "root_text": "Macchakacchapasañchannā, ",
+      "variant": "",
+      "translations": {},
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "thig12.1": {
+    "sutta_id": "thig12.1",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/thig",
+    "titles": {
+     "root": "Puṇṇātherīgāthā ",
+     "ru_narinyanievmenenko+edited+o": "Пунна Тхери "
+    },
+    "mr": 0,
+    "count": 1,
+    "unique_words": [
+     "maṇḍūkakacchapā"
+    ],
+    "segments": [
+     {
+      "segment": "thig12.1:6.2",
+      "root_text": "sabbe maṇḍūkakacchapā; ",
+      "variant": "",
+      "translations": {
+       "en_thanissaro": "all the frogs, turtles,",
+       "ru_narinyanievmenenko+edited+o": "Змеи водяные, крокодилы —"
+      },
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "pli-tv-bu-vb-pj2": {
+    "sutta_id": "pli-tv-bu-vb-pj2",
     "category": "vinaya",
-    "dir_path": "pli/ms/vinaya/pli-tv-vi/pli-tv-bu-vb",
+    "dir_path": "pli/ms/vinaya/pli-tv-bu-vb/pli-tv-bu-vb-pj",
     "titles": {
-     "root": "Paṭhamapārājika"
+     "root": "2. Dutiyapārājikasikkhāpada ",
+     "en_brahmali": "The training rule on stealing ",
+     "ru_kheminda+edited+o": "Второе Поражение - Правило Тренировки"
     },
-    "mr": 4,
+    "mr": 0,
     "count": 1,
     "unique_words": [
-     "kacchapasadisā"
+     "kacchapaṁ"
     ],
     "segments": [
      {
-      "segment": "pli-tv-bu-vb-pj1:1.2",
-      "root_text": "Kacchapasadisā te bhikkhū ahesuṁ.",
+      "segment": "pli-tv-bu-vb-pj2:4.6.8",
+      "root_text": "Tattha jātakaṁ uppalaṁ vā padumaṁ vā puṇḍarīkaṁ vā bhisaṁ vā macchaṁ vā kacchapaṁ vā pañcamāsakaṁ vā atirekapañcamāsakaṁ vā agghanakaṁ theyyacitto āmasati, āpatti dukkaṭassa. ",
       "variant": "",
       "translations": {
-       "en_brahmali": "Those monks were like turtles.",
-       "ru_o": "Те монахи были подобны черепахам."
+       "en_brahmali": "If, intending to steal, he touches either a red or white lotus or a blue water lily growing there, or a lotus root, or a fish, or a turtle having a value of five <i lang='pi' translate='no'>māsaka</i> coins or more, he commits an offense of wrong conduct. ",
+       "ru_kheminda+edited+o": "Если, намереваясь украсть, он касается либо синего, красного, или белого лотоса, растущего там, либо ростка лотоса, либо рыбы, либо черепахи, имеющей ценность пяти масак или более пяти масак, он совершает плохой поступок."
+      },
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "pli-tv-kd17": {
+    "sutta_id": "pli-tv-kd17",
+    "category": "vinaya",
+    "dir_path": "pli/ms/vinaya/pli-tv-kd",
+    "titles": {
+     "root": "1.1 Chasakyapabbajjākathā ",
+     "en_brahmali": "1. The account of the going forth of the six Sakyans "
+    },
+    "mr": 0,
+    "count": 1,
+    "unique_words": [
+     "bhiṅkacchāpā"
+    ],
+    "segments": [
+     {
+      "segment": "pli-tv-kd17:4.5.7",
+      "root_text": "Tesaṁyeva kho pana, bhikkhave, mahānāgānaṁ anusikkhamānā taruṇā bhiṅkacchāpā. ",
+      "variant": "",
+      "translations": {
+       "en_brahmali": "Then the baby elephants tried to imitate those great elephants. "
       },
       "lb_context": [],
       "la_context": []
@@ -116,55 +877,284 @@
   },
   "wordReport": [
    {
+    "word": "macchakacchapā",
+    "textCount": 7,
+    "matchCount": 7,
+    "links": [
+     {
+      "sutta_id": "cnd19",
+      "segment": "cnd19:11.1"
+     },
+     {
+      "sutta_id": "ja543",
+      "segment": "ja543:112.4"
+     },
+     {
+      "sutta_id": "mil5.1.4",
+      "segment": "mil5.1.4:11.2"
+     },
+     {
+      "sutta_id": "mnd14",
+      "segment": "mnd14:64.1"
+     },
+     {
+      "sutta_id": "mnd16",
+      "segment": "mnd16:30.1"
+     },
+     {
+      "sutta_id": "mnd8",
+      "segment": "mnd8:82.1"
+     },
+     {
+      "sutta_id": "ps3.1",
+      "segment": "ps3.1:28.1"
+     }
+    ]
+   },
+   {
+    "word": "kacchapā",
+    "textCount": 5,
+    "matchCount": 5,
+    "links": [
+     {
+      "sutta_id": "ja273",
+      "segment": "ja273:3.1"
+     },
+     {
+      "sutta_id": "ja546",
+      "segment": "ja546:71.2"
+     },
+     {
+      "sutta_id": "tha-ap3",
+      "segment": "tha-ap3:5.2"
+     },
+     {
+      "sutta_id": "tha-ap412",
+      "segment": "tha-ap412:17.2"
+     },
+     {
+      "sutta_id": "mn129",
+      "segment": "mn129:21.3"
+     }
+    ]
+   },
+   {
+    "word": "kacchapaṁ",
+    "textCount": 4,
+    "matchCount": 5,
+    "links": [
+     {
+      "sutta_id": "ja215",
+      "segment": "ja215:2.4"
+     },
+     {
+      "sutta_id": "mnd4",
+      "segment": "mnd4:24.2"
+     },
+     {
+      "sutta_id": "sn35.240",
+      "segment": "sn35.240:1.5"
+     },
+     {
+      "sutta_id": "pli-tv-bu-vb-pj2",
+      "segment": "pli-tv-bu-vb-pj2:4.6.8"
+     }
+    ]
+   },
+   {
+    "word": "kacchapajātaka",
+    "textCount": 3,
+    "matchCount": 6,
+    "links": [
+     {
+      "sutta_id": "ja178",
+      "segment": "ja178:0.4"
+     },
+     {
+      "sutta_id": "ja215",
+      "segment": "ja215:0.4"
+     },
+     {
+      "sutta_id": "ja273",
+      "segment": "ja273:0.4"
+     }
+    ]
+   },
+   {
+    "word": "kacchapajātakaṁ",
+    "textCount": 3,
+    "matchCount": 3,
+    "links": [
+     {
+      "sutta_id": "ja178",
+      "segment": "ja178:3.1"
+     },
+     {
+      "sutta_id": "ja215",
+      "segment": "ja215:3.1"
+     },
+     {
+      "sutta_id": "ja273",
+      "segment": "ja273:4.1"
+     }
+    ]
+   },
+   {
+    "word": "kacchapalakkhaṇaṁ",
+    "textCount": 3,
+    "matchCount": 3,
+    "links": [
+     {
+      "sutta_id": "dn1",
+      "segment": "dn1:1.22.2"
+     },
+     {
+      "sutta_id": "dn2",
+      "segment": "dn2:57.2"
+     },
+     {
+      "sutta_id": "mnd14",
+      "segment": "mnd14:153.2"
+     }
+    ]
+   },
+   {
+    "word": "macchakacchapasañchannā",
+    "textCount": 3,
+    "matchCount": 5,
+    "links": [
+     {
+      "sutta_id": "tha-ap401",
+      "segment": "tha-ap401:3.1"
+     },
+     {
+      "sutta_id": "tha-ap407",
+      "segment": "tha-ap407:3.3"
+     },
+     {
+      "sutta_id": "tha-ap553",
+      "segment": "tha-ap553:3.1"
+     }
+    ]
+   },
+   {
+    "word": "bhiṅkacchāpā",
+    "textCount": 2,
+    "matchCount": 2,
+    "links": [
+     {
+      "sutta_id": "sn20.9",
+      "segment": "sn20.9:3.5"
+     },
+     {
+      "sutta_id": "pli-tv-kd17",
+      "segment": "pli-tv-kd17:4.5.7"
+     }
+    ]
+   },
+   {
+    "word": "macchakacchapasampannā",
+    "textCount": 2,
+    "matchCount": 3,
+    "links": [
+     {
+      "sutta_id": "tha-ap407",
+      "segment": "tha-ap407:3.3"
+     },
+     {
+      "sutta_id": "tha-ap414",
+      "segment": "tha-ap414:2.3"
+     }
+    ]
+   },
+   {
     "word": "kacchapa",
     "textCount": 1,
     "matchCount": 1,
     "links": [
      {
-      "sutta_id": "dn22",
-      "segment": "dn22:1.3"
+      "sutta_id": "ja206",
+      "segment": "ja206:1.2"
      }
     ]
    },
    {
-    "word": "kacchapānaṁ",
+    "word": "kacchapalomānaṁ",
     "textCount": 1,
     "matchCount": 1,
     "links": [
      {
-      "sutta_id": "sn56.11",
-      "segment": "sn56.11:2.2"
+      "sutta_id": "ja425",
+      "segment": "ja425:2.1"
      }
     ]
    },
    {
-    "word": "kacchapasadisā",
+    "word": "kāṇakacchapaṁ",
     "textCount": 1,
     "matchCount": 1,
     "links": [
      {
-      "sutta_id": "pli-tv-bu-vb-pj1",
-      "segment": "pli-tv-bu-vb-pj1:1.2"
+      "sutta_id": "thig16.1",
+      "segment": "thig16.1:53.1"
      }
     ]
    },
    {
-    "word": "mahākacchapānaṁ",
+    "word": "macchakacchapabyāviddhā",
     "textCount": 1,
     "matchCount": 1,
     "links": [
      {
-      "sutta_id": "dn22",
-      "segment": "dn22:1.4"
+      "sutta_id": "ja547",
+      "segment": "ja547:347.3"
+     }
+    ]
+   },
+   {
+    "word": "macchakacchapaṁ",
+    "textCount": 1,
+    "matchCount": 1,
+    "links": [
+     {
+      "sutta_id": "ja495",
+      "segment": "ja495:38.4"
+     }
+    ]
+   },
+   {
+    "word": "maṇḍūkakacchapā",
+    "textCount": 1,
+    "matchCount": 1,
+    "links": [
+     {
+      "sutta_id": "thig12.1",
+      "segment": "thig12.1:6.2"
+     }
+    ]
+   },
+   {
+    "word": "tiṇalatāgaccharukkhaosadhivanappatinadīpabbatasamuddamacchakacchapā",
+    "textCount": 1,
+    "matchCount": 1,
+    "links": [
+     {
+      "sutta_id": "mil6.2.4",
+      "segment": "mil6.2.4:1.1"
      }
     ]
    }
   ],
   "variantSegments": [
    {
-    "sutta_id": "dn22",
-    "segment": "dn22:1.3",
-    "text": "kacchapo → kacchapa"
+    "sutta_id": "tha-ap407",
+    "segment": "tha-ap407:3.3",
+    "text": "Macchakacchapasañchannā → macchakacchapasampannā (?) "
+   },
+   {
+    "sutta_id": "tha-ap414",
+    "segment": "tha-ap414:2.3",
+    "text": "Macchakacchapasampannā → … sañchannā (mr) "
    }
   ]
  }

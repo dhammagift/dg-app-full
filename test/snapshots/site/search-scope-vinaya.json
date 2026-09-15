@@ -14,31 +14,59 @@
    "lb": 0,
    "la": 0,
    "exactMatch": false,
-   "totalFiles": 1,
-   "totalMatches": 1,
+   "totalFiles": 2,
+   "totalMatches": 2,
    "hasVariantMatch": true
   },
   "data": {
-   "pli-tv-bu-vb-pj1": {
-    "sutta_id": "pli-tv-bu-vb-pj1",
+   "pli-tv-bu-vb-pj2": {
+    "sutta_id": "pli-tv-bu-vb-pj2",
     "category": "vinaya",
-    "dir_path": "pli/ms/vinaya/pli-tv-vi/pli-tv-bu-vb",
+    "dir_path": "pli/ms/vinaya/pli-tv-bu-vb/pli-tv-bu-vb-pj",
     "titles": {
-     "root": "Paṭhamapārājika"
+     "root": "2. Dutiyapārājikasikkhāpada ",
+     "en_brahmali": "The training rule on stealing ",
+     "ru_kheminda+edited+o": "Второе Поражение - Правило Тренировки"
     },
-    "mr": 4,
+    "mr": 0,
     "count": 1,
     "unique_words": [
-     "kacchapasadisā"
+     "kacchapaṁ"
     ],
     "segments": [
      {
-      "segment": "pli-tv-bu-vb-pj1:1.2",
-      "root_text": "Kacchapasadisā te bhikkhū ahesuṁ.",
+      "segment": "pli-tv-bu-vb-pj2:4.6.8",
+      "root_text": "Tattha jātakaṁ uppalaṁ vā padumaṁ vā puṇḍarīkaṁ vā bhisaṁ vā macchaṁ vā kacchapaṁ vā pañcamāsakaṁ vā atirekapañcamāsakaṁ vā agghanakaṁ theyyacitto āmasati, āpatti dukkaṭassa. ",
       "variant": "",
       "translations": {
-       "en_brahmali": "Those monks were like turtles.",
-       "ru_o": "Те монахи были подобны черепахам."
+       "en_brahmali": "If, intending to steal, he touches either a red or white lotus or a blue water lily growing there, or a lotus root, or a fish, or a turtle having a value of five <i lang='pi' translate='no'>māsaka</i> coins or more, he commits an offense of wrong conduct. ",
+       "ru_kheminda+edited+o": "Если, намереваясь украсть, он касается либо синего, красного, или белого лотоса, растущего там, либо ростка лотоса, либо рыбы, либо черепахи, имеющей ценность пяти масак или более пяти масак, он совершает плохой поступок."
+      },
+      "lb_context": [],
+      "la_context": []
+     }
+    ]
+   },
+   "pli-tv-kd17": {
+    "sutta_id": "pli-tv-kd17",
+    "category": "vinaya",
+    "dir_path": "pli/ms/vinaya/pli-tv-kd",
+    "titles": {
+     "root": "1.1 Chasakyapabbajjākathā ",
+     "en_brahmali": "1. The account of the going forth of the six Sakyans "
+    },
+    "mr": 0,
+    "count": 1,
+    "unique_words": [
+     "bhiṅkacchāpā"
+    ],
+    "segments": [
+     {
+      "segment": "pli-tv-kd17:4.5.7",
+      "root_text": "Tesaṁyeva kho pana, bhikkhave, mahānāgānaṁ anusikkhamānā taruṇā bhiṅkacchāpā. ",
+      "variant": "",
+      "translations": {
+       "en_brahmali": "Then the baby elephants tried to imitate those great elephants. "
       },
       "lb_context": [],
       "la_context": []
@@ -48,22 +76,38 @@
   },
   "wordReport": [
    {
-    "word": "kacchapasadisā",
+    "word": "bhiṅkacchāpā",
     "textCount": 1,
     "matchCount": 1,
     "links": [
      {
-      "sutta_id": "pli-tv-bu-vb-pj1",
-      "segment": "pli-tv-bu-vb-pj1:1.2"
+      "sutta_id": "pli-tv-kd17",
+      "segment": "pli-tv-kd17:4.5.7"
+     }
+    ]
+   },
+   {
+    "word": "kacchapaṁ",
+    "textCount": 1,
+    "matchCount": 1,
+    "links": [
+     {
+      "sutta_id": "pli-tv-bu-vb-pj2",
+      "segment": "pli-tv-bu-vb-pj2:4.6.8"
      }
     ]
    }
   ],
   "variantSegments": [
    {
-    "sutta_id": "dn22",
-    "segment": "dn22:1.3",
-    "text": "kacchapo → kacchapa"
+    "sutta_id": "tha-ap407",
+    "segment": "tha-ap407:3.3",
+    "text": "Macchakacchapasañchannā → macchakacchapasampannā (?) "
+   },
+   {
+    "sutta_id": "tha-ap414",
+    "segment": "tha-ap414:2.3",
+    "text": "Macchakacchapasampannā → … sañchannā (mr) "
    }
   ]
  }

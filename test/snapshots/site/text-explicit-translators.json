@@ -4,67 +4,4093 @@
   "sutta_id": "dn22",
   "category": "dhamma",
   "dir_path": "pli/ms/sutta/dn",
-  "title": "Mahāsatipaṭṭhānasutta",
-  "mr": 12,
+  "title": "Mahāsatipaṭṭhānasutta ",
+  "mr": 7,
   "segments": [
    {
     "segment": "dn22:0.1",
-    "root_text": "Dīgha Nikāya 22",
+    "root_text": "Dīgha Nikāya 22 ",
     "variant": "",
-    "html": "<header><h1>",
+    "html": "<article id='dn22'><header><ul><li class='division'>{}</li></ul>",
     "translations": {
-     "ru_o": "Дигха Никая 22",
-     "ru_sv": "ДН 22"
+     "ru_o": "Длинные Наставления 22 "
+    }
+   },
+   {
+    "segment": "dn22:0.2",
+    "root_text": "Mahāsatipaṭṭhānasutta ",
+    "variant": "",
+    "html": "<h1 class='sutta-title'>{}</h1></header>",
+    "translations": {
+     "ru_o": "Большое наставление об установлении памятования "
     }
    },
    {
     "segment": "dn22:1.1",
     "root_text": "Evaṁ me sutaṁ—",
     "variant": "",
-    "html": "<p>",
+    "html": "<p><span class='evam'>{}</span>",
     "translations": {
-     "ru_o": "Так я слышал —",
-     "ru_sv": "Вот что я слышал."
+     "ru_o": "Так мной услышано— "
     }
    },
    {
     "segment": "dn22:1.2",
-    "root_text": "ekaṁ samayaṁ bhagavā kurūsu viharati.",
-    "variant": "kurūsu → kurusu",
-    "html": "",
+    "root_text": "ekaṁ samayaṁ bhagavā kurūsu viharati kammāsadhammaṁ nāma kurūnaṁ nigamo. ",
+    "variant": "",
+    "html": "{}",
     "translations": {
-     "ru_o": "однажды Благословенный жил среди куру.",
-     "ru_sv": "Однажды Благословенный пребывал в стране Куру."
+     "ru_o": "По одному случаю Благословенный среди Куру располагается в Каммасадхамме – рыночном городе Куру. "
     }
    },
    {
     "segment": "dn22:1.3",
-    "root_text": "Seyyathāpi kacchapo aṅgāni sake kapāle samodahati.",
-    "variant": "kacchapo → kacchapa",
-    "html": "",
+    "root_text": "Tatra kho bhagavā bhikkhū āmantesi: ",
+    "variant": "",
+    "html": "{}",
     "translations": {
-     "ru_o": "Подобно тому, как черепаха втягивает конечности в панцирь.",
-     "ru_sv": "Словно чepeпaxa, прячущая лапы в свой панцирь."
+     "ru_o": "И здесь Благословенный к монахам обратился: "
     }
    },
    {
     "segment": "dn22:1.4",
-    "root_text": "Mahākacchapānaṁ pana rūpaṁ evaṁ hoti.",
+    "root_text": "“bhikkhavo”ti. ",
     "variant": "",
-    "html": "",
+    "html": "{}</p>",
     "translations": {
-     "ru_o": "У больших черепах облик именно таков.",
-     "ru_sv": "Облик больших черепах таков."
+     "ru_o": "“Монахи”. "
     }
    },
    {
     "segment": "dn22:1.5",
-    "root_text": "Idaṁ vuccati, bhikkhave, dukkhaṁ ariyasaccaṁ.",
-    "variant": "",
-    "html": "</p>",
+    "root_text": "“Bhaddante”ti te bhikkhū bhagavato paccassosuṁ. ",
+    "variant": "Bhaddante”ti → bhadanteti (bj, sya-all, km, pts1ed) ",
+    "html": "<p>{}",
     "translations": {
-     "ru_o": "Это, монахи, называется благородной истиной о страдании.",
-     "ru_sv": "Это зовётся, монахи, благородной истиной о страдании."
+     "ru_o": "“Достопочтенный!”, - те монахи Благословенному ответили. "
+    }
+   },
+   {
+    "segment": "dn22:1.6",
+    "root_text": "Bhagavā etadavoca: ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Благословенный это сказал: "
+    }
+   },
+   {
+    "segment": "dn22:1.7",
+    "root_text": "“Ekāyano ayaṁ, bhikkhave, maggo sattānaṁ visuddhiyā, sokaparidevānaṁ samatikkamāya dukkhadomanassānaṁ atthaṅgamāya ñāyassa adhigamāya nibbānassa sacchikiriyāya, yadidaṁ cattāro satipaṭṭhānā. ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "“Однонаправленный это, монахи, путь существ очищения, страданий-плачей преодоления, болей-недовольств захождения, метода достижения, ниббаны засвидетельствования (своими глазами), это четыре постановления памятования. "
+    }
+   },
+   {
+    "segment": "dn22:1.8",
+    "root_text": "Katame cattāro? ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Какие четыре? "
+    }
+   },
+   {
+    "segment": "dn22:1.9",
+    "root_text": "Idha, bhikkhave, bhikkhu kāye kāyānupassī viharati ātāpī sampajāno satimā vineyya loke abhijjhādomanassaṁ, ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Вот, монахи, монах в теле тело-наблюдающий пребывает, пылкий, сознательный, памятующий, выводя (вычищая) к миру-свету алчность-недовольство, "
+    }
+   },
+   {
+    "segment": "dn22:1.10",
+    "root_text": "vedanāsu vedanānupassī viharati ātāpī sampajāno satimā vineyya loke abhijjhādomanassaṁ, ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "в чувствах чувство-наблюдающий (в чувствованиях чувствование-наблюдающий) пребывает, пылкий, сознательный, памятующий, выводя к миру алчность-недовольство, "
+    }
+   },
+   {
+    "segment": "dn22:1.11",
+    "root_text": "citte cittānupassī viharati ātāpī sampajāno satimā vineyya loke abhijjhādomanassaṁ, ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "в уме-состоянии умо-наблюдающий пребывает, пылкий, сознательный, памятующий, выводя к миру алчность-недовольство, "
+    }
+   },
+   {
+    "segment": "dn22:1.12",
+    "root_text": "dhammesu dhammānupassī viharati ātāpī sampajāno satimā vineyya loke abhijjhādomanassaṁ. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "в явлениях явление-наблюдающий пребывает, пылкий, сознательный, памятующий, выводя к миру алчность-недовольство. "
+    }
+   },
+   {
+    "segment": "dn22:1.13",
+    "root_text": "Uddeso niṭṭhito. ",
+    "variant": "",
+    "html": "<p class='endsection'>{}</p>",
+    "translations": {
+     "ru_o": "Вступление установлено. "
+    }
+   },
+   {
+    "segment": "dn22:2.0.1",
+    "root_text": "1. Kāyānupassanā ",
+    "variant": "",
+    "html": "<h2>{}</h2>",
+    "translations": {
+     "ru_o": "1. Наблюдение тела "
+    }
+   },
+   {
+    "segment": "dn22:2.0.2",
+    "root_text": "1.1. Kāyānupassanāānāpānapabba ",
+    "variant": "",
+    "html": "<h3>{}</h3>",
+    "translations": {
+     "ru_o": "1.1. Наблюдение тела секция памятования о дыхании "
+    }
+   },
+   {
+    "segment": "dn22:2.1",
+    "root_text": "Kathañca pana, bhikkhave, bhikkhu kāye kāyānupassī viharati? ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "И как, монахи, монах в теле тело-наблюдающий пребывает? "
+    }
+   },
+   {
+    "segment": "dn22:2.2",
+    "root_text": "Idha, bhikkhave, bhikkhu araññagato vā rukkhamūlagato vā suññāgāragato vā nisīdati pallaṅkaṁ ābhujitvā ujuṁ kāyaṁ paṇidhāya parimukhaṁ satiṁ upaṭṭhapetvā. ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Вот, монахи, монах или в дикую местность ушедший или к корням дерева ушедший или в пустое жилище ушедший, садится, сидение-сидячую позу сложив, прямо тело удерживая (удержав), на весь рот-лицо памятование установив. "
+    }
+   },
+   {
+    "segment": "dn22:2.3",
+    "root_text": "So satova assasati, satova passasati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Так, только памятуя выдыхает, только памятуя вдыхает. "
+    }
+   },
+   {
+    "segment": "dn22:2.4",
+    "root_text": "Dīghaṁ vā assasanto ‘dīghaṁ assasāmī’ti pajānāti, dīghaṁ vā passasanto ‘dīghaṁ passasāmī’ti pajānāti. ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "Или длинно выдыхающий: “длинно выдыхаю“ понимает; или длинно вдыхающий “длинно вдыхаю“ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:2.5",
+    "root_text": "Rassaṁ vā assasanto ‘rassaṁ assasāmī’ti pajānāti, rassaṁ vā passasanto ‘rassaṁ passasāmī’ti pajānāti. ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "Или коротко выдыхающий: “коротко выдыхаю“ понимает; или коротко вдыхающий “коротко вдыхаю“ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:2.6",
+    "root_text": "‘Sabbakāyapaṭisaṁvedī assasissāmī’ti sikkhati, ‘sabbakāyapaṭisaṁvedī passasissāmī’ti sikkhati. ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "“Всё-тело-чувствующий выдохну“ тренируется; “всё-тело-чувствующий вдохну“ тренируется. "
+    }
+   },
+   {
+    "segment": "dn22:2.7",
+    "root_text": "‘Passambhayaṁ kāyasaṅkhāraṁ assasissāmī’ti sikkhati, ‘passambhayaṁ kāyasaṅkhāraṁ passasissāmī’ti sikkhati. ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "“Умиротворяя тела-составляющую выдохну” тренируется, “умиротворяя тела-составляющую вдохну” тренируется. "
+    }
+   },
+   {
+    "segment": "dn22:2.8",
+    "root_text": "Seyyathāpi, bhikkhave, dakkho bhamakāro vā bhamakārantevāsī vā dīghaṁ vā añchanto ‘dīghaṁ añchāmī’ti pajānāti, rassaṁ vā añchanto ‘rassaṁ añchāmī’ti pajānāti; ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Это как, монахи, опытный гончар (или профессия не ясна) или его подмастерье, тянущий длинно: “тяну длинно“ понимает, или, тянущий коротко: “тяну коротко“ понимает, "
+    }
+   },
+   {
+    "segment": "dn22:2.9",
+    "root_text": "evameva kho, bhikkhave, bhikkhu dīghaṁ vā assasanto ‘dīghaṁ assasāmī’ti pajānāti, dīghaṁ vā passasanto ‘dīghaṁ passasāmī’ti pajānāti, rassaṁ vā assasanto ‘rassaṁ assasāmī’ti pajānāti, rassaṁ vā passasanto ‘rassaṁ passasāmī’ti pajānāti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "именно так, монахи, монах или длинно выдыхающий: “длинно выдыхаю“ понимает; или длинно вдыхающий “длинно вдыхаю“ понимает, или коротко выдыхающий: “коротко выдыхаю“ понимает; или коротко вдыхающий “коротко вдыхаю“ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:2.10",
+    "root_text": "‘Sabbakāyapaṭisaṁvedī assasissāmī’ti sikkhati, ‘sabbakāyapaṭisaṁvedī passasissāmī’ti sikkhati, ‘passambhayaṁ kāyasaṅkhāraṁ assasissāmī’ti sikkhati, ‘passambhayaṁ kāyasaṅkhāraṁ passasissāmī’ti sikkhati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "“Всё-тело-чувствующий выдохну“ тренируется; “всё-тело-чувствующий вдохну“ тренируется. “Умиротворяя тела-составляющую выдохну” тренируется, “умиротворяя тела-составляющую вдохну” тренируется. "
+    }
+   },
+   {
+    "segment": "dn22:2.11",
+    "root_text": "Iti ajjhattaṁ vā kāye kāyānupassī viharati, bahiddhā vā kāye kāyānupassī viharati, ajjhattabahiddhā vā kāye kāyānupassī viharati. ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Так или внутри в теле тело-наблюдающий пребывает, или снаружи в теле тело-наблюдающий пребывает, или внутри-снаружи в теле тело-наблюдающий пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:2.12",
+    "root_text": "Samudayadhammānupassī vā kāyasmiṁ viharati, vayadhammānupassī vā kāyasmiṁ viharati, samudayavayadhammānupassī vā kāyasmiṁ viharati. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Или скапливания-явление-наблюдающий в теле пребывает, или прохождения-явление-наблюдающий в теле пребывает, или скапливания-прохождения-явление-наблюдающий в теле пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:2.13",
+    "root_text": "‘Atthi kāyo’ti vā panassa sati paccupaṭṭhitā hoti yāvadeva ñāṇamattāya paṭissatimattāya anissito ca viharati, na ca kiñci loke upādiyati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Или ‘есть тело’ памятование является установленным, именно только ради знания и только ради памятования, и независимый пребывает, ничто на свете не удерживая. "
+    }
+   },
+   {
+    "segment": "dn22:2.14",
+    "root_text": "Evampi kho, bhikkhave, bhikkhu kāye kāyānupassī viharati. ",
+    "variant": "Evampi kho → evampi (sya-all, km, pts1ed) ",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "Так, в том числе, монахи, монах в теле тело-наблюдающий пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:2.15",
+    "root_text": "Ānāpānapabbaṁ niṭṭhitaṁ. ",
+    "variant": "",
+    "html": "<p class='endsection'>{}</p>",
+    "translations": {
+     "ru_o": "Секция Памятования о дыхании установлена. "
+    }
+   },
+   {
+    "segment": "dn22:3.0",
+    "root_text": "1.2. Kāyānupassanāiriyāpathapabba ",
+    "variant": "",
+    "html": "<h3>{}</h3>",
+    "translations": {
+     "ru_o": "1.2. Наблюдение тела секция положений "
+    }
+   },
+   {
+    "segment": "dn22:3.1",
+    "root_text": "Puna caparaṁ, bhikkhave, bhikkhu gacchanto vā ‘gacchāmī’ti pajānāti, ṭhito vā ‘ṭhitomhī’ti pajānāti, nisinno vā ‘nisinnomhī’ti pajānāti, sayāno vā ‘sayānomhī’ti pajānāti, ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "И снова, монахи, монах идущий: ‘иду’ понимает, или стоящий: ‘я стою’ понимает, или сидящий: ‘я сижу’ понимает, или лежащий: ‘я лежу’ понимает, "
+    }
+   },
+   {
+    "segment": "dn22:3.2",
+    "root_text": "yathā yathā vā panassa kāyo paṇihito hoti tathā tathā naṁ pajānāti. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "или как бы ни было расположено тело так то понимает. "
+    }
+   },
+   {
+    "segment": "dn22:3.3",
+    "root_text": "Iti ajjhattaṁ vā kāye kāyānupassī viharati, bahiddhā vā kāye kāyānupassī viharati, ajjhattabahiddhā vā kāye kāyānupassī viharati. ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Так или внутри в теле тело-наблюдающий пребывает, или снаружи в теле тело-наблюдающий пребывает, или внутри-снаружи в теле тело-наблюдающий пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:3.4",
+    "root_text": "Samudayadhammānupassī vā kāyasmiṁ viharati, vayadhammānupassī vā kāyasmiṁ viharati, samudayavayadhammānupassī vā kāyasmiṁ viharati. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Или скапливания-явление-наблюдающий в теле пребывает, или прохождения-явление-наблюдающий в теле пребывает, или скапливания-прохождения-явление-наблюдающий в теле пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:3.5",
+    "root_text": "‘Atthi kāyo’ti vā panassa sati paccupaṭṭhitā hoti yāvadeva ñāṇamattāya paṭissatimattāya anissito ca viharati, na ca kiñci loke upādiyati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Или ‘есть тело’ памятование является установленным, именно только ради знания и только ради памятования, и независимый пребывает, ничто на свете не удерживая. "
+    }
+   },
+   {
+    "segment": "dn22:3.6",
+    "root_text": "Evampi kho, bhikkhave, bhikkhu kāye kāyānupassī viharati. ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "Так, в том числе, монахи, монах в теле тело-наблюдающий пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:3.7",
+    "root_text": "Iriyāpathapabbaṁ niṭṭhitaṁ. ",
+    "variant": "",
+    "html": "<p class='endsection'>{}</p>",
+    "translations": {
+     "ru_o": "Секция положений установлена. "
+    }
+   },
+   {
+    "segment": "dn22:4.0",
+    "root_text": "1.3. Kāyānupassanāsampajānapabba ",
+    "variant": "",
+    "html": "<h3>{}</h3>",
+    "translations": {
+     "ru_o": "1.3. Наблюдение тела секция сознательности "
+    }
+   },
+   {
+    "segment": "dn22:4.1",
+    "root_text": "Puna caparaṁ, bhikkhave, bhikkhu abhikkante paṭikkante sampajānakārī hoti, ālokite vilokite sampajānakārī hoti, samiñjite pasārite sampajānakārī hoti, saṅghāṭipattacīvaradhāraṇe sampajānakārī hoti, asite pīte khāyite sāyite sampajānakārī hoti, uccārapassāvakamme sampajānakārī hoti, gate ṭhite nisinne sutte jāgarite bhāsite tuṇhībhāve sampajānakārī hoti. ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "И снова, монахи, монах в поступании в отступании сознательно-делающий (есть тот, кто делает сознательно); в осматривании в рассматривании сознательно-делающий; в сгибании в распрямлении сознательно-делающий; в сангхати-чаши-чивары-применении сознательно-делающий; в кусании, в питье, в жевании, в пробовании сознательно-делающий; в дефекации-мочеиспускания-активности сознательно-делающий; в хождении, в стоянии, в сидении, в лежании-сне, в бодрствовании, в разговоре, в молчании сознательно-делающий. "
+    }
+   },
+   {
+    "segment": "dn22:4.2",
+    "root_text": "Iti ajjhattaṁ vā …pe… ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "Так или внутри… "
+    }
+   },
+   {
+    "segment": "dn22:4.3",
+    "root_text": "Evampi kho, bhikkhave, bhikkhu kāye kāyānupassī viharati. ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "Так, в том числе, монах пребывает наблюдающим тело в теле. "
+    }
+   },
+   {
+    "segment": "dn22:4.4",
+    "root_text": "Sampajānapabbaṁ niṭṭhitaṁ. ",
+    "variant": "",
+    "html": "<p class='endsection'>{}</p>",
+    "translations": {
+     "ru_o": "Секция сознательности установлена. "
+    }
+   },
+   {
+    "segment": "dn22:5.0",
+    "root_text": "1.4. Kāyānupassanāpaṭikūlamanasikārapabba ",
+    "variant": "",
+    "html": "<h3>{}</h3>",
+    "translations": {
+     "ru_o": "1.4. Наблюдение тела секция отстраняющей мыследеятельности (создании представления-воображения) "
+    }
+   },
+   {
+    "segment": "dn22:5.1",
+    "root_text": "Puna caparaṁ, bhikkhave, bhikkhu imameva kāyaṁ uddhaṁ pādatalā adho kesamatthakā tacapariyantaṁ pūraṁ nānappakārassa asucino paccavekkhati: ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "И снова, монахи, монах именно это тело вверх от подошв ступней, вниз от кончиков волос головы кожей-обернутое, полное разнообразного нечистого рассматривает: "
+    }
+   },
+   {
+    "segment": "dn22:5.2",
+    "root_text": "‘atthi imasmiṁ kāye kesā lomā nakhā dantā taco, maṁsaṁ nhāru aṭṭhi aṭṭhimiñjaṁ vakkaṁ, hadayaṁ yakanaṁ kilomakaṁ pihakaṁ papphāsaṁ, antaṁ antaguṇaṁ udariyaṁ karīsaṁ, pittaṁ semhaṁ pubbo lohitaṁ sedo medo, assu vasā kheḷo siṅghāṇikā lasikā muttan’ti. ",
+    "variant": "udariyaṁ karīsaṁ → karīsaṁ matthaluṅgaṁ (mr) ",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "‘в этом теле есть волосы головы, волосы тела, ногти, зубы, кожа, плоть, соединительные структуры, кости, костный мозг (включая мозг и спинной мозг), почки, сердце, печень, телесные оболочки (или диафрагма), селезенка, лёгкие, пищеварительные органы, кишечник, содержимое желудка, кал, желчь, лимфа (или слизь), гной, кровь, пот, жир, слезы, кожное сало, слюна, слизь-сопли, спинно-мозговая и суставная жидкость, моча‘. "
+    }
+   },
+   {
+    "segment": "dn22:5.3",
+    "root_text": "Seyyathāpi, bhikkhave, ubhatomukhā putoḷi pūrā nānāvihitassa dhaññassa, seyyathidaṁ—sālīnaṁ vīhīnaṁ muggānaṁ māsānaṁ tilānaṁ taṇḍulānaṁ. Tamenaṁ cakkhumā puriso muñcitvā paccavekkheyya: ‘ime sālī, ime vīhī ime muggā ime māsā ime tilā ime taṇḍulā’ti. ",
+    "variant": "putoḷi → mūtoḷī (sya-all, km); mutoli (pts1ed) ",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "Это как, монахи, с двумя отверстиями (ртами) сумка, полная различного зерна, в частности: горные рисинки (суходольные), неочищенные рисинки, фасолины, горошины, кунжутные зерна, очищенные рисинки. Ту ее зрячий человек открыв пересматривал бы: ‘Эти – горные рисинки, эти – неочищенные рисинки, эти – фасолины, эти – горошины, эти – кунжутные зёрна, эти – очищенные рисинки’. "
+    }
+   },
+   {
+    "segment": "dn22:5.4",
+    "root_text": "Evameva kho, bhikkhave, bhikkhu imameva kāyaṁ uddhaṁ pādatalā adho kesamatthakā tacapariyantaṁ pūraṁ nānappakārassa asucino paccavekkhati: ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Именно так, монахи, монах именно это тело вверх от подошв ступней, вниз от кончиков волос головы кожей-обернутое, полное разнообразного нечистого рассматривает: "
+    }
+   },
+   {
+    "segment": "dn22:5.5",
+    "root_text": "‘atthi imasmiṁ kāye kesā lomā …pe… muttan’ti. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "‘В этом теле есть волосы головы, волосы тела … моча’. "
+    }
+   },
+   {
+    "segment": "dn22:5.6",
+    "root_text": "Iti ajjhattaṁ vā …pe… ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "Так или внутри… "
+    }
+   },
+   {
+    "segment": "dn22:5.7",
+    "root_text": "Evampi kho, bhikkhave, bhikkhu kāye kāyānupassī viharati. ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "Так, в том числе, монах пребывает наблюдающим тело в теле. "
+    }
+   },
+   {
+    "segment": "dn22:5.8",
+    "root_text": "Paṭikūlamanasikārapabbaṁ niṭṭhitaṁ. ",
+    "variant": "",
+    "html": "<p class='endsection'>{}</p>",
+    "translations": {
+     "ru_o": "Секция отстраняющей мыследеятельности установлена. "
+    }
+   },
+   {
+    "segment": "dn22:6.0",
+    "root_text": "1.5. Kāyānupassanādhātumanasikārapabba ",
+    "variant": "",
+    "html": "<h3>{}</h3>",
+    "translations": {
+     "ru_o": "1.5. Наблюдение тела секция мыследеятельности дхату (феномен) "
+    }
+   },
+   {
+    "segment": "dn22:6.1",
+    "root_text": "Puna caparaṁ, bhikkhave, bhikkhu imameva kāyaṁ yathāṭhitaṁ yathāpaṇihitaṁ dhātuso paccavekkhati: ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "И снова, монахи, монах именно это тело, как-стоящее, как-(так-и)-направляющееся дхату рассматривает: "
+    }
+   },
+   {
+    "segment": "dn22:6.2",
+    "root_text": "‘atthi imasmiṁ kāye pathavīdhātu āpodhātu tejodhātu vāyodhātū’ti. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "‘есть в этом теле дхату твёрдого (тверди), дхату жидкости, дхату тепла, дхату воздуха‘. "
+    }
+   },
+   {
+    "segment": "dn22:6.3",
+    "root_text": "Seyyathāpi, bhikkhave, dakkho goghātako vā goghātakantevāsī vā gāviṁ vadhitvā catumahāpathe bilaso vibhajitvā nisinno assa; ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Это как, монахи, опытный мясник или ученик мясника корову убив на перекрёстке четырёх больших дорог разделав ее на части сел бы; "
+    }
+   },
+   {
+    "segment": "dn22:6.4",
+    "root_text": "evameva kho, bhikkhave, bhikkhu imameva kāyaṁ yathāṭhitaṁ yathāpaṇihitaṁ dhātuso paccavekkhati: ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "именно так, монахи, монах именно это тело, как-стоящее, так-и-направляющееся дхату рассматривает: "
+    }
+   },
+   {
+    "segment": "dn22:6.5",
+    "root_text": "‘atthi imasmiṁ kāye pathavīdhātu āpodhātu tejodhātu vāyodhātū’ti. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "‘есть в этом теле дхату твёрдого, дхату жидкости, дхату тепла, дхату воздуха‘. "
+    }
+   },
+   {
+    "segment": "dn22:6.6",
+    "root_text": "Iti ajjhattaṁ vā kāye kāyānupassī viharati …pe… ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "Так или внутри в теле тело-наблюдающий пребывает… "
+    }
+   },
+   {
+    "segment": "dn22:6.7",
+    "root_text": "Evampi kho, bhikkhave, bhikkhu kāye kāyānupassī viharati. ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "Так, в том числе, монах пребывает наблюдающим тело в теле. "
+    }
+   },
+   {
+    "segment": "dn22:6.8",
+    "root_text": "Dhātumanasikārapabbaṁ niṭṭhitaṁ. ",
+    "variant": "",
+    "html": "<p class='endsection'>{}</p>",
+    "translations": {
+     "ru_o": "Секция мыследеятельности дхату установлена. "
+    }
+   },
+   {
+    "segment": "dn22:7.0",
+    "root_text": "1.6. Kāyānupassanānavasivathikapabba ",
+    "variant": "",
+    "html": "<h3>{}</h3>",
+    "translations": {
+     "ru_o": "1.6. Наблюдение тела секция девяти погребений "
+    }
+   },
+   {
+    "segment": "dn22:7.1",
+    "root_text": "Puna caparaṁ, bhikkhave, bhikkhu seyyathāpi passeyya sarīraṁ sivathikāya chaḍḍitaṁ ekāhamataṁ vā dvīhamataṁ vā tīhamataṁ vā uddhumātakaṁ vinīlakaṁ vipubbakajātaṁ. ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "И снова, монахи, монах как если бы, увидел тело (останки) на кладбище брошенное один день мертвое или два дня мертвое или три дня мертвое вздутое, синюшное, гниющее. "
+    }
+   },
+   {
+    "segment": "dn22:7.2",
+    "root_text": "So imameva kāyaṁ upasaṁharati: ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Он именно это тело соотносит: "
+    }
+   },
+   {
+    "segment": "dn22:7.3",
+    "root_text": "‘ayampi kho kāyo evaṁdhammo evaṁbhāvī evaṁanatīto’ti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "‘Это, в том числе тело, такова действительность, таким являющееся, это неминуемо‘. "
+    }
+   },
+   {
+    "segment": "dn22:7.4",
+    "root_text": "Iti ajjhattaṁ vā …pe… ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Так или внутри… "
+    }
+   },
+   {
+    "segment": "dn22:7.5",
+    "root_text": "Evampi kho, bhikkhave, bhikkhu kāye kāyānupassī viharati. ",
+    "variant": "",
+    "html": "<p data-counter='1'>{}</p>",
+    "translations": {
+     "ru_o": "Так, в том числе, монах пребывает наблюдающим тело в теле. "
+    }
+   },
+   {
+    "segment": "dn22:8.1",
+    "root_text": "Puna caparaṁ, bhikkhave, bhikkhu seyyathāpi passeyya sarīraṁ sivathikāya chaḍḍitaṁ kākehi vā khajjamānaṁ kulalehi vā khajjamānaṁ gijjhehi vā khajjamānaṁ kaṅkehi vā khajjamānaṁ sunakhehi vā khajjamānaṁ byagghehi vā khajjamānaṁ dīpīhi vā khajjamānaṁ siṅgālehi vā khajjamānaṁ vividhehi vā pāṇakajātehi khajjamānaṁ. ",
+    "variant": "kaṅkehi vā khajjamānaṁ sunakhehi vā khajjamānaṁ byagghehi vā khajjamānaṁ dīpīhi vā khajjamānaṁ siṅgālehi vā khajjamānaṁ → suvānehi vā khajjamānaṁ sigālehi vā khajjamānaṁ (si, sya-all, km), supāṇehi vā khajjamānaṁ sigālehi vā khajjamānaṁ (pts1ed) ",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "И снова, монахи, монах как если бы, увидел тело (останки) на кладбище брошенное воронами поглощаемое или падальщиками поглощаемое или грифами поглощаемое или собаками поглощаемое или тиграми поглощаемое или леопардами поглощаемое или шакалами поглощаемое или различными мелкими животными поглощаемое. "
+    }
+   },
+   {
+    "segment": "dn22:8.2",
+    "root_text": "So imameva kāyaṁ upasaṁharati: ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Он именно это тело соотносит: "
+    }
+   },
+   {
+    "segment": "dn22:8.3",
+    "root_text": "‘ayampi kho kāyo evaṁdhammo evaṁbhāvī evaṁanatīto’ti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "‘Это, в том числе тело, такова действительность, таким являющееся, это неминуемо‘. "
+    }
+   },
+   {
+    "segment": "dn22:8.4",
+    "root_text": "Iti ajjhattaṁ vā …pe… ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Так или внутри… "
+    }
+   },
+   {
+    "segment": "dn22:8.5",
+    "root_text": "Evampi kho, bhikkhave, bhikkhu kāye kāyānupassī viharati. ",
+    "variant": "",
+    "html": "<p data-counter='2'>{}</p>",
+    "translations": {
+     "ru_o": "Так, в том числе, монах пребывает наблюдающим тело в теле. "
+    }
+   },
+   {
+    "segment": "dn22:9.1",
+    "root_text": "Puna caparaṁ, bhikkhave, bhikkhu seyyathāpi passeyya sarīraṁ sivathikāya chaḍḍitaṁ aṭṭhikasaṅkhalikaṁ samaṁsalohitaṁ nhārusambandhaṁ …pe… ",
+    "variant": "",
+    "html": "<p data-counter='3'>{}</p>",
+    "translations": {
+     "ru_o": "И снова, монахи, монах как если бы, увидел тело (останки) на кладбище брошенное, скелет с-плотью-кровью, суставами-сухожилиями-скрепленный… "
+    }
+   },
+   {
+    "segment": "dn22:9.2",
+    "root_text": "Aṭṭhikasaṅkhalikaṁ nimaṁsalohitamakkhitaṁ nhārusambandhaṁ …pe… ",
+    "variant": "",
+    "html": "<p data-counter='4'>{}</p>",
+    "translations": {
+     "ru_o": "Скелет, без-плоти-кровью-измазанный, суставами-сухожилиями-скрепленный… "
+    }
+   },
+   {
+    "segment": "dn22:9.3",
+    "root_text": "Aṭṭhikasaṅkhalikaṁ apagatamaṁsalohitaṁ nhārusambandhaṁ …pe… ",
+    "variant": "",
+    "html": "<p data-counter='5'>{}</p>",
+    "translations": {
+     "ru_o": "Скелет, лишенный-плоти-крови, суставами-сухожилиями-скрепленный… "
+    }
+   },
+   {
+    "segment": "dn22:9.4",
+    "root_text": "Aṭṭhikāni apagatasambandhāni disā vidisā vikkhittāni, aññena hatthaṭṭhikaṁ aññena pādaṭṭhikaṁ aññena gopphakaṭṭhikaṁ aññena jaṅghaṭṭhikaṁ aññena ūruṭṭhikaṁ aññena kaṭiṭṭhikaṁ aññena phāsukaṭṭhikaṁ aññena piṭṭhiṭṭhikaṁ aññena khandhaṭṭhikaṁ aññena gīvaṭṭhikaṁ aññena hanukaṭṭhikaṁ aññena dantaṭṭhikaṁ aññena sīsakaṭāhaṁ. ",
+    "variant": "aññena kaṭiṭṭhikaṁ aññena phāsukaṭṭhikaṁ aññena piṭṭhiṭṭhikaṁ aññena khandhaṭṭhikaṁ aññena gīvaṭṭhikaṁ aññena hanukaṭṭhikaṁ → aññena kaṭaṭṭhikaṁ aññena piṭṭhaṭṭhikaṁ aññena kaṇḍakaṭṭhikaṁ aññena phāsukaṭṭhikaṁ aññena uraṭṭhikaṁ aññena aṁsaṭṭhikaṁ aññena bāhuṭṭhikaṁ (sya-all, km) | aññena kaṭiṭṭhikaṁ → aññena piṭṭhiṭṭhikaṁ aññena kaṭaṭṭhikaṁ aññena khandhaṭṭhikaṁ aññena gīvaṭṭhikaṁ (si) ",
+    "html": "<p data-counter='6'>{}",
+    "translations": {
+     "ru_o": "Кости лишенные-соединений по направлениям (кардинальным) и вне  направлений разбросанные, отдельно кость руки, отдельно кость стопы, отдельно кость голени, отдельно берцовая кость, отдельно бедренная кость, отдельно кость таза, отдельно ребро, отдельно позвонок, отдельно кость плеча, отдельно кость шеи, отдельно кость челюсти, отдельно зуб, отдельно череп. "
+    }
+   },
+   {
+    "segment": "dn22:9.5",
+    "root_text": "So imameva kāyaṁ upasaṁharati: ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Он именно это тело соотносит: "
+    }
+   },
+   {
+    "segment": "dn22:9.6",
+    "root_text": "‘ayampi kho kāyo evaṁdhammo evaṁbhāvī evaṁanatīto’ti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "‘Это, в том числе тело, такова действительность, таким являющееся, это неминуемо‘. "
+    }
+   },
+   {
+    "segment": "dn22:9.7",
+    "root_text": "Iti ajjhattaṁ vā …pe… ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Так или внутри… "
+    }
+   },
+   {
+    "segment": "dn22:9.8",
+    "root_text": "viharati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:10.1",
+    "root_text": "Puna caparaṁ, bhikkhave, bhikkhu seyyathāpi passeyya sarīraṁ sivathikāya chaḍḍitaṁ aṭṭhikāni setāni saṅkhavaṇṇapaṭibhāgāni …pe… ",
+    "variant": "",
+    "html": "<p data-counter='7'>{}</p>",
+    "translations": {
+     "ru_o": "И снова, монахи, монах как если бы, увидел тело (останки) на кладбище брошенное кости белые, морской раковины цвету подобные… "
+    }
+   },
+   {
+    "segment": "dn22:10.2",
+    "root_text": "Aṭṭhikāni puñjakitāni terovassikāni …pe… ",
+    "variant": "",
+    "html": "<p data-counter='8'>{}</p>",
+    "translations": {
+     "ru_o": "Кости в-кучу-сваленные более-чем-годовалые… "
+    }
+   },
+   {
+    "segment": "dn22:10.3",
+    "root_text": "Aṭṭhikāni pūtīni cuṇṇakajātāni. ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Кости испортившиеся (сгнившие) порошком-ставшие. "
+    }
+   },
+   {
+    "segment": "dn22:10.4",
+    "root_text": "So imameva kāyaṁ upasaṁharati: ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Он именно это тело соотносит: "
+    }
+   },
+   {
+    "segment": "dn22:10.5",
+    "root_text": "‘ayampi kho kāyo evaṁdhammo evaṁbhāvī evaṁanatīto’ti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "‘Это, в том числе тело, такова действительность, таким являющееся, это неминуемо‘. "
+    }
+   },
+   {
+    "segment": "dn22:10.6",
+    "root_text": "Iti ajjhattaṁ vā kāye kāyānupassī viharati, bahiddhā vā kāye kāyānupassī viharati, ajjhattabahiddhā vā kāye kāyānupassī viharati. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Так или внутри в теле тело-наблюдающий пребывает, или снаружи в теле тело-наблюдающий пребывает, или внутри-снаружи в теле тело-наблюдающий пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:10.7",
+    "root_text": "Samudayadhammānupassī vā kāyasmiṁ viharati, vayadhammānupassī vā kāyasmiṁ viharati, samudayavayadhammānupassī vā kāyasmiṁ viharati. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Или скапливания-явление-наблюдающий в теле пребывает, или прохождения-явление-наблюдающий в теле пребывает, или скапливания-прохождения-явление-наблюдающий в теле пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:10.8",
+    "root_text": "‘Atthi kāyo’ti vā panassa sati paccupaṭṭhitā hoti yāvadeva ñāṇamattāya paṭissatimattāya anissito ca viharati, na ca kiñci loke upādiyati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Или ‘есть тело’ памятование является установленным, именно только ради знания и только ради памятования, и независимый пребывает, ничто на свете не удерживая. "
+    }
+   },
+   {
+    "segment": "dn22:10.9",
+    "root_text": "Evampi kho, bhikkhave, bhikkhu kāye kāyānupassī viharati. ",
+    "variant": "",
+    "html": "<p data-counter='9'>{}</p>",
+    "translations": {
+     "ru_o": "Так, в том числе, монах пребывает наблюдающим тело в теле. "
+    }
+   },
+   {
+    "segment": "dn22:10.10",
+    "root_text": "Navasivathikapabbaṁ niṭṭhitaṁ. ",
+    "variant": "",
+    "html": "<p class='endsection'>{}</p>",
+    "translations": {
+     "ru_o": "Секция девяти погребений установлена. "
+    }
+   },
+   {
+    "segment": "dn22:10.11",
+    "root_text": "Cuddasa kāyānupassanā niṭṭhitā. ",
+    "variant": "",
+    "html": "<p class='end'>{}</p>",
+    "translations": {
+     "ru_o": "Четырнадцать наблюдений тела окончены. "
+    }
+   },
+   {
+    "segment": "dn22:11.0",
+    "root_text": "2. Vedanānupassanā ",
+    "variant": "",
+    "html": "<h2>{}</h2>",
+    "translations": {
+     "ru_o": "2. Наблюдение чувствования "
+    }
+   },
+   {
+    "segment": "dn22:11.1",
+    "root_text": "Kathañca pana, bhikkhave, bhikkhu vedanāsu vedanānupassī viharati? ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "И как, монахи, монах в чувствах чувство-наблюдающий пребывает? "
+    }
+   },
+   {
+    "segment": "dn22:11.2",
+    "root_text": "Idha, bhikkhave, bhikkhu sukhaṁ vā vedanaṁ vedayamāno ‘sukhaṁ vedanaṁ vedayāmī’ti pajānāti. ",
+    "variant": "",
+    "html": "<p data-counter='1'>{}</p>",
+    "translations": {
+     "ru_o": "Вот, монахи, монах либо приятное чувство чувствующий ‘приятное чувство чувствую’ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:11.3",
+    "root_text": "Dukkhaṁ vā vedanaṁ vedayamāno ‘dukkhaṁ vedanaṁ vedayāmī’ti pajānāti. ",
+    "variant": "",
+    "html": "<p data-counter='2'>{}</p>",
+    "translations": {
+     "ru_o": "Либо болезненное чувство чувствующий ‘болезненное чувство чувствую’ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:11.4",
+    "root_text": "Adukkhamasukhaṁ vā vedanaṁ vedayamāno ‘adukkhamasukhaṁ vedanaṁ vedayāmī’ti pajānāti. ",
+    "variant": "",
+    "html": "<p data-counter='3'>{}</p>",
+    "translations": {
+     "ru_o": "Либо ни-болезненное-ни-приятное чувство чувствующий ‘ни-болезненное-ни-приятное чувство чувствую’ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:11.5",
+    "root_text": "Sāmisaṁ vā sukhaṁ vedanaṁ vedayamāno ‘sāmisaṁ sukhaṁ vedanaṁ vedayāmī’ti pajānāti. ",
+    "variant": "",
+    "html": "<p data-counter='4'>{}</p>",
+    "translations": {
+     "ru_o": "Либо мирское приятное чувство чувствующий ‘мирское приятное чувство чувствую’ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:11.6",
+    "root_text": "Nirāmisaṁ vā sukhaṁ vedanaṁ vedayamāno ‘nirāmisaṁ sukhaṁ vedanaṁ vedayāmī’ti pajānāti. ",
+    "variant": "",
+    "html": "<p data-counter='5'>{}</p>",
+    "translations": {
+     "ru_o": "Либо не мирское приятное чувство чувствующий ‘не мирское приятное чувство чувствую’ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:11.7",
+    "root_text": "Sāmisaṁ vā dukkhaṁ vedanaṁ vedayamāno ‘sāmisaṁ dukkhaṁ vedanaṁ vedayāmī’ti pajānāti. ",
+    "variant": "",
+    "html": "<p data-counter='6'>{}</p>",
+    "translations": {
+     "ru_o": "Либо мирское болезненное чувство чувствующий ‘мирское болезненное чувство чувствую’ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:11.8",
+    "root_text": "Nirāmisaṁ vā dukkhaṁ vedanaṁ vedayamāno ‘nirāmisaṁ dukkhaṁ vedanaṁ vedayāmī’ti pajānāti. ",
+    "variant": "",
+    "html": "<p data-counter='7'>{}</p>",
+    "translations": {
+     "ru_o": "Либо не мирское болезненное чувство чувствующий ‘не мирское болезненное чувство чувствую’ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:11.9",
+    "root_text": "Sāmisaṁ vā adukkhamasukhaṁ vedanaṁ vedayamāno ‘sāmisaṁ adukkhamasukhaṁ vedanaṁ vedayāmī’ti pajānāti. ",
+    "variant": "",
+    "html": "<p data-counter='8'>{}</p>",
+    "translations": {
+     "ru_o": "Либо мирское ни-болезненное-ни-приятное чувство чувствующий ‘ни-болезненное-ни-приятное мирское чувство чувствую’ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:11.10",
+    "root_text": "Nirāmisaṁ vā adukkhamasukhaṁ vedanaṁ vedayamāno ‘nirāmisaṁ adukkhamasukhaṁ vedanaṁ vedayāmī’ti pajānāti. ",
+    "variant": "",
+    "html": "<p data-counter='9'>{}</p>",
+    "translations": {
+     "ru_o": "Либо не мирское ни-болезненное-ни-приятное чувство чувствующий ‘не мирское ни-болезненное-ни-приятное чувство чувствую’ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:11.11",
+    "root_text": "Iti ajjhattaṁ vā vedanāsu vedanānupassī viharati, bahiddhā vā vedanāsu vedanānupassī viharati, ajjhattabahiddhā vā vedanāsu vedanānupassī viharati. ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Так или внутри в чувствах чувство-наблюдающий пребывает, или снаружи в чувствах чувство-наблюдающий пребывает, или внутри-снаружи в чувствах чувство-наблюдающий пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:11.12",
+    "root_text": "Samudayadhammānupassī vā vedanāsu viharati, vayadhammānupassī vā vedanāsu viharati, samudayavayadhammānupassī vā vedanāsu viharati. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Или скапливания-явление-наблюдающий в чувствах пребывает, или прохождения-явление-наблюдающий в чувствах пребывает, или скапливания-прохождения-явление-наблюдающий в чувствах пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:11.13",
+    "root_text": "‘Atthi vedanā’ti vā panassa sati paccupaṭṭhitā hoti yāvadeva ñāṇamattāya paṭissatimattāya anissito ca viharati, na ca kiñci loke upādiyati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Или ‘есть чувство’ памятование является установленным, именно только ради знания и только ради памятования, и независимый пребывает, ничто на свете не удерживая. "
+    }
+   },
+   {
+    "segment": "dn22:11.14",
+    "root_text": "Evampi kho, bhikkhave, bhikkhu vedanāsu vedanānupassī viharati. ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "Так, в том числе, монах в чувствах чувство-наблюдающий пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:11.15",
+    "root_text": "Vedanānupassanā niṭṭhitā. ",
+    "variant": "",
+    "html": "<p class='endsection'>{}</p>",
+    "translations": {
+     "ru_o": "Наблюдение чувствования установлено. "
+    }
+   },
+   {
+    "segment": "dn22:12.0",
+    "root_text": "3. Cittānupassanā ",
+    "variant": "",
+    "html": "<h2>{}</h2>",
+    "translations": {
+     "ru_o": "3. Наблюдение ума "
+    }
+   },
+   {
+    "segment": "dn22:12.1",
+    "root_text": "Kathañca pana, bhikkhave, bhikkhu citte cittānupassī viharati? ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "И как, монахи, монах в уме умо-наблюдающий пребывает? "
+    }
+   },
+   {
+    "segment": "dn22:12.2",
+    "root_text": "Idha, bhikkhave, bhikkhu sarāgaṁ vā cittaṁ ‘sarāgaṁ cittan’ti pajānāti. ",
+    "variant": "",
+    "html": "<p data-counter='1–16'>{}",
+    "translations": {
+     "ru_o": "Вот, монахи, монах либо с очарованностью-страстью ум ‘с очарованностью ум’ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:12.3",
+    "root_text": "Vītarāgaṁ vā cittaṁ ‘vītarāgaṁ cittan’ti pajānāti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Либо без очарованности ум ‘без очарованности ум’ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:12.4",
+    "root_text": "Sadosaṁ vā cittaṁ ‘sadosaṁ cittan’ti pajānāti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Либо с вредностью-злобой ум ‘с вредностью ум’ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:12.5",
+    "root_text": "Vītadosaṁ vā cittaṁ ‘vītadosaṁ cittan’ti pajānāti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Либо без вредности ум ‘без вредности ум’ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:12.6",
+    "root_text": "Samohaṁ vā cittaṁ ‘samohaṁ cittan’ti pajānāti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Либо с замутненностью-заблуждением ум ‘с замутненностью ум’ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:12.7",
+    "root_text": "Vītamohaṁ vā cittaṁ ‘vītamohaṁ cittan’ti pajānāti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Либо без замутненности ум ‘без замутненности ум’ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:12.8",
+    "root_text": "Saṅkhittaṁ vā cittaṁ ‘saṅkhittaṁ cittan’ti pajānāti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Либо зажатый ум ‘зажатый ум’ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:12.9",
+    "root_text": "Vikkhittaṁ vā cittaṁ ‘vikkhittaṁ cittan’ti pajānāti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Либо вжатый ум , как ‘вжатый ум’ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:12.10",
+    "root_text": "Mahaggataṁ vā cittaṁ ‘mahaggataṁ cittan’ti pajānāti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Либо просторный ум ‘просторный ум’ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:12.11",
+    "root_text": "Amahaggataṁ vā cittaṁ ‘amahaggataṁ cittan’ti pajānāti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Либо не просторный ум ‘не просторный ум’ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:12.12",
+    "root_text": "Sauttaraṁ vā cittaṁ ‘sauttaraṁ cittan’ti pajānāti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Либо уже превзойденный ум ‘уже превзойденный ум’ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:12.13",
+    "root_text": "Anuttaraṁ vā cittaṁ ‘anuttaraṁ cittan’ti pajānāti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Либо ещё не превзойденный ум ‘ещё не превзойденный ум’ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:12.14",
+    "root_text": "Samāhitaṁ vā cittaṁ ‘samāhitaṁ cittan’ti pajānāti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Либо собранный ум ‘собранный ум’ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:12.15",
+    "root_text": "Asamāhitaṁ vā cittaṁ ‘asamāhitaṁ cittan’ti pajānāti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Либо не собранный ум ‘не собранный ум’ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:12.16",
+    "root_text": "Vimuttaṁ vā cittaṁ ‘vimuttaṁ cittan’ti pajānāti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Либо освобожденный ум ‘освобожденный ум’ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:12.17",
+    "root_text": "Avimuttaṁ vā cittaṁ ‘avimuttaṁ cittan’ti pajānāti. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Либо не освобожденный ум ‘не освобожденный ум’ понимает. "
+    }
+   },
+   {
+    "segment": "dn22:12.18",
+    "root_text": "Iti ajjhattaṁ vā citte cittānupassī viharati, bahiddhā vā citte cittānupassī viharati, ajjhattabahiddhā vā citte cittānupassī viharati. ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Так или внутри в уме умо-наблюдающий пребывает, или снаружи в уме умо-наблюдающий пребывает, или внутри-снаружи в уме умо-наблюдающий пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:12.19",
+    "root_text": "Samudayadhammānupassī vā cittasmiṁ viharati, vayadhammānupassī vā cittasmiṁ viharati, samudayavayadhammānupassī vā cittasmiṁ viharati. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Или скапливания-явление-наблюдающий в уме пребывает, или прохождения-явление-наблюдающий в уме пребывает, или скапливания-прохождения-явление-наблюдающий в уме пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:12.20",
+    "root_text": "‘Atthi cittan’ti vā panassa sati paccupaṭṭhitā hoti yāvadeva ñāṇamattāya paṭissatimattāya anissito ca viharati, na ca kiñci loke upādiyati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Или ‘есть ум’ памятование является установленным, именно только ради знания и только ради памятования, и независимый пребывает, ничто на свете не удерживая. "
+    }
+   },
+   {
+    "segment": "dn22:12.21",
+    "root_text": "Evampi kho, bhikkhave, bhikkhu citte cittānupassī viharati. ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "Так, в том числе, монахи, монах в уме умо-наблюдающий пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:12.22",
+    "root_text": "Cittānupassanā niṭṭhitā. ",
+    "variant": "",
+    "html": "<p class='endsection'>{}</p>",
+    "translations": {
+     "ru_o": "Наблюдение ума установлено. "
+    }
+   },
+   {
+    "segment": "dn22:13.0.1",
+    "root_text": "4. Dhammānupassanā ",
+    "variant": "",
+    "html": "<h2>{}</h2>",
+    "translations": {
+     "ru_o": "4. Наблюдение явлений "
+    }
+   },
+   {
+    "segment": "dn22:13.0.2",
+    "root_text": "4.1. Dhammānupassanānīvaraṇapabba ",
+    "variant": "",
+    "html": "<h3>{}</h3>",
+    "translations": {
+     "ru_o": "4.1. Наблюдение явлений секция препятствий "
+    }
+   },
+   {
+    "segment": "dn22:13.1",
+    "root_text": "Kathañca pana, bhikkhave, bhikkhu dhammesu dhammānupassī viharati? ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "И как, монахи, монах в явлениях явление-наблюдающий пребывает? "
+    }
+   },
+   {
+    "segment": "dn22:13.2",
+    "root_text": "Idha, bhikkhave, bhikkhu dhammesu dhammānupassī viharati pañcasu nīvaraṇesu. ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Вот, монахи, монах в явлениях явление-наблюдающий пребывает в пяти препятствиях. "
+    }
+   },
+   {
+    "segment": "dn22:13.3",
+    "root_text": "Kathañca pana, bhikkhave, bhikkhu dhammesu dhammānupassī viharati pañcasu nīvaraṇesu? ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "И как, монахи, монах в явлениях явление-наблюдающий пребывает в пяти препятствиях? "
+    }
+   },
+   {
+    "segment": "dn22:13.4",
+    "root_text": "Idha, bhikkhave, bhikkhu santaṁ vā ajjhattaṁ kāmacchandaṁ ‘atthi me ajjhattaṁ kāmacchando’ti pajānāti, asantaṁ vā ajjhattaṁ kāmacchandaṁ ‘natthi me ajjhattaṁ kāmacchando’ti pajānāti, yathā ca anuppannassa kāmacchandassa uppādo hoti tañca pajānāti, yathā ca uppannassa kāmacchandassa pahānaṁ hoti tañca pajānāti, yathā ca pahīnassa kāmacchandassa āyatiṁ anuppādo hoti tañca pajānāti. ",
+    "variant": "",
+    "html": "<p data-counter='1'>{}</p>",
+    "translations": {
+     "ru_o": "Вот, монахи, либо монах присутствующий внутри желания-импульс-намерение-выбор: ‘присутствует у меня внутри желания-импульс‘ понимает, либо не присутствующий внутри желания-импульс: ‘не присутствует у меня внутри желания-импульс‘ понимает, и как невозникшего желания-импульса появление происходит и то понимает, и как возникшего желания-импульса покидание происходит и то понимает, и как покинутого желания-импульса в грядущем не происходит появление и то понимает. "
+    }
+   },
+   {
+    "segment": "dn22:13.5",
+    "root_text": "Santaṁ vā ajjhattaṁ byāpādaṁ ‘atthi me ajjhattaṁ byāpādo’ti pajānāti, asantaṁ vā ajjhattaṁ byāpādaṁ ‘natthi me ajjhattaṁ byāpādo’ti pajānāti, yathā ca anuppannassa byāpādassa uppādo hoti tañca pajānāti, yathā ca uppannassa byāpādassa pahānaṁ hoti tañca pajānāti, yathā ca pahīnassa byāpādassa āyatiṁ anuppādo hoti tañca pajānāti. ",
+    "variant": "",
+    "html": "<p data-counter='2'>{}</p>",
+    "translations": {
+     "ru_o": "Либо присутствующую внутри враждебность ‘присутствует у меня внутри враждебность‘ понимает, или не присутствующую внутри враждебность ‘не присутствует у меня внутри враждебность‘ понимает, и как невозникшей враждебности происходит появление и то понимает, и как возникшей враждебности происходит покидание и то понимает, и как покинутой враждебности в грядущем не происходит появление и то понимает. "
+    }
+   },
+   {
+    "segment": "dn22:13.6",
+    "root_text": "Santaṁ vā ajjhattaṁ thinamiddhaṁ ‘atthi me ajjhattaṁ thinamiddhan’ti pajānāti, asantaṁ vā ajjhattaṁ thinamiddhaṁ ‘natthi me ajjhattaṁ thinamiddhan’ti pajānāti, yathā ca anuppannassa thinamiddhassa uppādo hoti tañca pajānāti, yathā ca uppannassa thinamiddhassa pahānaṁ hoti tañca pajānāti, yathā ca pahīnassa thinamiddhassa āyatiṁ anuppādo hoti tañca pajānāti. ",
+    "variant": "",
+    "html": "<p data-counter='3'>{}</p>",
+    "translations": {
+     "ru_o": "Либо присутствующую внутри апатию-сонливость ‘присутствует у меня внутри апатия-сонливость‘ понимает, или не присутствующую внутри апатию-сонливость ‘не присутствует у меня внутри апатия-сонливость‘ понимает, и как невозникшей апатии-сонливости происходит появление и то понимает, и как возникшей апатии-сонливости происходит покидание и то понимает, и как покинутой апатии-сонливости в грядущем не происходит появление и то понимает. "
+    }
+   },
+   {
+    "segment": "dn22:13.7",
+    "root_text": "Santaṁ vā ajjhattaṁ uddhaccakukkuccaṁ ‘atthi me ajjhattaṁ uddhaccakukkuccan’ti pajānāti, asantaṁ vā ajjhattaṁ uddhaccakukkuccaṁ ‘natthi me ajjhattaṁ uddhaccakukkuccan’ti pajānāti, yathā ca anuppannassa uddhaccakukkuccassa uppādo hoti tañca pajānāti, yathā ca uppannassa uddhaccakukkuccassa pahānaṁ hoti tañca pajānāti, yathā ca pahīnassa uddhaccakukkuccassa āyatiṁ anuppādo hoti tañca pajānāti. ",
+    "variant": "",
+    "html": "<p data-counter='4'>{}</p>",
+    "translations": {
+     "ru_o": "Либо присутствующую внутри возбужденность-беспокойство ‘присутствует у меня внутри возбужденность-беспокойство‘ понимает, или не присутствующую внутри возбужденность-беспокойство ‘не присутствует у меня внутри возбужденность-беспокойство‘ понимает, и как невозникшей возбужденности-беспокойства происходит появление и то понимает, и как возникшей возбужденности-беспокойства происходит покидание и то понимает, и как покинутой возбужденности-беспокойства в грядущем не происходит появление и то понимает. "
+    }
+   },
+   {
+    "segment": "dn22:13.8",
+    "root_text": "Santaṁ vā ajjhattaṁ vicikicchaṁ ‘atthi me ajjhattaṁ vicikicchā’ti pajānāti, asantaṁ vā ajjhattaṁ vicikicchaṁ ‘natthi me ajjhattaṁ vicikicchā’ti pajānāti, yathā ca anuppannāya vicikicchāya uppādo hoti tañca pajānāti, yathā ca uppannāya vicikicchāya pahānaṁ hoti tañca pajānāti, yathā ca pahīnāya vicikicchāya āyatiṁ anuppādo hoti tañca pajānāti. ",
+    "variant": "",
+    "html": "<p data-counter='5'>{}</p>",
+    "translations": {
+     "ru_o": "Либо присутствующее внутри разбредание ‘присутствует у меня внутри разбредание‘ понимает, или не присутствующее внутри разбредание ‘не присутствует у меня внутри разбредание‘ понимает, и как невозникшего разбредания происходит появление и то понимает, и как возникшего разбредания происходит покидание и то понимает, и как покинутого разбредания в грядущем не происходит появление и то понимает. "
+    }
+   },
+   {
+    "segment": "dn22:13.9",
+    "root_text": "Iti ajjhattaṁ vā dhammesu dhammānupassī viharati, bahiddhā vā dhammesu dhammānupassī viharati, ajjhattabahiddhā vā dhammesu dhammānupassī viharati. ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Так или внутри в явлениях явление-наблюдающий пребывает, или снаружи в явлениях явление-наблюдающий пребывает, или внутри-снаружи в явлениях явление-наблюдающий пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:13.10",
+    "root_text": "Samudayadhammānupassī vā dhammesu viharati, vayadhammānupassī vā dhammesu viharati, samudayavayadhammānupassī vā dhammesu viharati. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Или скапливания-явление-наблюдающий в явлениях пребывает, или прохождения-явление-наблюдающий в явлениях пребывает, или скапливания-прохождения-явление-наблюдающий в явлениях пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:13.11",
+    "root_text": "‘Atthi dhammā’ti vā panassa sati paccupaṭṭhitā hoti yāvadeva ñāṇamattāya paṭissatimattāya, anissito ca viharati, na ca kiñci loke upādiyati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Или ‘есть явление’ памятование является установленным, именно только ради знания и только ради памятования, и независимый пребывает, ничто на свете не удерживая. "
+    }
+   },
+   {
+    "segment": "dn22:13.12",
+    "root_text": "Evampi kho, bhikkhave, bhikkhu dhammesu dhammānupassī viharati pañcasu nīvaraṇesu. ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "Так, в том числе, монахи, монах в явлениях явление-наблюдающий пребывает в пяти препятствиях. "
+    }
+   },
+   {
+    "segment": "dn22:13.13",
+    "root_text": "Nīvaraṇapabbaṁ niṭṭhitaṁ. ",
+    "variant": "",
+    "html": "<p class='endsection'>{}</p>",
+    "translations": {
+     "ru_o": "Секция препятствий установлена. "
+    }
+   },
+   {
+    "segment": "dn22:14.0",
+    "root_text": "4.2. Dhammānupassanākhandhapabba ",
+    "variant": "",
+    "html": "<h3>{}</h3>",
+    "translations": {
+     "ru_o": "4.2. Наблюдение явлений секция блоков "
+    }
+   },
+   {
+    "segment": "dn22:14.1",
+    "root_text": "Puna caparaṁ, bhikkhave, bhikkhu dhammesu dhammānupassī viharati pañcasu upādānakkhandhesu. ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "И снова, монахи, монах в явлениях явление-наблюдающий пребывает в пяти поддерживания-блоках. "
+    }
+   },
+   {
+    "segment": "dn22:14.2",
+    "root_text": "Kathañca pana, bhikkhave, bhikkhu dhammesu dhammānupassī viharati pañcasu upādānakkhandhesu? ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "И как, монахи, монах в явлениях явление-наблюдающий пребывает в пяти поддерживания-блоках? "
+    }
+   },
+   {
+    "segment": "dn22:14.3",
+    "root_text": "Idha, bhikkhave, bhikkhu: ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Вот, монахи, монах: "
+    }
+   },
+   {
+    "segment": "dn22:14.4",
+    "root_text": "‘iti rūpaṁ, iti rūpassa samudayo, iti rūpassa atthaṅgamo; ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "‘Это – материя-объект-рупа; это – материи скапливание; это – материи захождение; "
+    }
+   },
+   {
+    "segment": "dn22:14.5",
+    "root_text": "iti vedanā, iti vedanāya samudayo, iti vedanāya atthaṅgamo; ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "это – чувствование; это – чувствования скапливание; это – чувствования захождение; "
+    }
+   },
+   {
+    "segment": "dn22:14.6",
+    "root_text": "iti saññā, iti saññāya samudayo, iti saññāya atthaṅgamo; ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "это – сознавание; это – сознавания скапливание; это – сознавания захождение; "
+    }
+   },
+   {
+    "segment": "dn22:14.7",
+    "root_text": "iti saṅkhārā, iti saṅkhārānaṁ samudayo, iti saṅkhārānaṁ atthaṅgamo, ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "это – составляющие; это – составляющих скапливание; это – составляющих захождение, "
+    }
+   },
+   {
+    "segment": "dn22:14.8",
+    "root_text": "iti viññāṇaṁ, iti viññāṇassa samudayo, iti viññāṇassa atthaṅgamo’ti, ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "это – внимание-распознавание; это – внимания скапливание; это – внимания захождение’, "
+    }
+   },
+   {
+    "segment": "dn22:14.9",
+    "root_text": "iti ajjhattaṁ vā dhammesu dhammānupassī viharati, bahiddhā vā dhammesu dhammānupassī viharati, ajjhattabahiddhā vā dhammesu dhammānupassī viharati. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Так или внутри в явлениях явление-наблюдающий пребывает, или снаружи в явлениях явление-наблюдающий пребывает, или внутри-снаружи в явлениях явление-наблюдающий пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:14.10",
+    "root_text": "Samudayadhammānupassī vā dhammesu viharati, vayadhammānupassī vā dhammesu viharati, samudayavayadhammānupassī vā dhammesu viharati. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Или скапливания-явление-наблюдающий в явлениях пребывает, или прохождения-явление-наблюдающий в явлениях пребывает, или скапливания-прохождения-явление-наблюдающий в явлениях пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:14.11",
+    "root_text": "‘Atthi dhammā’ti vā panassa sati paccupaṭṭhitā hoti yāvadeva ñāṇamattāya paṭissatimattāya, anissito ca viharati, na ca kiñci loke upādiyati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Или ‘есть явление’ памятование является установленным, именно только ради знания и только ради памятования, и независимый пребывает, ничто на свете не удерживая. "
+    }
+   },
+   {
+    "segment": "dn22:14.12",
+    "root_text": "Evampi kho, bhikkhave, bhikkhu dhammesu dhammānupassī viharati pañcasu upādānakkhandhesu. ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "Так, в том числе, монахи, монах в явлениях явление-наблюдающий пребывает в пяти поддерживания-блоках. "
+    }
+   },
+   {
+    "segment": "dn22:14.13",
+    "root_text": "Khandhapabbaṁ niṭṭhitaṁ. ",
+    "variant": "",
+    "html": "<p class='endsection'>{}</p>",
+    "translations": {
+     "ru_o": "Секция блоков установлена. "
+    }
+   },
+   {
+    "segment": "dn22:15.0",
+    "root_text": "4.3. Dhammānupassanāāyatanapabba ",
+    "variant": "",
+    "html": "<h3>{}</h3>",
+    "translations": {
+     "ru_o": "4.3. Наблюдение явлений секция областей "
+    }
+   },
+   {
+    "segment": "dn22:15.1",
+    "root_text": "Puna caparaṁ, bhikkhave, bhikkhu dhammesu dhammānupassī viharati chasu ajjhattikabāhiresu āyatanesu. ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "И снова, монахи, монах в явлениях явление-наблюдающий пребывает в шести внутренне-внешних областях. "
+    }
+   },
+   {
+    "segment": "dn22:15.2",
+    "root_text": "Kathañca pana, bhikkhave, bhikkhu dhammesu dhammānupassī viharati chasu ajjhattikabāhiresu āyatanesu? ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "И как, монахи, монах в явлениях явление-наблюдающий пребывает в шести внутренне-внешних областях? "
+    }
+   },
+   {
+    "segment": "dn22:15.3",
+    "root_text": "Idha, bhikkhave, bhikkhu cakkhuñca pajānāti, rūpe ca pajānāti, yañca tadubhayaṁ paṭicca uppajjati saṁyojanaṁ tañca pajānāti, yathā ca anuppannassa saṁyojanassa uppādo hoti tañca pajānāti, yathā ca uppannassa saṁyojanassa pahānaṁ hoti tañca pajānāti, yathā ca pahīnassa saṁyojanassa āyatiṁ anuppādo hoti tañca pajānāti. ",
+    "variant": "",
+    "html": "<p data-counter='1'>{}</p>",
+    "translations": {
+     "ru_o": "Вот, монахи, монах и глаз понимает и объекты понимает, и которая от этой пары порождается связанность и то понимает, и как невозникшей связанности возникновение происходит и то понимает, и как возникшей связанности покидание происходит и то понимает, и как покинутой связанности в грядущем не-возникновение происходит и то понимает. "
+    }
+   },
+   {
+    "segment": "dn22:15.4",
+    "root_text": "Sotañca pajānāti, sadde ca pajānāti, yañca tadubhayaṁ paṭicca uppajjati saṁyojanaṁ tañca pajānāti, yathā ca anuppannassa saṁyojanassa uppādo hoti tañca pajānāti, yathā ca uppannassa saṁyojanassa pahānaṁ hoti tañca pajānāti, yathā ca pahīnassa saṁyojanassa āyatiṁ anuppādo hoti tañca pajānāti. ",
+    "variant": "",
+    "html": "<p data-counter='2'>{}</p>",
+    "translations": {
+     "ru_o": "И ухо-канал понимает и звуки понимает, и которая от этой пары порождается связанность и то понимает, и как невозникшей связанности возникновение происходит и то понимает, и как возникшей связанности покидание происходит и то понимает, и как покинутой связанности в грядущем не-возникновение происходит и то понимает. "
+    }
+   },
+   {
+    "segment": "dn22:15.5",
+    "root_text": "Ghānañca pajānāti, gandhe ca pajānāti, yañca tadubhayaṁ paṭicca uppajjati saṁyojanaṁ tañca pajānāti, yathā ca anuppannassa saṁyojanassa uppādo hoti tañca pajānāti, yathā ca uppannassa saṁyojanassa pahānaṁ hoti tañca pajānāti, yathā ca pahīnassa saṁyojanassa āyatiṁ anuppādo hoti tañca pajānāti. ",
+    "variant": "",
+    "html": "<p data-counter='3'>{}</p>",
+    "translations": {
+     "ru_o": "И нос понимает и запахи понимает, и которая от этой пары порождается связанность и то понимает, и как невозникшей связанности возникновение происходит и то понимает, и как возникшей связанности покидание происходит и то понимает, и как покинутой связанности в грядущем не-возникновение происходит и то понимает. "
+    }
+   },
+   {
+    "segment": "dn22:15.6",
+    "root_text": "Jivhañca pajānāti, rase ca pajānāti, yañca tadubhayaṁ paṭicca uppajjati saṁyojanaṁ tañca pajānāti, yathā ca anuppannassa saṁyojanassa uppādo hoti tañca pajānāti, yathā ca uppannassa saṁyojanassa pahānaṁ hoti tañca pajānāti, yathā ca pahīnassa saṁyojanassa āyatiṁ anuppādo hoti tañca pajānāti. ",
+    "variant": "",
+    "html": "<p data-counter='4'>{}</p>",
+    "translations": {
+     "ru_o": "И язык понимает и вкусы понимает, и которая от этой пары порождается связанность и то понимает, и как невозникшей связанности возникновение происходит и то понимает, и как возникшей связанности покидание происходит и то понимает, и как покинутой связанности в грядущем не-возникновение происходит и то понимает. "
+    }
+   },
+   {
+    "segment": "dn22:15.7",
+    "root_text": "Kāyañca pajānāti, phoṭṭhabbe ca pajānāti, yañca tadubhayaṁ paṭicca uppajjati saṁyojanaṁ tañca pajānāti, yathā ca anuppannassa saṁyojanassa uppādo hoti tañca pajānāti, yathā ca uppannassa saṁyojanassa pahānaṁ hoti tañca pajānāti, yathā ca pahīnassa saṁyojanassa āyatiṁ anuppādo hoti tañca pajānāti. ",
+    "variant": "",
+    "html": "<p data-counter='5'>{}</p>",
+    "translations": {
+     "ru_o": "И тело понимает и касания понимает, и которая от этой пары порождается связанность и то понимает, и как невозникшей связанности возникновение происходит и то понимает, и как возникшей связанности покидание происходит и то понимает, и как покинутой связанности в грядущем не-возникновение происходит и то понимает. "
+    }
+   },
+   {
+    "segment": "dn22:15.8",
+    "root_text": "Manañca pajānāti, dhamme ca pajānāti, yañca tadubhayaṁ paṭicca uppajjati saṁyojanaṁ tañca pajānāti, yathā ca anuppannassa saṁyojanassa uppādo hoti tañca pajānāti, yathā ca uppannassa saṁyojanassa pahānaṁ hoti tañca pajānāti, yathā ca pahīnassa saṁyojanassa āyatiṁ anuppādo hoti tañca pajānāti. ",
+    "variant": "",
+    "html": "<p data-counter='6'>{}</p>",
+    "translations": {
+     "ru_o": "И ум-представление понимает и явления понимает, и которая от этой пары порождается связанность и то понимает, и как невозникшей связанности возникновение происходит и то понимает, и как возникшей связанности покидание происходит и то понимает, и как покинутой связанности в грядущем не-возникновение происходит и то понимает. "
+    }
+   },
+   {
+    "segment": "dn22:15.9",
+    "root_text": "Iti ajjhattaṁ vā dhammesu dhammānupassī viharati, bahiddhā vā dhammesu dhammānupassī viharati, ajjhattabahiddhā vā dhammesu dhammānupassī viharati. ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Так или внутри в явлениях явление-наблюдающий пребывает, или снаружи в явлениях явление-наблюдающий пребывает, или внутри-снаружи в явлениях явление-наблюдающий пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:15.10",
+    "root_text": "Samudayadhammānupassī vā dhammesu viharati, vayadhammānupassī vā dhammesu viharati, samudayavayadhammānupassī vā dhammesu viharati. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Или скапливания-явление-наблюдающий в явлениях пребывает, или прохождения-явление-наблюдающий в явлениях пребывает, или скапливания-прохождения-явление-наблюдающий в явлениях пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:15.11",
+    "root_text": "‘Atthi dhammā’ti vā panassa sati paccupaṭṭhitā hoti yāvadeva ñāṇamattāya paṭissatimattāya, anissito ca viharati, na ca kiñci loke upādiyati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Или ‘есть явление’ памятование является установленным, именно только ради знания и только ради памятования, и независимый пребывает, ничто на свете не удерживая. "
+    }
+   },
+   {
+    "segment": "dn22:15.12",
+    "root_text": "Evampi kho, bhikkhave, bhikkhu dhammesu dhammānupassī viharati chasu ajjhattikabāhiresu āyatanesu. ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "Так, в том числе, монахи, монах в явлениях явление-наблюдающий пребывает в шести внутренне-внешних областях. "
+    }
+   },
+   {
+    "segment": "dn22:15.13",
+    "root_text": "Āyatanapabbaṁ niṭṭhitaṁ. ",
+    "variant": "",
+    "html": "<p class='endsection'>{}</p>",
+    "translations": {
+     "ru_o": "Секция областей установлена. "
+    }
+   },
+   {
+    "segment": "dn22:16.0",
+    "root_text": "4.4. Dhammānupassanābojjhaṅgapabba ",
+    "variant": "",
+    "html": "<h3>{}</h3>",
+    "translations": {
+     "ru_o": "4.4. Наблюдение явлений секция пробуждения-аспектов "
+    }
+   },
+   {
+    "segment": "dn22:16.1",
+    "root_text": "Puna caparaṁ, bhikkhave, bhikkhu dhammesu dhammānupassī viharati sattasu bojjhaṅgesu. ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "И снова, монахи, монах в явлениях явление-наблюдающий пребывает в семи пробуждения-аспектах. "
+    }
+   },
+   {
+    "segment": "dn22:16.2",
+    "root_text": "Kathañca pana, bhikkhave, bhikkhu dhammesu dhammānupassī viharati sattasu bojjhaṅgesu? ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "И как, монахи, монах в явлениях явление-наблюдающий пребывает в семи пробуждения-аспектах? "
+    }
+   },
+   {
+    "segment": "dn22:16.3",
+    "root_text": "Idha, bhikkhave, bhikkhu santaṁ vā ajjhattaṁ satisambojjhaṅgaṁ ‘atthi me ajjhattaṁ satisambojjhaṅgo’ti pajānāti, asantaṁ vā ajjhattaṁ satisambojjhaṅgaṁ ‘natthi me ajjhattaṁ satisambojjhaṅgo’ti pajānāti, yathā ca anuppannassa satisambojjhaṅgassa uppādo hoti tañca pajānāti, yathā ca uppannassa satisambojjhaṅgassa bhāvanāya pāripūrī hoti tañca pajānāti. ",
+    "variant": "",
+    "html": "<p data-counter='1'>{}</p>",
+    "translations": {
+     "ru_o": "Вот, монахи, монах, присутствующий внутри памятование-пробуждения-аспект ‘присутствует у меня внутри памятование-пробуждения-аспект‘ понимает, либо не присутствующий внутри памятование-пробуждения-аспект ‘не присутствует у меня внутри памятование-пробуждения-аспект‘ понимает, и как невозникшего памятования-пробуждения-аспекта возникновение происходит и то понимает, и как возникшего памятования-пробуждения-аспекта с развитием исполнение-совершенствование происходит и то понимает. "
+    }
+   },
+   {
+    "segment": "dn22:16.4",
+    "root_text": "Santaṁ vā ajjhattaṁ dhammavicayasambojjhaṅgaṁ ‘atthi me ajjhattaṁ dhammavicayasambojjhaṅgo’ti pajānāti, asantaṁ vā ajjhattaṁ dhammavicayasambojjhaṅgaṁ ‘natthi me ajjhattaṁ dhammavicayasambojjhaṅgo’ti pajānāti, yathā ca anuppannassa dhammavicayasambojjhaṅgassa uppādo hoti tañca pajānāti, yathā ca uppannassa dhammavicayasambojjhaṅgassa bhāvanāya pāripūrī hoti tañca pajānāti. ",
+    "variant": "",
+    "html": "<p data-counter='2–7'>{}",
+    "translations": {
+     "ru_o": "Или присутствующий внутри дхаммо-различение-пробуждения-аспект ‘присутствует у меня внутри дхаммо-различение-пробуждения-аспект‘ понимает, либо не присутствующий внутри дхаммо-различение-пробуждения-аспект ‘не присутствует у меня внутри дхаммо-различение-пробуждения-аспект‘ понимает, и как невозникшего дхаммо-различения-пробуждения-аспекта возникновение происходит и то понимает, и как возникшего дхаммо-различения-пробуждения-аспекта с развитием исполнение происходит и то понимает. "
+    }
+   },
+   {
+    "segment": "dn22:16.5",
+    "root_text": "Santaṁ vā ajjhattaṁ vīriyasambojjhaṅgaṁ ‘atthi me ajjhattaṁ vīriyasambojjhaṅgo’ti pajānāti, asantaṁ vā ajjhattaṁ vīriyasambojjhaṅgaṁ ‘natthi me ajjhattaṁ vīriyasambojjhaṅgo’ti pajānāti, yathā ca anuppannassa vīriyasambojjhaṅgassa uppādo hoti tañca pajānāti, yathā ca uppannassa vīriyasambojjhaṅgassa bhāvanāya pāripūrī hoti tañca pajānāti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Или присутствующий внутри усилие-пробуждения-аспект ‘присутствует у меня внутри усилие-пробуждения-аспект‘ понимает, либо не присутствующий внутри усилие-пробуждения-аспект ‘не присутствует у меня внутри усилие-пробуждения-аспект‘ понимает, и как невозникшего усилие-пробуждения-аспекта возникновение происходит и то понимает, и как возникшего усилие-пробуждения-аспекта с развитием исполнение происходит и то понимает. "
+    }
+   },
+   {
+    "segment": "dn22:16.6",
+    "root_text": "Santaṁ vā ajjhattaṁ pītisambojjhaṅgaṁ ‘atthi me ajjhattaṁ pītisambojjhaṅgo’ti pajānāti, asantaṁ vā ajjhattaṁ pītisambojjhaṅgaṁ ‘natthi me ajjhattaṁ pītisambojjhaṅgo’ti pajānāti, yathā ca anuppannassa pītisambojjhaṅgassa uppādo hoti tañca pajānāti, yathā ca uppannassa pītisambojjhaṅgassa bhāvanāya pāripūrī hoti tañca pajānāti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Или присутствующий внутри озарённость-упоение-пробуждения-аспект ‘присутствует у меня внутри упоение-пробуждения-аспект‘ понимает, либо не присутствующий внутри упоение-пробуждения-аспект ‘не присутствует у меня внутри упоение-пробуждения-аспект‘ понимает, и как невозникшего упоения-пробуждения-аспекта возникновение происходит и то понимает, и как возникшего упоения-пробуждения-аспекта с развитием исполнение происходит и то понимает. "
+    }
+   },
+   {
+    "segment": "dn22:16.7",
+    "root_text": "Santaṁ vā ajjhattaṁ passaddhisambojjhaṅgaṁ ‘atthi me ajjhattaṁ passaddhisambojjhaṅgo’ti pajānāti, asantaṁ vā ajjhattaṁ passaddhisambojjhaṅgaṁ ‘natthi me ajjhattaṁ passaddhisambojjhaṅgo’ti pajānāti, yathā ca anuppannassa passaddhisambojjhaṅgassa uppādo hoti tañca pajānāti, yathā ca uppannassa passaddhisambojjhaṅgassa bhāvanāya pāripūrī hoti tañca pajānāti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Или присутствующий внутри умиротворение-пробуждения-аспект ‘присутствует у меня внутри умиротворение-пробуждения-аспект‘ понимает, либо не присутствующий внутри умиротворение-пробуждения-аспект ‘не присутствует у меня внутри умиротворение-пробуждения-аспект‘ понимает, и как невозникшего умиротворения-пробуждения-аспекта возникновение происходит и то понимает, и как возникшего умиротворения-пробуждения-аспекта с развитием исполнение происходит и то понимает. "
+    }
+   },
+   {
+    "segment": "dn22:16.8",
+    "root_text": "Santaṁ vā ajjhattaṁ samādhisambojjhaṅgaṁ ‘atthi me ajjhattaṁ samādhisambojjhaṅgo’ti pajānāti, asantaṁ vā ajjhattaṁ samādhisambojjhaṅgaṁ ‘natthi me ajjhattaṁ samādhisambojjhaṅgo’ti pajānāti, yathā ca anuppannassa samādhisambojjhaṅgassa uppādo hoti tañca pajānāti, yathā ca uppannassa samādhisambojjhaṅgassa bhāvanāya pāripūrī hoti tañca pajānāti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Или присутствующий внутри объедение-опыта-трансценденция-пробуждения-аспект ‘присутствует у меня внутри объедение-опыта-пробуждения-аспект‘ понимает, либо не присутствующий внутри объедение-опыта-пробуждения-аспект ‘не присутствует у меня внутри объедение-опыта-пробуждения-аспект‘ понимает, и как невозникшего объедения-опыта-пробуждения-аспекта возникновение происходит и то понимает, и как возникшего объедения-опыта-пробуждения-аспекта с развитием исполнение происходит и то понимает. "
+    }
+   },
+   {
+    "segment": "dn22:16.9",
+    "root_text": "Santaṁ vā ajjhattaṁ upekkhāsambojjhaṅgaṁ ‘atthi me ajjhattaṁ upekkhāsambojjhaṅgo’ti pajānāti, asantaṁ vā ajjhattaṁ upekkhāsambojjhaṅgaṁ ‘natthi me ajjhattaṁ upekkhāsambojjhaṅgo’ti pajānāti, yathā ca anuppannassa upekkhāsambojjhaṅgassa uppādo hoti tañca pajānāti, yathā ca uppannassa upekkhāsambojjhaṅgassa bhāvanāya pāripūrī hoti tañca pajānāti. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Или присутствующий внутри прямое-видение-пробуждения-аспект ‘присутствует у меня внутри прямое-видение-пробуждения-аспект‘ понимает, либо не присутствующий внутри прямое-видение-пробуждения-аспект ‘не присутствует у меня внутри прямое-видение-пробуждения-аспект‘ понимает, и как невозникшего прямого-видения-пробуждения-аспекта возникновение происходит и то понимает, и как возникшего прямого-видения-пробуждения-аспекта с развитием исполнение происходит и то понимает. "
+    }
+   },
+   {
+    "segment": "dn22:16.10",
+    "root_text": "Iti ajjhattaṁ vā dhammesu dhammānupassī viharati, bahiddhā vā dhammesu dhammānupassī viharati, ajjhattabahiddhā vā dhammesu dhammānupassī viharati. ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Так или внутри в явлениях явление-наблюдающий пребывает, или снаружи в явлениях явление-наблюдающий пребывает, или внутри-снаружи в явлениях явление-наблюдающий пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:16.11",
+    "root_text": "Samudayadhammānupassī vā dhammesu viharati, vayadhammānupassī vā dhammesu viharati, samudayavayadhammānupassī vā dhammesu viharati. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Или скапливания-явление-наблюдающий в явлениях пребывает, или прохождения-явление-наблюдающий в явлениях пребывает, или скапливания-прохождения-явление-наблюдающий в явлениях пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:16.12",
+    "root_text": "‘Atthi dhammā’ti vā panassa sati paccupaṭṭhitā hoti yāvadeva ñāṇamattāya paṭissatimattāya, anissito ca viharati, na ca kiñci loke upādiyati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Или ‘есть явление’ памятование является установленным, именно только ради знания и только ради памятования, и независимый пребывает, ничто на свете не удерживая. "
+    }
+   },
+   {
+    "segment": "dn22:16.13",
+    "root_text": "Evampi kho, bhikkhave, bhikkhu dhammesu dhammānupassī viharati sattasu bojjhaṅgesu. ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "Так, в том числе, монахи, монах в явлениях явление-наблюдающий пребывает в семи пробуждения-аспектах. "
+    }
+   },
+   {
+    "segment": "dn22:16.14",
+    "root_text": "Bojjhaṅgapabbaṁ niṭṭhitaṁ. ",
+    "variant": "",
+    "html": "<p class='endsection'>{}</p>",
+    "translations": {
+     "ru_o": "Секция пробуждения-аспектов установлена. "
+    }
+   },
+   {
+    "segment": "dn22:17.0",
+    "root_text": "4.5. Dhammānupassanāsaccapabba ",
+    "variant": "",
+    "html": "<h3>{}</h3>",
+    "translations": {
+     "ru_o": "4.5. Наблюдение явлений секция истин "
+    }
+   },
+   {
+    "segment": "dn22:17.1",
+    "root_text": "Puna caparaṁ, bhikkhave, bhikkhu dhammesu dhammānupassī viharati catūsu ariyasaccesu. ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "И снова, монахи, монах в явлениях явление-наблюдающий пребывает в четырёх благородно-истинах. "
+    }
+   },
+   {
+    "segment": "dn22:17.2",
+    "root_text": "Kathañca pana, bhikkhave, bhikkhu dhammesu dhammānupassī viharati catūsu ariyasaccesu? ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "И как, монахи, монах в явлениях явление-наблюдающий пребывает в четырёх благородно-истинах? "
+    }
+   },
+   {
+    "segment": "dn22:17.3",
+    "root_text": "Idha, bhikkhave, bhikkhu ‘idaṁ dukkhan’ti yathābhūtaṁ pajānāti, ‘ayaṁ dukkhasamudayo’ti yathābhūtaṁ pajānāti, ‘ayaṁ dukkhanirodho’ti yathābhūtaṁ pajānāti, ‘ayaṁ dukkhanirodhagāminī paṭipadā’ti yathābhūtaṁ pajānāti. ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "Вот, монахи, монах: ‘это – боль’ как-есть понимает; ‘это – боле-скапливание’ как-есть понимает; ‘это – боле-устранение’ как-есть понимает; ‘это – к боле-устранению-ведущая практика’ как-есть понимает. "
+    }
+   },
+   {
+    "segment": "dn22:17.4",
+    "root_text": "Paṭhamabhāṇavāro niṭṭhito. ",
+    "variant": "",
+    "html": "<p class='endsection'>{}</p>",
+    "translations": {
+     "ru_o": "Первый раздел поучения установлен. "
+    }
+   },
+   {
+    "segment": "dn22:18.0",
+    "root_text": "4.5.1. Dukkhasaccaniddesa ",
+    "variant": "",
+    "html": "<h4>{}</h4>",
+    "translations": {
+     "ru_o": "4.5.1. Объяснение истины о боли "
+    }
+   },
+   {
+    "segment": "dn22:18.1",
+    "root_text": "Katamañca, bhikkhave, dukkhaṁ ariyasaccaṁ? ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "И что такое, монахи, боль благородно-истина? "
+    }
+   },
+   {
+    "segment": "dn22:18.2",
+    "root_text": "Jātipi dukkhā, jarāpi dukkhā, maraṇampi dukkhaṁ, sokaparidevadukkhadomanassupāyāsāpi dukkhā, appiyehi sampayogopi dukkho, piyehi vippayogopi dukkho, yampicchaṁ na labhati tampi dukkhaṁ, saṅkhittena pañcupādānakkhandhā dukkhā. ",
+    "variant": "dukkho → appiyehi …pe… vippayogo dukkhotipāṭho ceva taṁniddeso ca katthaci na dissati, aṭṭhakathāyampi taṁsaṁvaṇṇanā ",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "Рождение в том числе болезненно, старение в том числе болезненно, умирание в том числе болезненно, страдание-плач-боль-недовольство-тоска в том числе болезненны, и то, что желанное не обретать, то в том числе болезненно, сжато, пять-поддерживания-блоков – болезненны. "
+    }
+   },
+   {
+    "segment": "dn22:18.3",
+    "root_text": "Katamā ca, bhikkhave, jāti? ",
+    "variant": "",
+    "html": "<p data-counter='1'>{}",
+    "translations": {
+     "ru_o": "И что такое, монахи, рождение? "
+    }
+   },
+   {
+    "segment": "dn22:18.4",
+    "root_text": "Yā tesaṁ tesaṁ sattānaṁ tamhi tamhi sattanikāye jāti sañjāti okkanti abhinibbatti khandhānaṁ pātubhāvo āyatanānaṁ paṭilābho, ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Которое таких-то таких-то существ в таком-то таком-то собрании существ рождение (начинание, начатие), зачатие, низхождение, опускание, блоков появление, областей обретение, "
+    }
+   },
+   {
+    "segment": "dn22:18.5",
+    "root_text": "ayaṁ vuccati, bhikkhave, jāti. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "это, монахи, называется рождение. "
+    }
+   },
+   {
+    "segment": "dn22:18.6",
+    "root_text": "Katamā ca, bhikkhave, jarā? ",
+    "variant": "",
+    "html": "<p data-counter='2'>{}",
+    "translations": {
+     "ru_o": "И что такое, монахи, старение? "
+    }
+   },
+   {
+    "segment": "dn22:18.7",
+    "root_text": "Yā tesaṁ tesaṁ sattānaṁ tamhi tamhi sattanikāye jarā jīraṇatā khaṇḍiccaṁ pāliccaṁ valittacatā āyuno saṁhāni indriyānaṁ paripāko, ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Которая таких-то таких-то существ в таком-то таком-то собрании существ старение, старость, разбитость, седина, морщинистость, уменьшение срока жизни, перезревание способностей-сил (индрий), "
+    }
+   },
+   {
+    "segment": "dn22:18.8",
+    "root_text": "ayaṁ vuccati, bhikkhave, jarā. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "это называется, монахи, старение. "
+    }
+   },
+   {
+    "segment": "dn22:18.9",
+    "root_text": "Katamañca, bhikkhave, maraṇaṁ? ",
+    "variant": "",
+    "html": "<p data-counter='3'>{}",
+    "translations": {
+     "ru_o": "И что такое, монахи, умирание? "
+    }
+   },
+   {
+    "segment": "dn22:18.10",
+    "root_text": "Yaṁ tesaṁ tesaṁ sattānaṁ tamhā tamhā sattanikāyā cuti cavanatā bhedo antaradhānaṁ maccu maraṇaṁ kālakiriyā khandhānaṁ bhedo kaḷevarassa nikkhepo jīvitindriyassupacchedo, ",
+    "variant": "Yaṁ → yā (sya-all, km) ",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Которое таких-то таких-то существ из такого-то такого-то собрании существ падение (падёж, джут), тленность, распад-поломка, крайнее пристанище, смерть, умирание, приход времени, блоков поломка, трупа (кадавра)-оставление, жизненной-способности-пресечение, "
+    }
+   },
+   {
+    "segment": "dn22:18.11",
+    "root_text": "idaṁ vuccati, bhikkhave, maraṇaṁ. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "это называется, монахи, умирание. "
+    }
+   },
+   {
+    "segment": "dn22:18.12",
+    "root_text": "Katamo ca, bhikkhave, soko? ",
+    "variant": "",
+    "html": "<p data-counter='4'>{}",
+    "translations": {
+     "ru_o": "И что такое, монахи, страдание? "
+    }
+   },
+   {
+    "segment": "dn22:18.13",
+    "root_text": "Yo kho, bhikkhave, aññataraññatarena byasanena samannāgatassa aññataraññatarena dukkhadhammena phuṭṭhassa soko socanā socitattaṁ antosoko antoparisoko, ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "То которое, монахи, с той или иной неприятностью сошедшегося, тем или иным болезненным-явлением затронутого терзание, страдание, страдательность, крайнее страдание, крайнее-полное-страдание, "
+    }
+   },
+   {
+    "segment": "dn22:18.14",
+    "root_text": "ayaṁ vuccati, bhikkhave, soko. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "это называется, монахи, страдание. "
+    }
+   },
+   {
+    "segment": "dn22:18.15",
+    "root_text": "Katamo ca, bhikkhave, paridevo? ",
+    "variant": "",
+    "html": "<p data-counter='5'>{}",
+    "translations": {
+     "ru_o": "И что такое, монахи, плач? "
+    }
+   },
+   {
+    "segment": "dn22:18.16",
+    "root_text": "Yo kho, bhikkhave, aññataraññatarena byasanena samannāgatassa aññataraññatarena dukkhadhammena phuṭṭhassa ādevo paridevo ādevanā paridevanā ādevitattaṁ paridevitattaṁ, ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Тот который, монахи, с той или иной неприятностью сошедшегося, тем или иным болезненным-явлением затронутого стон, плач, стенание, плаканье, жалобность, плаксивость, "
+    }
+   },
+   {
+    "segment": "dn22:18.17",
+    "root_text": "ayaṁ vuccati, bhikkhave, paridevo. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "это называется, монахи, плач. "
+    }
+   },
+   {
+    "segment": "dn22:18.18",
+    "root_text": "Katamañca, bhikkhave, dukkhaṁ? ",
+    "variant": "",
+    "html": "<p data-counter='6'>{}",
+    "translations": {
+     "ru_o": "И что такое, монахи, боль? "
+    }
+   },
+   {
+    "segment": "dn22:18.19",
+    "root_text": "Yaṁ kho, bhikkhave, kāyikaṁ dukkhaṁ kāyikaṁ asātaṁ kāyasamphassajaṁ dukkhaṁ asātaṁ vedayitaṁ, ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Та которая, монахи, телесная боль, телесный дискомфорт, тела-соприкосновением-рожденная боль, дискомфорт почувствованный, "
+    }
+   },
+   {
+    "segment": "dn22:18.20",
+    "root_text": "idaṁ vuccati, bhikkhave, dukkhaṁ. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "это называется, монахи, боль. "
+    }
+   },
+   {
+    "segment": "dn22:18.21",
+    "root_text": "Katamañca, bhikkhave, domanassaṁ? ",
+    "variant": "",
+    "html": "<p data-counter='7'>{}",
+    "translations": {
+     "ru_o": "И что такое, монахи, недовольство-“страдание”? "
+    }
+   },
+   {
+    "segment": "dn22:18.22",
+    "root_text": "Yaṁ kho, bhikkhave, cetasikaṁ dukkhaṁ cetasikaṁ asātaṁ manosamphassajaṁ dukkhaṁ asātaṁ vedayitaṁ, ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Та которая, монахи, умственная-когнитивная боль, умственный дискомфорт, умо-соприкосновением-рожденная боль, дискомфорт почувствованный, "
+    }
+   },
+   {
+    "segment": "dn22:18.23",
+    "root_text": "idaṁ vuccati, bhikkhave, domanassaṁ. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "это называется, монахи, недовольство. "
+    }
+   },
+   {
+    "segment": "dn22:18.24",
+    "root_text": "Katamo ca, bhikkhave, upāyāso? ",
+    "variant": "",
+    "html": "<p data-counter='8'>{}",
+    "translations": {
+     "ru_o": "И что такое, монахи, тоска-томление? "
+    }
+   },
+   {
+    "segment": "dn22:18.25",
+    "root_text": "Yo kho, bhikkhave, aññataraññatarena byasanena samannāgatassa aññataraññatarena dukkhadhammena phuṭṭhassa āyāso upāyāso āyāsitattaṁ upāyāsitattaṁ, ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Та которая, монахи, с той или иной неприятностью сошедшегося, тем или иным болезненным-явлением затронутого скука, тоска, тягость, тоскливость, "
+    }
+   },
+   {
+    "segment": "dn22:18.26",
+    "root_text": "ayaṁ vuccati, bhikkhave, upāyāso. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "это называется, монахи, тоска. "
+    }
+   },
+   {
+    "segment": "dn22:18.27",
+    "root_text": "Katamo ca, bhikkhave, appiyehi sampayogo dukkho? ",
+    "variant": "",
+    "html": "<p data-counter='9'>{}",
+    "translations": {
+     "ru_o": "И что такое, монахи, соединение с нелюбимыми болезненно? "
+    }
+   },
+   {
+    "segment": "dn22:18.28",
+    "root_text": "Idha yassa te honti aniṭṭhā akantā amanāpā rūpā saddā gandhā rasā phoṭṭhabbā dhammā, ye vā panassa te honti anatthakāmā ahitakāmā aphāsukakāmā ayogakkhemakāmā, yā tehi saddhiṁ saṅgati samāgamo samodhānaṁ missībhāvo, ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Это если бы были те нежеланные, нежелательные, немилые (неприятные эмоционально) объекты-виды, звуки, запахи, вкусы, касания, явления, или если бы были те не желающие блага, не желающие пользы, не желающие легкости-комфорта, не желающие защиты от уз, которое с такими вместе скапливание, сближение, сведЕние, смешанность "
+    }
+   },
+   {
+    "segment": "dn22:18.29",
+    "root_text": "ayaṁ vuccati, bhikkhave, appiyehi sampayogo dukkho. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "это называется, монахи, с нелюбимыми соединение болезненно. "
+    }
+   },
+   {
+    "segment": "dn22:18.30",
+    "root_text": "Katamo ca, bhikkhave, piyehi vippayogo dukkho? ",
+    "variant": "",
+    "html": "<p data-counter='10'>{}",
+    "translations": {
+     "ru_o": "И что такое, монахи, разъединение с любимыми болезненно? "
+    }
+   },
+   {
+    "segment": "dn22:18.31",
+    "root_text": "Idha yassa te honti iṭṭhā kantā manāpā rūpā saddā gandhā rasā phoṭṭhabbā dhammā, ye vā panassa te honti atthakāmā hitakāmā phāsukakāmā yogakkhemakāmā mātā vā pitā vā bhātā vā bhaginī vā mittā vā amaccā vā ñātisālohitā vā, yā tehi saddhiṁ asaṅgati asamāgamo asamodhānaṁ amissībhāvo, ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Это если бы были те желанные, желательные, милые (приятные эмоционально) объекты, звуки, запахи, вкусы, касания, явления, или если бы были те желающие блага, желающие пользы, желающие легкости-комфорта, желающие защиты от уз, мать или отец или брат или сестра или друг или компаньон или дальний-близкий-родственник, которое с такими вместе несхождение, несближение, несведЕние, несмешанность "
+    }
+   },
+   {
+    "segment": "dn22:18.32",
+    "root_text": "ayaṁ vuccati, bhikkhave, piyehi vippayogo dukkho. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "это называется, монахи, разъединение с любимыми болезненно. "
+    }
+   },
+   {
+    "segment": "dn22:18.33",
+    "root_text": "Katamañca, bhikkhave, yampicchaṁ na labhati tampi dukkhaṁ? ",
+    "variant": "",
+    "html": "<p data-counter='11'>{}",
+    "translations": {
+     "ru_o": "И что такое, монахи, то, что желанное не получать, то в том числе болезненно? "
+    }
+   },
+   {
+    "segment": "dn22:18.34",
+    "root_text": "Jātidhammānaṁ, bhikkhave, sattānaṁ evaṁ icchā uppajjati: ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "У рождающихся-действительно, монахи, существ, такое хотение возникает: "
+    }
+   },
+   {
+    "segment": "dn22:18.35",
+    "root_text": "‘aho vata mayaṁ na jātidhammā assāma, na ca vata no jāti āgaccheyyā’ti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "“ах, вот бы мы рождающимися-действительно не были, и вот бы к нам рождение не приходило”. "
+    }
+   },
+   {
+    "segment": "dn22:18.36",
+    "root_text": "Na kho panetaṁ icchāya pattabbaṁ, ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Но это желанием не достигается. "
+    }
+   },
+   {
+    "segment": "dn22:18.37",
+    "root_text": "idampi yampicchaṁ na labhati tampi dukkhaṁ. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Это в том числе, то, что желанное не получать, то в том числе болезненно. "
+    }
+   },
+   {
+    "segment": "dn22:18.38",
+    "root_text": "Jarādhammānaṁ, bhikkhave, sattānaṁ evaṁ icchā uppajjati: ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "У стареющих-действительно, монахи, существ, такое хотение возникает: "
+    }
+   },
+   {
+    "segment": "dn22:18.39",
+    "root_text": "‘aho vata mayaṁ na jarādhammā assāma, na ca vata no jarā āgaccheyyā’ti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "“ах, вот бы мы стареющими-действительно не были, и вот бы к нам старение не приходило”. "
+    }
+   },
+   {
+    "segment": "dn22:18.40",
+    "root_text": "Na kho panetaṁ icchāya pattabbaṁ, idampi yampicchaṁ na labhati tampi dukkhaṁ. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Но это желанием не достигается. Это в том числе, то, что желанное не получать, то в том числе болезненно. "
+    }
+   },
+   {
+    "segment": "dn22:18.41",
+    "root_text": "Byādhidhammānaṁ, bhikkhave, sattānaṁ evaṁ icchā uppajjati ‘aho vata mayaṁ na byādhidhammā assāma, na ca vata no byādhi āgaccheyyā’ti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "У болеющих-действительно, монахи, существ, такое хотение возникает: “ах, вот бы мы болеющими-действительно не были, и вот бы к нам болезнь не приходила”. "
+    }
+   },
+   {
+    "segment": "dn22:18.42",
+    "root_text": "Na kho panetaṁ icchāya pattabbaṁ, idampi yampicchaṁ na labhati tampi dukkhaṁ. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Но это желанием не достигается. Это в том числе, то, что желанное не получать, то в том числе болезненно. "
+    }
+   },
+   {
+    "segment": "dn22:18.43",
+    "root_text": "Maraṇadhammānaṁ, bhikkhave, sattānaṁ evaṁ icchā uppajjati ‘aho vata mayaṁ na maraṇadhammā assāma, na ca vata no maraṇaṁ āgaccheyyā’ti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "У умирающих-действительно, монахи, существ, такое хотение возникает: “ах, вот бы мы умирающими-действительно не были, и вот бы к нам умирание не приходило”. "
+    }
+   },
+   {
+    "segment": "dn22:18.44",
+    "root_text": "Na kho panetaṁ icchāya pattabbaṁ, idampi yampicchaṁ na labhati tampi dukkhaṁ. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Но это желанием не достигается. Это в том числе, то, что желанное не получать, то в том числе болезненно. "
+    }
+   },
+   {
+    "segment": "dn22:18.45",
+    "root_text": "Sokaparidevadukkhadomanassupāyāsadhammānaṁ, bhikkhave, sattānaṁ evaṁ icchā uppajjati ‘aho vata mayaṁ na sokaparidevadukkhadomanassupāyāsadhammā assāma, na ca vata no sokaparidevadukkhadomanassupāyāsadhammā āgaccheyyun’ti. ",
+    "variant": "sokaparidevadukkhadomanassupāyāsadhammā āgaccheyyun → sokaparidevadukkhadomanassupāyāsā āgaccheyyun (pts1ed, sya-all). BJ lists each item separately. ",
+    "html": "{}",
+    "translations": {
+     "ru_o": "У страдание-плач-боль-недовольство-тоску-испытывающих-действительно, монахи, существ такое хотение возникает: “ах, вот бы мы страдание-плач-боль-недовольство-тоску-испытывающими-действительно не были, и вот бы к нам страдание-плач-боль-недовольство-тоска не приходили”. "
+    }
+   },
+   {
+    "segment": "dn22:18.46",
+    "root_text": "Na kho panetaṁ icchāya pattabbaṁ, ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Но это желанием не достигается. "
+    }
+   },
+   {
+    "segment": "dn22:18.47",
+    "root_text": "idampi yampicchaṁ na labhati tampi dukkhaṁ. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Это в том числе, то, что желанное не получать, то в том числе болезненно. "
+    }
+   },
+   {
+    "segment": "dn22:18.48",
+    "root_text": "Katame ca, bhikkhave, saṅkhittena pañcupādānakkhandhā dukkhā? ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "И что такое, монахи, сжато, пять-поддерживания-блоков – болезненны? "
+    }
+   },
+   {
+    "segment": "dn22:18.49",
+    "root_text": "Seyyathidaṁ—rūpupādānakkhandho, vedanupādānakkhandho, saññupādānakkhandho, saṅkhārupādānakkhandho, viññāṇupādānakkhandho. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Это именно: объекто (рупы)-поддерживания-блок, ведания-поддерживания-блок, сознавания-поддерживания-блок, составления-поддерживания-блок, различения-поддерживания-блок. "
+    }
+   },
+   {
+    "segment": "dn22:18.50",
+    "root_text": "Ime vuccanti, bhikkhave, saṅkhittena pañcupādānakkhandhā dukkhā. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Эти называются, монахи, сжато, пять-поддерживания-блоков – болезненны. "
+    }
+   },
+   {
+    "segment": "dn22:18.51",
+    "root_text": "Idaṁ vuccati, bhikkhave, dukkhaṁ ariyasaccaṁ. ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "Это называется, монахи, боль благородно-истина. "
+    }
+   },
+   {
+    "segment": "dn22:19.0",
+    "root_text": "4.5.2. Samudayasaccaniddesa ",
+    "variant": "",
+    "html": "<h4>{}</h4>",
+    "translations": {
+     "ru_o": "4.5.2. Объяснение истины о боле-скапливании "
+    }
+   },
+   {
+    "segment": "dn22:19.1",
+    "root_text": "Katamañca, bhikkhave, dukkhasamudayaṁ ariyasaccaṁ? ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "И что такое, товарищи, боли-скапливание благородно-истина? "
+    }
+   },
+   {
+    "segment": "dn22:19.2",
+    "root_text": "Yāyaṁ taṇhā ponobbhavikā nandīrāgasahagatā tatratatrābhinandinī, seyyathidaṁ—",
+    "variant": "ponobbhavikā → ponobhavikā (bj, pts1ed) ",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "В котором цепляние-прилипание повторяющееся, с радостью-страстью-схожее здесь-и-здесь-обрадывающееся, а именно: "
+    }
+   },
+   {
+    "segment": "dn22:19.3",
+    "root_text": "kāmataṇhā bhavataṇhā vibhavataṇhā. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "желания-цепляние, бытия-цепляние, разлучения-цепляние. "
+    }
+   },
+   {
+    "segment": "dn22:19.4",
+    "root_text": "Sā kho panesā, bhikkhave, taṇhā kattha uppajjamānā uppajjati, kattha nivisamānā nivisati? ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "И это, монахи, цепляние, где зарождающееся зарождается, где поселяющееся поселяется? "
+    }
+   },
+   {
+    "segment": "dn22:19.5",
+    "root_text": "Yaṁ loke piyarūpaṁ sātarūpaṁ, etthesā taṇhā uppajjamānā uppajjati, ettha nivisamānā nivisati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Которое на свете-в мире любимое, комфортное, здесь это цепляние зарождающееся зарождается, здесь поселяющееся поселяется. "
+    }
+   },
+   {
+    "segment": "dn22:19.6",
+    "root_text": "Kiñca loke piyarūpaṁ sātarūpaṁ? ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "И что на свете любимое, комфортное? "
+    }
+   },
+   {
+    "segment": "dn22:19.7",
+    "root_text": "Cakkhu loke piyarūpaṁ sātarūpaṁ, etthesā taṇhā uppajjamānā uppajjati, ettha nivisamānā nivisati. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Глаз в мире любимый, комфортный, здесь это цепляние зарождающееся зарождается, здесь поселяющееся поселяется. "
+    }
+   },
+   {
+    "segment": "dn22:19.8",
+    "root_text": "Sotaṁ loke …pe… ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Ухо в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.9",
+    "root_text": "ghānaṁ loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "нос в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.10",
+    "root_text": "jivhā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "язык в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.11",
+    "root_text": "kāyo loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "тело в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.12",
+    "root_text": "mano loke piyarūpaṁ sātarūpaṁ, etthesā taṇhā uppajjamānā uppajjati, ettha nivisamānā nivisati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "ум-представление в мире любимое, комфортное, здесь это цепляние зарождающееся зарождается, здесь поселяющееся поселяется. "
+    }
+   },
+   {
+    "segment": "dn22:19.13",
+    "root_text": "Rūpā loke … ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Объекты в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.14",
+    "root_text": "saddā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "звуки в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.15",
+    "root_text": "gandhā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "запахи в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.16",
+    "root_text": "rasā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "вкусы в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.17",
+    "root_text": "phoṭṭhabbā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "касания в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.18",
+    "root_text": "dhammā loke piyarūpaṁ sātarūpaṁ, etthesā taṇhā uppajjamānā uppajjati, ettha nivisamānā nivisati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Явления в мире любимые, комфортные, здесь это цепляние зарождающееся зарождается, здесь поселяющееся поселяется. "
+    }
+   },
+   {
+    "segment": "dn22:19.19",
+    "root_text": "Cakkhuviññāṇaṁ loke … ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Глазо-внимание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.20",
+    "root_text": "sotaviññāṇaṁ loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "ухо-внимание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.21",
+    "root_text": "ghānaviññāṇaṁ loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "носо-внимание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.22",
+    "root_text": "jivhāviññāṇaṁ loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "языко-внимание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.23",
+    "root_text": "kāyaviññāṇaṁ loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "тело-внимание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.24",
+    "root_text": "manoviññāṇaṁ loke piyarūpaṁ sātarūpaṁ, etthesā taṇhā uppajjamānā uppajjati, ettha nivisamānā nivisati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "умо-внимание в мире любимое, комфортное, здесь это цепляние зарождающееся зарождается, здесь поселяющееся поселяется. "
+    }
+   },
+   {
+    "segment": "dn22:19.25",
+    "root_text": "Cakkhusamphasso loke … ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Глаза-затронутость в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.26",
+    "root_text": "sotasamphasso loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "уха-затронутость в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.27",
+    "root_text": "ghānasamphasso loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "носа-затронутость в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.28",
+    "root_text": "jivhāsamphasso loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "языка-затронутость в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.29",
+    "root_text": "kāyasamphasso loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "тела-затронутость в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.30",
+    "root_text": "manosamphasso loke piyarūpaṁ sātarūpaṁ, etthesā taṇhā uppajjamānā uppajjati, ettha nivisamānā nivisati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "ума-затронутость в мире любимая, комфортная, здесь это цепляние зарождающееся зарождается, здесь поселяющееся поселяется. "
+    }
+   },
+   {
+    "segment": "dn22:19.31",
+    "root_text": "Cakkhusamphassajā vedanā loke … ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Глаза-затронутостью-рожденное чувствование в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.32",
+    "root_text": "sotasamphassajā vedanā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "уха-затронутостью-рожденное чувствование в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.33",
+    "root_text": "ghānasamphassajā vedanā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "носа-затронутостью-рожденное чувствование в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.34",
+    "root_text": "jivhāsamphassajā vedanā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "языка-затронутостью-рожденное чувствование в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.35",
+    "root_text": "kāyasamphassajā vedanā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "тела-затронутостью-рожденное чувствование в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.36",
+    "root_text": "manosamphassajā vedanā loke piyarūpaṁ sātarūpaṁ, etthesā taṇhā uppajjamānā uppajjati, ettha nivisamānā nivisati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "ума-затронутостью-рожденное чувствование в мире любимое, комфортное, здесь это цепляние зарождающееся зарождается, здесь поселяющееся поселяется. "
+    }
+   },
+   {
+    "segment": "dn22:19.37",
+    "root_text": "Rūpasaññā loke … ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Объекто-сознавание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.38",
+    "root_text": "saddasaññā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "звуко-сознавание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.39",
+    "root_text": "gandhasaññā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "запахо-сознавание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.40",
+    "root_text": "rasasaññā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "вкусо-сознавание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.41",
+    "root_text": "phoṭṭhabbasaññā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "касание-сознавание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.42",
+    "root_text": "dhammasaññā loke piyarūpaṁ sātarūpaṁ, etthesā taṇhā uppajjamānā uppajjati, ettha nivisamānā nivisati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "явление-сознавание в мире любимое, комфортное, здесь это цепляние зарождающееся зарождается, здесь поселяющееся поселяется. "
+    }
+   },
+   {
+    "segment": "dn22:19.43",
+    "root_text": "Rūpasañcetanā loke … ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Объекто-осмысливание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.44",
+    "root_text": "saddasañcetanā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "звуко-осмысливание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.45",
+    "root_text": "gandhasañcetanā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "запахо-осмысливание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.46",
+    "root_text": "rasasañcetanā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "вкусо-осмысливание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.47",
+    "root_text": "phoṭṭhabbasañcetanā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "касание-осмысливание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.48",
+    "root_text": "dhammasañcetanā loke piyarūpaṁ sātarūpaṁ, etthesā taṇhā uppajjamānā uppajjati, ettha nivisamānā nivisati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "явление-осмысливание в мире любимое, комфортное, здесь это цепляние зарождающееся зарождается, здесь поселяющееся поселяется. "
+    }
+   },
+   {
+    "segment": "dn22:19.49",
+    "root_text": "Rūpataṇhā loke … ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Объекто-цепляние в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.50",
+    "root_text": "saddataṇhā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "звуко-цепляние в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.51",
+    "root_text": "gandhataṇhā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "запахо-цепляние в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.52",
+    "root_text": "rasataṇhā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "вкусо-цепляние в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.53",
+    "root_text": "phoṭṭhabbataṇhā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "касание-цепляние в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.54",
+    "root_text": "dhammataṇhā loke piyarūpaṁ sātarūpaṁ, etthesā taṇhā uppajjamānā uppajjati, ettha nivisamānā nivisati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "явление-цепляние в мире любимое, комфортное, здесь это цепляние зарождающееся зарождается, здесь поселяющееся поселяется. "
+    }
+   },
+   {
+    "segment": "dn22:19.55",
+    "root_text": "Rūpavitakko loke … ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Объекто-восприятие-рассуждение в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.56",
+    "root_text": "saddavitakko loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "звуко-рассуждение в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.57",
+    "root_text": "gandhavitakko loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "запахо-рассуждение в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.58",
+    "root_text": "rasavitakko loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "вкусо-рассуждение в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.59",
+    "root_text": "phoṭṭhabbavitakko loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "касание-рассуждение в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.60",
+    "root_text": "dhammavitakko loke piyarūpaṁ sātarūpaṁ, etthesā taṇhā uppajjamānā uppajjati, ettha nivisamānā nivisati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "явление-рассуждение в мире любимое, комфортное, здесь это цепляние зарождающееся зарождается, здесь поселяющееся поселяется. "
+    }
+   },
+   {
+    "segment": "dn22:19.61",
+    "root_text": "Rūpavicāro loke … ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Объекто-выслеживание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.62",
+    "root_text": "saddavicāro loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "звуко-выслеживание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.63",
+    "root_text": "gandhavicāro loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "запахо-выслеживание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.64",
+    "root_text": "rasavicāro loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "вкусо-выслеживание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.65",
+    "root_text": "phoṭṭhabbavicāro loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "касание-выслеживание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:19.66",
+    "root_text": "dhammavicāro loke piyarūpaṁ sātarūpaṁ, etthesā taṇhā uppajjamānā uppajjati, ettha nivisamānā nivisati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "явление-выслеживание в мире любимое, комфортное, здесь это цепляние зарождающееся зарождается, здесь поселяющееся поселяется. "
+    }
+   },
+   {
+    "segment": "dn22:19.67",
+    "root_text": "Idaṁ vuccati, bhikkhave, dukkhasamudayaṁ ariyasaccaṁ. ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "Это называется, монахи, боли-скапливание благородно-истина. "
+    }
+   },
+   {
+    "segment": "dn22:20.0",
+    "root_text": "4.5.3. Nirodhasaccaniddesa ",
+    "variant": "",
+    "html": "<h4>{}</h4>",
+    "translations": {
+     "ru_o": "4.5.3. Объяснение истины об устранении боли "
+    }
+   },
+   {
+    "segment": "dn22:20.1",
+    "root_text": "Katamañca, bhikkhave, dukkhanirodhaṁ ariyasaccaṁ? ",
+    "variant": "dukkhanirodhaṁ → dukkhanirodho (bj, sya-all, km) ",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "И что такое, монахи, боли-устранение благородно-истина? "
+    }
+   },
+   {
+    "segment": "dn22:20.2",
+    "root_text": "Yo tassāyeva taṇhāya asesavirāganirodho cāgo paṭinissaggo mutti anālayo. ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "Которое именно этого цепляния без-остатка-не-очарованность-устранение, готовность поступиться, отдаление, свобода, не пребывание. "
+    }
+   },
+   {
+    "segment": "dn22:20.3",
+    "root_text": "Sā kho panesā, bhikkhave, taṇhā kattha pahīyamānā pahīyati, kattha nirujjhamānā nirujjhati? ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "И это, монахи, цепляние, где покидаемое покидается, где устраняемое устраняется? "
+    }
+   },
+   {
+    "segment": "dn22:20.4",
+    "root_text": "Yaṁ loke piyarūpaṁ sātarūpaṁ, etthesā taṇhā pahīyamānā pahīyati, ettha nirujjhamānā nirujjhati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Которое на свете любимое, комфортное, здесь это цепляние покидаемое покидается, здесь устраняемое устраняется. "
+    }
+   },
+   {
+    "segment": "dn22:20.5",
+    "root_text": "Kiñca loke piyarūpaṁ sātarūpaṁ? ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "И что на свете-в мире любимое, комфортное? "
+    }
+   },
+   {
+    "segment": "dn22:20.6",
+    "root_text": "Cakkhu loke piyarūpaṁ sātarūpaṁ, etthesā taṇhā pahīyamānā pahīyati, ettha nirujjhamānā nirujjhati. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Глаз в мире любимый, комфортный, здесь это цепляние покидаемое покидается, здесь устраняемое устраняется "
+    }
+   },
+   {
+    "segment": "dn22:20.7",
+    "root_text": "Sotaṁ loke …pe… ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Ухо в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.8",
+    "root_text": "ghānaṁ loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "нос в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.9",
+    "root_text": "jivhā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "язык в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.10",
+    "root_text": "kāyo loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "тело в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.11",
+    "root_text": "mano loke piyarūpaṁ sātarūpaṁ, etthesā taṇhā pahīyamānā pahīyati, ettha nirujjhamānā nirujjhati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "ум в мире любимое, комфортное, здесь это цепляние покидаемое покидается, здесь устраняемое устраняется "
+    }
+   },
+   {
+    "segment": "dn22:20.12",
+    "root_text": "Rūpā loke … ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Объекты в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.13",
+    "root_text": "saddā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "звуки в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.14",
+    "root_text": "gandhā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "запахи в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.15",
+    "root_text": "rasā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "вкусы в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.16",
+    "root_text": "phoṭṭhabbā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "касания в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.17",
+    "root_text": "dhammā loke piyarūpaṁ sātarūpaṁ, etthesā taṇhā pahīyamānā pahīyati, ettha nirujjhamānā nirujjhati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Явления в мире любимые, комфортные, здесь это цепляние покидаемое покидается, здесь устраняемое устраняется "
+    }
+   },
+   {
+    "segment": "dn22:20.18",
+    "root_text": "Cakkhuviññāṇaṁ loke … ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Глазо-внимание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.19",
+    "root_text": "sotaviññāṇaṁ loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "ухо-внимание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.20",
+    "root_text": "ghānaviññāṇaṁ loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "носо-внимание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.21",
+    "root_text": "jivhāviññāṇaṁ loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "языко-внимание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.22",
+    "root_text": "kāyaviññāṇaṁ loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "тело-внимание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.23",
+    "root_text": "manoviññāṇaṁ loke piyarūpaṁ sātarūpaṁ, etthesā taṇhā pahīyamānā pahīyati, ettha nirujjhamānā nirujjhati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "умо-внимание в мире любимое, комфортное, здесь это цепляние покидаемое покидается, здесь устраняемое устраняется "
+    }
+   },
+   {
+    "segment": "dn22:20.24",
+    "root_text": "Cakkhusamphasso loke … ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Глаза-затронутость в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.25",
+    "root_text": "sotasamphasso loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "уха-затронутость в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.26",
+    "root_text": "ghānasamphasso loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "носа-затронутость в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.27",
+    "root_text": "jivhāsamphasso loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "языка-затронутость в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.28",
+    "root_text": "kāyasamphasso loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "тела-затронутость в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.29",
+    "root_text": "manosamphasso loke piyarūpaṁ sātarūpaṁ, etthesā taṇhā pahīyamānā pahīyati, ettha nirujjhamānā nirujjhati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "ума-затронутость в мире любимая, комфортная, здесь это цепляние покидаемое покидается, здесь устраняемое устраняется "
+    }
+   },
+   {
+    "segment": "dn22:20.30",
+    "root_text": "Cakkhusamphassajā vedanā loke … ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Глаза-затронутостью-рожденное чувствование в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.31",
+    "root_text": "sotasamphassajā vedanā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "уха-затронутостью-рожденное чувствование в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.32",
+    "root_text": "ghānasamphassajā vedanā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "носа-затронутостью-рожденное чувствование в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.33",
+    "root_text": "jivhāsamphassajā vedanā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "языка-затронутостью-рожденное чувствование в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.34",
+    "root_text": "kāyasamphassajā vedanā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "тела-затронутостью-рожденное чувствование в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.35",
+    "root_text": "manosamphassajā vedanā loke piyarūpaṁ sātarūpaṁ, etthesā taṇhā pahīyamānā pahīyati, ettha nirujjhamānā nirujjhati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "ума-затронутостью-рожденное чувствование в мире любимое, комфортное, здесь это цепляние покидаемое покидается, здесь устраняемое устраняется "
+    }
+   },
+   {
+    "segment": "dn22:20.36",
+    "root_text": "Rūpasaññā loke … ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Объекто-сознавание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.37",
+    "root_text": "saddasaññā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "звуко-сознавание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.38",
+    "root_text": "gandhasaññā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "запахо-сознавание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.39",
+    "root_text": "rasasaññā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "вкусо-сознавание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.40",
+    "root_text": "phoṭṭhabbasaññā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "касание-сознавание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.41",
+    "root_text": "dhammasaññā loke piyarūpaṁ sātarūpaṁ, etthesā taṇhā pahīyamānā pahīyati, ettha nirujjhamānā nirujjhati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "явление-сознавание в мире любимое, комфортное, здесь это цепляние покидаемое покидается, здесь устраняемое устраняется "
+    }
+   },
+   {
+    "segment": "dn22:20.42",
+    "root_text": "Rūpasañcetanā loke … ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Объекто-осмысливание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.43",
+    "root_text": "saddasañcetanā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "звуко-осмысливание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.44",
+    "root_text": "gandhasañcetanā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "запахо-осмысливание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.45",
+    "root_text": "rasasañcetanā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "вкусо-осмысливание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.46",
+    "root_text": "phoṭṭhabbasañcetanā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "касание-осмысливание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.47",
+    "root_text": "dhammasañcetanā loke piyarūpaṁ sātarūpaṁ, etthesā taṇhā pahīyamānā pahīyati, ettha nirujjhamānā nirujjhati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "явление-осмысливание в мире любимое, комфортное, здесь это цепляние покидаемое покидается, здесь устраняемое устраняется "
+    }
+   },
+   {
+    "segment": "dn22:20.48",
+    "root_text": "Rūpataṇhā loke … ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Объекто-цепляние в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.49",
+    "root_text": "saddataṇhā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "звуко-цепляние в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.50",
+    "root_text": "gandhataṇhā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "запахо-цепляние в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.51",
+    "root_text": "rasataṇhā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "вкусо-цепляние в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.52",
+    "root_text": "phoṭṭhabbataṇhā loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "касание-цепляние в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.53",
+    "root_text": "dhammataṇhā loke piyarūpaṁ sātarūpaṁ, etthesā taṇhā pahīyamānā pahīyati, ettha nirujjhamānā nirujjhati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "явление-цепляние в мире любимое, комфортное, здесь это цепляние покидаемое покидается, здесь устраняемое устраняется "
+    }
+   },
+   {
+    "segment": "dn22:20.54",
+    "root_text": "Rūpavitakko loke … ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Объекто-восприятие-рассуждение в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.55",
+    "root_text": "saddavitakko loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "звуко-рассуждение в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.56",
+    "root_text": "gandhavitakko loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "запахо-рассуждение в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.57",
+    "root_text": "rasavitakko loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "вкусо-рассуждение в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.58",
+    "root_text": "phoṭṭhabbavitakko loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "касание-рассуждение в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.59",
+    "root_text": "dhammavitakko loke piyarūpaṁ sātarūpaṁ, etthesā taṇhā pahīyamānā pahīyati, ettha nirujjhamānā nirujjhati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "явление-рассуждение в мире любимое, комфортное, здесь это цепляние покидаемое покидается, здесь устраняемое устраняется "
+    }
+   },
+   {
+    "segment": "dn22:20.60",
+    "root_text": "Rūpavicāro loke … ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Объекто-выслеживание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.61",
+    "root_text": "saddavicāro loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "звуко-выслеживание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.62",
+    "root_text": "gandhavicāro loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "запахо-выслеживание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.63",
+    "root_text": "rasavicāro loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "вкусо-выслеживание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.64",
+    "root_text": "phoṭṭhabbavicāro loke … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "касание-выслеживание в мире… "
+    }
+   },
+   {
+    "segment": "dn22:20.65",
+    "root_text": "dhammavicāro loke piyarūpaṁ sātarūpaṁ, etthesā taṇhā pahīyamānā pahīyati, ettha nirujjhamānā nirujjhati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "явление-выслеживание в мире любимое, комфортное, здесь это цепляние покидаемое покидается, здесь устраняемое устраняется "
+    }
+   },
+   {
+    "segment": "dn22:20.66",
+    "root_text": "Idaṁ vuccati, bhikkhave, dukkhanirodhaṁ ariyasaccaṁ. ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "Это называется, монахи, боли-устранение благородно-истина. "
+    }
+   },
+   {
+    "segment": "dn22:21.0",
+    "root_text": "4.5.4. Maggasaccaniddesa ",
+    "variant": "",
+    "html": "<h4>{}</h4>",
+    "translations": {
+     "ru_o": "4.5.4. Объяснение истины о пути "
+    }
+   },
+   {
+    "segment": "dn22:21.1",
+    "root_text": "Katamañca, bhikkhave, dukkhanirodhagāminī paṭipadā ariyasaccaṁ? ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "И что такое, монахи, к боли-устранению-ведущая практика благородно-истина? "
+    }
+   },
+   {
+    "segment": "dn22:21.2",
+    "root_text": "Ayameva ariyo aṭṭhaṅgiko maggo seyyathidaṁ—",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Именно этот благородный восьмеричный путь, в частности: "
+    }
+   },
+   {
+    "segment": "dn22:21.3",
+    "root_text": "sammādiṭṭhi sammāsaṅkappo sammāvācā sammākammanto sammāājīvo sammāvāyāmo sammāsati sammāsamādhi. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "правильный взгляд, правильное намерение-заготовка (шаблон,  преднамерение, намерение-привычка), правильное высказывание-речь, правильный поступок (активности-граница), правильный быт, правильное старание, правильное памятование, правильное самадхи. "
+    }
+   },
+   {
+    "segment": "dn22:21.4",
+    "root_text": "Katamā ca, bhikkhave, sammādiṭṭhi? ",
+    "variant": "",
+    "html": "<p data-counter='1'>{}",
+    "translations": {
+     "ru_o": "И что такое, монахи, правильный взгляд? "
+    }
+   },
+   {
+    "segment": "dn22:21.5",
+    "root_text": "Yaṁ kho, bhikkhave, dukkhe ñāṇaṁ, dukkhasamudaye ñāṇaṁ, dukkhanirodhe ñāṇaṁ, dukkhanirodhagāminiyā paṭipadāya ñāṇaṁ. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Которое, монахи, о боли знание, о боли-скапливании знание, о боли-устранении знание, о к боли-устранению-ведущей практике знание. "
+    }
+   },
+   {
+    "segment": "dn22:21.6",
+    "root_text": "Ayaṁ vuccati, bhikkhave, sammādiṭṭhi. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Это называется, монахи, правильный взгляд. "
+    }
+   },
+   {
+    "segment": "dn22:21.7",
+    "root_text": "Katamo ca, bhikkhave, sammāsaṅkappo? ",
+    "variant": "",
+    "html": "<p data-counter='2'>{}",
+    "translations": {
+     "ru_o": "И что такое, монахи, правильное намерение-привычка? "
+    }
+   },
+   {
+    "segment": "dn22:21.8",
+    "root_text": "Nekkhammasaṅkappo abyāpādasaṅkappo avihiṁsāsaṅkappo. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Отречения-привычка, без-враждебности-привычка, без-жестокости-привычка. "
+    }
+   },
+   {
+    "segment": "dn22:21.9",
+    "root_text": "Ayaṁ vuccati, bhikkhave, sammāsaṅkappo. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Это называется, монахи, правильное намерение-привычка. "
+    }
+   },
+   {
+    "segment": "dn22:21.10",
+    "root_text": "Katamā ca, bhikkhave, sammāvācā? ",
+    "variant": "",
+    "html": "<p data-counter='3'>{}",
+    "translations": {
+     "ru_o": "И что такое, монахи, правильная речь-высказывание? "
+    }
+   },
+   {
+    "segment": "dn22:21.11",
+    "root_text": "Musāvādā veramaṇī pisuṇāya vācāya veramaṇī pharusāya vācāya veramaṇī samphappalāpā veramaṇī. ",
+    "variant": "veramaṇī → veramaṇi (mr) ",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Ложно-утверждение неприемлющая, рознящее высказывание неприемлющая, жёсткое высказывание неприемлющая, пустословие неприемлющая. "
+    }
+   },
+   {
+    "segment": "dn22:21.12",
+    "root_text": "Ayaṁ vuccati, bhikkhave, sammāvācā. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Это называется, монахи, правильная речь-высказывание. "
+    }
+   },
+   {
+    "segment": "dn22:21.13",
+    "root_text": "Katamo ca, bhikkhave, sammākammanto? ",
+    "variant": "",
+    "html": "<p data-counter='4'>{}",
+    "translations": {
+     "ru_o": "И что такое, монахи, правильный поступок? "
+    }
+   },
+   {
+    "segment": "dn22:21.14",
+    "root_text": "Pāṇātipātā veramaṇī adinnādānā veramaṇī kāmesumicchācārā veramaṇī. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Снижение жизни неприемлющий, неданное даяние неприемлющий, в желаниях-ошибочное-поведение неприемлющий. "
+    }
+   },
+   {
+    "segment": "dn22:21.15",
+    "root_text": "Ayaṁ vuccati, bhikkhave, sammākammanto. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Это называется, монахи, правильный поступок. "
+    }
+   },
+   {
+    "segment": "dn22:21.16",
+    "root_text": "Katamo ca, bhikkhave, sammāājīvo? ",
+    "variant": "",
+    "html": "<p data-counter='5'>{}",
+    "translations": {
+     "ru_o": "И что такое, монахи, правильный быт? "
+    }
+   },
+   {
+    "segment": "dn22:21.17",
+    "root_text": "Idha, bhikkhave, ariyasāvako micchāājīvaṁ pahāya sammāājīvena jīvitaṁ kappeti. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Вот, монахи, благородно-слушатель ошибочный быт отбрасывая, правильным бытом быт организует. "
+    }
+   },
+   {
+    "segment": "dn22:21.18",
+    "root_text": "Ayaṁ vuccati, bhikkhave, sammāājīvo. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Это называется, монахи, правильный быт. "
+    }
+   },
+   {
+    "segment": "dn22:21.19",
+    "root_text": "Katamo ca, bhikkhave, sammāvāyāmo? ",
+    "variant": "",
+    "html": "<p data-counter='6'>{}",
+    "translations": {
+     "ru_o": "И что такое, монахи, правильное старание? "
+    }
+   },
+   {
+    "segment": "dn22:21.20",
+    "root_text": "Idha, bhikkhave, bhikkhu anuppannānaṁ pāpakānaṁ akusalānaṁ dhammānaṁ anuppādāya chandaṁ janeti vāyamati vīriyaṁ ārabhati cittaṁ paggaṇhāti padahati; ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Вот, монахи, монах для невозникших вредных неблаготворных явлений невозникновения намерение-импульс-выбор порождает, старается, усилие направляет, ум-состояние подхватывает, поддерживает; "
+    }
+   },
+   {
+    "segment": "dn22:21.21",
+    "root_text": "uppannānaṁ pāpakānaṁ akusalānaṁ dhammānaṁ pahānāya chandaṁ janeti vāyamati vīriyaṁ ārabhati cittaṁ paggaṇhāti padahati; ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "для возникших вредных неблаготворных явлений прекращения намерение-импульс порождает, старается, усилие направляет, ум подхватывает, поддерживает. "
+    }
+   },
+   {
+    "segment": "dn22:21.22",
+    "root_text": "anuppannānaṁ kusalānaṁ dhammānaṁ uppādāya chandaṁ janeti vāyamati vīriyaṁ ārabhati cittaṁ paggaṇhāti padahati; ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "для невозникших благотворных явлений возникновения намерение-импульс порождает, старается, усилие направляет, ум подхватывает, поддерживает. "
+    }
+   },
+   {
+    "segment": "dn22:21.23",
+    "root_text": "uppannānaṁ kusalānaṁ dhammānaṁ ṭhitiyā asammosāya bhiyyobhāvāya vepullāya bhāvanāya pāripūriyā chandaṁ janeti vāyamati vīriyaṁ ārabhati cittaṁ paggaṇhāti padahati. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "для возникших благотворных явлений устойчивости, незамутненности, возрастанию, обилию, развитию, совершенствованию намерение-импульс порождает, старается, усилие направляет, ум подхватывает, поддерживает. "
+    }
+   },
+   {
+    "segment": "dn22:21.24",
+    "root_text": "Ayaṁ vuccati, bhikkhave, sammāvāyāmo. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Это называется, монахи, правильное старание. "
+    }
+   },
+   {
+    "segment": "dn22:21.25",
+    "root_text": "Katamā ca, bhikkhave, sammāsati? ",
+    "variant": "",
+    "html": "<p data-counter='7'>{}",
+    "translations": {
+     "ru_o": "И что такое, монахи, правильное памятование? "
+    }
+   },
+   {
+    "segment": "dn22:21.26",
+    "root_text": "Idha, bhikkhave, bhikkhu kāye kāyānupassī viharati ātāpī sampajāno satimā vineyya loke abhijjhādomanassaṁ; ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Вот, монахи, монах в теле тело-наблюдающий пребывает, пылкий, сознательный, памятующий, выводя к свету алчность-недовольство, "
+    }
+   },
+   {
+    "segment": "dn22:21.27",
+    "root_text": "vedanāsu vedanānupassī viharati ātāpī sampajāno satimā vineyya loke abhijjhādomanassaṁ; ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "в чувствах чувство-наблюдающий пребывает, пылкий, сознательный, памятующий, выводя к миру алчность-недовольство, "
+    }
+   },
+   {
+    "segment": "dn22:21.28",
+    "root_text": "citte cittānupassī viharati ātāpī sampajāno satimā vineyya loke abhijjhādomanassaṁ; ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "в уме-состоянии умо-наблюдающий пребывает, пылкий, сознательный, памятующий, выводя к миру алчность-недовольство, "
+    }
+   },
+   {
+    "segment": "dn22:21.29",
+    "root_text": "dhammesu dhammānupassī viharati ātāpī sampajāno satimā vineyya loke abhijjhādomanassaṁ. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "в явлениях явление-наблюдающий пребывает, пылкий, сознательный, памятующий, выводя к миру алчность-недовольство. "
+    }
+   },
+   {
+    "segment": "dn22:21.30",
+    "root_text": "Ayaṁ vuccati, bhikkhave, sammāsati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Это называется, монахи, правильное памятование. "
+    }
+   },
+   {
+    "segment": "dn22:21.31",
+    "root_text": "Katamo ca, bhikkhave, sammāsamādhi? ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "И что такое, монахи, правильное самадхи? "
+    }
+   },
+   {
+    "segment": "dn22:21.32",
+    "root_text": "Idha, bhikkhave, bhikkhu vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ vivekajaṁ pītisukhaṁ paṭhamaṁ jhānaṁ upasampajja viharati. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Вот, монахи, монах именно отделившись от желаний, отделившись от неблаготворных явлений с рассуждением с выслеживанием, различением-отъединением-рожденную, с упоением-приятную первую джхану достигнув пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:21.33",
+    "root_text": "Vitakkavicārānaṁ vūpasamā ajjhattaṁ sampasādanaṁ cetaso ekodibhāvaṁ avitakkaṁ avicāraṁ samādhijaṁ pītisukhaṁ dutiyaṁ jhānaṁ upasampajja viharati. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Рассуждений-выслеживаний от выравнивания, внутреннюю уверенность, ума-мышления единобытность, без рассуждения без выслеживания объединением (самадхи)-рожденную с упоением-приятную вторую джхану достигнув пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:21.34",
+    "root_text": "Pītiyā ca virāgā upekkhako ca viharati, sato ca sampajāno, sukhañca kāyena paṭisaṁvedeti, yaṁ taṁ ariyā ācikkhanti ‘upekkhako satimā sukhavihārī’ti tatiyaṁ jhānaṁ upasampajja viharati. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "И от неочарованности (бесстрастия) упоением и прямо-видящий пребывает, и памятующий сознательный и приятное телом изведывает, такого Благородные отмечают: ‘прямо-видящий, памятующий, в приятном пребывающий’ третью джхану достигнув пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:21.35",
+    "root_text": "Sukhassa ca pahānā dukkhassa ca pahānā pubbeva somanassadomanassānaṁ atthaṅgamā adukkhamasukhaṁ upekkhāsatipārisuddhiṁ catutthaṁ jhānaṁ upasampajja viharati. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "И от покидания приятного и от покидания боли, и прежде довольств-недовольств от захождения, ни-болезненную-ни-приятную с-прямым-видением-памятованием-пречистую четвёртую джхану достигнув пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:21.36",
+    "root_text": "Ayaṁ vuccati, bhikkhave, sammāsamādhi. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Это называется, монахи, правильное самадхи. "
+    }
+   },
+   {
+    "segment": "dn22:21.37",
+    "root_text": "Idaṁ vuccati, bhikkhave, dukkhanirodhagāminī paṭipadā ariyasaccaṁ. ",
+    "variant": "",
+    "html": "<p data-counter='8'>{}</p>",
+    "translations": {
+     "ru_o": "Это называется, монахи, к боле-устранению-ведущая практика благородно-истина. "
+    }
+   },
+   {
+    "segment": "dn22:21.38",
+    "root_text": "Iti ajjhattaṁ vā dhammesu dhammānupassī viharati, bahiddhā vā dhammesu dhammānupassī viharati, ajjhattabahiddhā vā dhammesu dhammānupassī viharati. ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Так или внутри в явлениях явление-наблюдающий пребывает, или снаружи в явлениях явление-наблюдающий пребывает, или внутри-снаружи в явлениях явление-наблюдающий пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:21.39",
+    "root_text": "Samudayadhammānupassī vā dhammesu viharati, vayadhammānupassī vā dhammesu viharati, samudayavayadhammānupassī vā dhammesu viharati. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Или скапливания-явление-наблюдающий в явлениях пребывает, или прохождения-явление-наблюдающий в явлениях пребывает, или скапливания-прохождения-явление-наблюдающий в явлениях пребывает. "
+    }
+   },
+   {
+    "segment": "dn22:21.40",
+    "root_text": "‘Atthi dhammā’ti vā panassa sati paccupaṭṭhitā hoti yāvadeva ñāṇamattāya paṭissatimattāya anissito ca viharati, na ca kiñci loke upādiyati. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Или ‘есть явление’ памятование является установленным, именно только ради знания и только ради памятования, и независимый пребывает, ничто на свете не удерживая. "
+    }
+   },
+   {
+    "segment": "dn22:21.41",
+    "root_text": "Evampi kho, bhikkhave, bhikkhu dhammesu dhammānupassī viharati catūsu ariyasaccesu. ",
+    "variant": "",
+    "html": "<p>{}</p>",
+    "translations": {
+     "ru_o": "Так, в том числе, монахи, монах в явлениях явление-наблюдающий пребывает в четырёх благородно-истинах. "
+    }
+   },
+   {
+    "segment": "dn22:21.42",
+    "root_text": "Saccapabbaṁ niṭṭhitaṁ. ",
+    "variant": "",
+    "html": "<p class='endsection'>{}</p>",
+    "translations": {
+     "ru_o": "Секция истин установлена. "
+    }
+   },
+   {
+    "segment": "dn22:21.43",
+    "root_text": "Dhammānupassanā niṭṭhitā. ",
+    "variant": "",
+    "html": "<p class='end'>{}</p>",
+    "translations": {
+     "ru_o": "Наблюдение явлений установлено. "
+    }
+   },
+   {
+    "segment": "dn22:22.1",
+    "root_text": "Yo hi koci, bhikkhave, ime cattāro satipaṭṭhāne evaṁ bhāveyya sattavassāni, tassa dvinnaṁ phalānaṁ aññataraṁ phalaṁ pāṭikaṅkhaṁ ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Любой кто, монахи, эти четыре постановления памятования так развивал бы семь лет, для того из двух плодов один плод можно ожидать "
+    }
+   },
+   {
+    "segment": "dn22:22.2",
+    "root_text": "diṭṭheva dhamme aññā; sati vā upādisese anāgāmitā. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "в (или о) видимой действительности знание, либо если памятование с поддерживанием - невозвращение. "
+    }
+   },
+   {
+    "segment": "dn22:22.3",
+    "root_text": "Tiṭṭhantu, bhikkhave, sattavassāni. ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Оставьте, монахи, семь лет. "
+    }
+   },
+   {
+    "segment": "dn22:22.4",
+    "root_text": "Yo hi koci, bhikkhave, ime cattāro satipaṭṭhāne evaṁ bhāveyya cha vassāni …pe… ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Любой кто, монахи, эти четыре постановления памятования так развивал бы шесть лет… "
+    }
+   },
+   {
+    "segment": "dn22:22.5",
+    "root_text": "pañca vassāni … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "пять лет… "
+    }
+   },
+   {
+    "segment": "dn22:22.6",
+    "root_text": "cattāri vassāni … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "четыре года… "
+    }
+   },
+   {
+    "segment": "dn22:22.7",
+    "root_text": "tīṇi vassāni … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "три года… "
+    }
+   },
+   {
+    "segment": "dn22:22.8",
+    "root_text": "dve vassāni … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "два года… "
+    }
+   },
+   {
+    "segment": "dn22:22.9",
+    "root_text": "ekaṁ vassaṁ … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "один год… "
+    }
+   },
+   {
+    "segment": "dn22:22.10",
+    "root_text": "tiṭṭhatu, bhikkhave, ekaṁ vassaṁ. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "оставьте, монахи, один год. "
+    }
+   },
+   {
+    "segment": "dn22:22.11",
+    "root_text": "Yo hi koci, bhikkhave, ime cattāro satipaṭṭhāne evaṁ bhāveyya sattamāsāni, tassa dvinnaṁ phalānaṁ aññataraṁ phalaṁ pāṭikaṅkhaṁ ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Любой кто, монахи, эти четыре постановления памятования так развивал бы семь месяцев, для того из двух плодов один плод можно ожидать "
+    }
+   },
+   {
+    "segment": "dn22:22.12",
+    "root_text": "diṭṭheva dhamme aññā; sati vā upādisese anāgāmitā. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "в (или о) видимой действительности знание, либо если памятование с поддерживанием - невозвращение. "
+    }
+   },
+   {
+    "segment": "dn22:22.13",
+    "root_text": "Tiṭṭhantu, bhikkhave, satta māsāni. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Оставьте, монахи, семь месяцев. "
+    }
+   },
+   {
+    "segment": "dn22:22.14",
+    "root_text": "Yo hi koci, bhikkhave, ime cattāro satipaṭṭhāne evaṁ bhāveyya cha māsāni …pe… ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Любой кто, монахи, эти четыре постановления памятования так развивал бы шесть месяцев… "
+    }
+   },
+   {
+    "segment": "dn22:22.15",
+    "root_text": "pañca māsāni … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "пять месяцев… "
+    }
+   },
+   {
+    "segment": "dn22:22.16",
+    "root_text": "cattāri māsāni … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "четыре месяца… "
+    }
+   },
+   {
+    "segment": "dn22:22.17",
+    "root_text": "tīṇi māsāni … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "три месяца… "
+    }
+   },
+   {
+    "segment": "dn22:22.18",
+    "root_text": "dve māsāni … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "два месяца… "
+    }
+   },
+   {
+    "segment": "dn22:22.19",
+    "root_text": "ekaṁ māsaṁ … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "один месяц… "
+    }
+   },
+   {
+    "segment": "dn22:22.20",
+    "root_text": "aḍḍhamāsaṁ … ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "полмесяца… "
+    }
+   },
+   {
+    "segment": "dn22:22.21",
+    "root_text": "tiṭṭhatu, bhikkhave, aḍḍhamāso. ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "оставьте, монахи, полмесяца. "
+    }
+   },
+   {
+    "segment": "dn22:22.22",
+    "root_text": "Yo hi koci, bhikkhave, ime cattāro satipaṭṭhāne evaṁ bhāveyya sattāhaṁ, tassa dvinnaṁ phalānaṁ aññataraṁ phalaṁ pāṭikaṅkhaṁ ",
+    "variant": "",
+    "html": "{}",
+    "translations": {
+     "ru_o": "Любой кто, монахи, эти четыре постановления памятования так развивал бы семь дней, для того из двух плодов один плод можно ожидать "
+    }
+   },
+   {
+    "segment": "dn22:22.23",
+    "root_text": "diṭṭheva dhamme aññā; sati vā upādisese anāgāmitāti. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "в (или о) видимой действительности знание, либо если памятование с поддерживанием - невозвращение. "
+    }
+   },
+   {
+    "segment": "dn22:22.24",
+    "root_text": "Ekāyano ayaṁ, bhikkhave, maggo sattānaṁ visuddhiyā sokaparidevānaṁ samatikkamāya dukkhadomanassānaṁ atthaṅgamāya ñāyassa adhigamāya nibbānassa sacchikiriyāya yadidaṁ cattāro satipaṭṭhānāti. ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Однонаправленный это, монахи, путь существ очищения, страданий-плачей преодоления, болей-недовольств захождения, метода достижения, ниббаны засвидетельствования (своими глазами), это четыре постановления памятования. "
+    }
+   },
+   {
+    "segment": "dn22:22.25",
+    "root_text": "Iti yaṁ taṁ vuttaṁ, idametaṁ paṭicca vuttan”ti. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "То что было сказано, относительно этого было сказано”. "
+    }
+   },
+   {
+    "segment": "dn22:22.26",
+    "root_text": "Idamavoca bhagavā. ",
+    "variant": "",
+    "html": "<p>{}",
+    "translations": {
+     "ru_o": "Это сказал Благословенный. "
+    }
+   },
+   {
+    "segment": "dn22:22.27",
+    "root_text": "Attamanā te bhikkhū bhagavato bhāsitaṁ abhinandunti. ",
+    "variant": "",
+    "html": "{}</p>",
+    "translations": {
+     "ru_o": "Довольные те монахи Благословенного речи обрадовались. "
+    }
+   },
+   {
+    "segment": "dn22:22.28",
+    "root_text": "Mahāsatipaṭṭhānasuttaṁ niṭṭhitaṁ navamaṁ. ",
+    "variant": "",
+    "html": "<p class='endsutta'>{}</p></article>",
+    "translations": {
+     "ru_o": "Махасатипаттхана Сутта Окончена. Девятая."
     }
    }
   ],
@@ -72,6 +4098,12 @@
    "ru",
    "en"
   ],
-  "lang": "ru"
+  "lang": "ru",
+  "availableLangs": [
+   "ru",
+   "sr",
+   "de",
+   "en"
+  ]
  }
 }

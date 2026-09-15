@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <!-- Base application theme. DayNight, not fixed Light: the app has a dark mode (the site's own
+         theme setting lives in localStorage and is applied by the page), so the native chrome —
+         the window behind the WebView before the first paint, dialogs, the system bars — should
+         follow the OS instead of forcing everything light. -->
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight.DarkActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
@@ -15,8 +18,16 @@
         <item name="android:background">@null</item>
     </style>
 
-
+    <!-- The launch screen. It used to be @drawable/splash — a PNG rendered on WHITE for every
+         density — so a dark-mode device got a white flash before the (dark) page appeared, which is
+         what the owner reported. Now it is the launcher icon's own background colour with the
+         icon's foreground centred: the same mark the reader just tapped, in both themes, no white.
+         postSplashScreenTheme is what hands over to the real theme; without it the app would keep
+         the splash theme and the WebView would never appear. -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <item name="android:background">@drawable/splash</item>
+        <item name="windowSplashScreenBackground">@color/ic_launcher_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
+        <item name="android:background">@color/ic_launcher_background</item>
     </style>
 </resources>

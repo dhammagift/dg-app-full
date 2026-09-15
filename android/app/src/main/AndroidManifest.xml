@@ -36,6 +36,34 @@
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />
 
+            <!-- Deep links: a dhamma.gift URL tapped anywhere on the device (browser, chat app,
+                 email) opens straight into the app instead of the browser, at the same path —
+                 MainActivity.handleIntent turns the URL's path+query into the SPA's own
+                 _nativeRoute (same mechanism the App Shortcuts above already use).
+
+                 android:autoVerify="true": Android confirms this app controls these hosts by
+                 fetching https://dhamma.gift/.well-known/assetlinks.json (dg-fastify.js route,
+                 see its own comment) and checking this APK's signing certificate against the
+                 fingerprint listed there — only then does a tap skip the "Open with: Chrome /
+                 Dhamma.gift" chooser entirely, including for links tapped INSIDE Chrome itself
+                 (which a non-verified filter never intercepts at all, chooser or not). That
+                 verification only ever passes for a build signed with the release key
+                 (android.keystore, gitignored — see android.keystore.readme) whose fingerprint
+                 is the one actually published; a debug-signed build still registers the intent
+                 -filter (chooser dialog from outside Chrome/Telegram's in-app browser) but can
+                 never pass verification. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="dhamma.gift" />
+                <data android:scheme="https" android:host="www.dhamma.gift" />
+                <data android:scheme="https" android:host="f.dhamma.gift" />
+                <data android:scheme="https" android:host="www.f.dhamma.gift" />
+                <data android:scheme="https" android:host="find.dhamma.gift" />
+                <data android:scheme="https" android:host="www.find.dhamma.gift" />
+            </intent-filter>
+
         </activity>
 
         <provider
@@ -47,15 +75,39 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
+
+        <!-- Holds the foreground slot for the offline-library download (see DgDownloadService):
+             without it Android is free to freeze the WebView process the moment the reader
+             switches away, and the transfer is exactly what the notification is reporting on. -->
+        <service
+            android:name=".DgDownloadService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
     </application>
 
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
-
-    <!-- Android 13+. The library download runs through DownloadManager so it survives the app
-         being backgrounded; this is what lets the system draw its progress in the shade. Without
-         it the download still runs, just invisibly, so it is requested before the first one
-         rather than required. -->
+    <!-- The offline-library download keeps running while the app is backgrounded: the
+         ongoing progress notification holds a foreground service slot (DgDownloadService),
+         which is what stops Android treating the WebView process as idle mid-transfer. -->
+    <!-- The download must survive the screen going off: the foreground slot keeps the process,
+         these keep the CPU and the radio (see DgDownloadService.acquireLocks). WAKE_LOCK and the
+         two Wi-Fi permissions are normal permissions — nothing is asked of the reader. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Read by the Network plugin (hasNetworkConsent in app.js) to tell Wi-Fi from cellular
+         before asking about the library download. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Android 11+ package visibility: without this the TextToSpeech engine (DgTtsPlugin) is not found. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
 </manifest>

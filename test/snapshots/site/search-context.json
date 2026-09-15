@@ -23,179 +23,529 @@
    "lb": 1,
    "la": 2,
    "exactMatch": false,
-   "totalFiles": 2,
-   "totalMatches": 3,
+   "totalFiles": 7,
+   "totalMatches": 8,
    "hasVariantMatch": true
   },
   "data": {
-   "dn22": {
-    "sutta_id": "dn22",
+   "dn2": {
+    "sutta_id": "dn2",
     "category": "dhamma",
     "dir_path": "pli/ms/sutta/dn",
     "titles": {
-     "root": "Dīgha Nikāya 22",
-     "ru_o": "Дигха Никая 22",
-     "en_thanissaro": "DN 22"
+     "root": "Sāmaññaphalasutta ",
+     "en_thanissaro": "The Fruits of the Contemplative Life ",
+     "ru_syrkin+edited+o": "Самана Пхала Сутта "
     },
-    "mr": 12,
-    "count": 2,
+    "mr": 30,
+    "count": 1,
     "unique_words": [
-     "mahākacchapānaṁ",
-     "kacchapa"
+     "kacchapalakkhaṇaṁ"
     ],
     "segments": [
      {
-      "segment": "dn22:1.3",
-      "root_text": "Seyyathāpi kacchapo aṅgāni sake kapāle samodahati.",
-      "variant": "kacchapo → kacchapa",
+      "segment": "dn2:57.2",
+      "root_text": "Seyyathidaṁ—maṇilakkhaṇaṁ vatthalakkhaṇaṁ daṇḍalakkhaṇaṁ satthalakkhaṇaṁ asilakkhaṇaṁ usulakkhaṇaṁ dhanulakkhaṇaṁ āvudhalakkhaṇaṁ itthilakkhaṇaṁ purisalakkhaṇaṁ kumāralakkhaṇaṁ kumārilakkhaṇaṁ dāsalakkhaṇaṁ dāsilakkhaṇaṁ hatthilakkhaṇaṁ assalakkhaṇaṁ mahiṁsalakkhaṇaṁ usabhalakkhaṇaṁ golakkhaṇaṁ ajalakkhaṇaṁ meṇḍalakkhaṇaṁ kukkuṭalakkhaṇaṁ vaṭṭakalakkhaṇaṁ godhālakkhaṇaṁ kaṇṇikalakkhaṇaṁ kacchapalakkhaṇaṁ migalakkhaṇaṁ ",
+      "variant": "",
       "translations": {
-       "ru_o": "Подобно тому, как черепаха втягивает конечности в панцирь.",
-       "en_thanissaro": "Just as a tortoise gathers its limbs in its own shell."
+       "en_thanissaro": "as: determining lucky & unlucky gems, staffs, garments, swords, arrows, bows, & other weapons; women, men, boys, girls, male slaves, female slaves; elephants, horses, buffaloes, bulls, cows, goats, rams, fowl, quails, lizards, rabbits, tortoises, & other animals—he abstains from wrong livelihood, from “animal” arts such as these. ",
+       "ru_syrkin+edited+o": "а именно: [истолковывая] знаки на драгоценностях, знаки на палках, знаки на одеждах, знаки на мечах, знаки на стрелах, знаки на луках, знаки на оружии, знаки на женщинах, знаки на мужчинах, знаки на юношах, знаки на девушках, знаки на рабах, знаки на рабынях, знаки на слонах, знаки на конях, знаки на буйволах, знаки на быках, знаки на коровах, знаки на козлах, знаки на баранах, знаки на петухах, знаки на перепелах, знаки на ящерицах, знаки на длинноухих животных, знаки на черепахах, знаки на диких зверях, — "
       },
       "lb_context": [
        {
-        "segment": "dn22:1.2",
-        "root_text": "ekaṁ samayaṁ bhagavā kurūsu viharati.",
-        "variant": "kurūsu → kurusu",
+        "segment": "dn2:57.1",
+        "root_text": "Yathā vā paneke bhonto samaṇabrāhmaṇā saddhādeyyāni bhojanāni bhuñjitvā te evarūpāya tiracchānavijjāya micchājīvena jīvitaṁ kappenti. ",
+        "variant": "",
         "translations": {
-         "ru_o": "однажды Благословенный жил среди куру.",
-         "en_thanissaro": "the Blessed One was staying among the Kurus."
+         "en_thanissaro": "“Whereas some contemplatives & brahmans, living off food given in faith, maintain themselves by wrong livelihood, by such “animal” arts ",
+         "ru_syrkin+edited+o": "В то время как некоторые почтенные отшельники и брахманы, поедая пищу, поданную верующими, добывают таким образом средства к существованию низменными знаниями и неправедной жизнью, "
         }
        }
       ],
       "la_context": [
        {
-        "segment": "dn22:1.4",
-        "root_text": "Mahākacchapānaṁ pana rūpaṁ evaṁ hoti.",
+        "segment": "dn2:57.3",
+        "root_text": "iti vā iti evarūpāya tiracchānavijjāya micchājīvā paṭivirato hoti. ",
         "variant": "",
         "translations": {
-         "ru_o": "У больших черепах облик именно таков.",
-         "en_thanissaro": "Of great tortoises the form is thus."
+         "ru_syrkin+edited+o": "он избегает таким образом низменных знаний и неправедной жизни. "
         }
        },
        {
-        "segment": "dn22:1.5",
-        "root_text": "Idaṁ vuccati, bhikkhave, dukkhaṁ ariyasaccaṁ.",
+        "segment": "dn2:57.4",
+        "root_text": "Idampissa hoti sīlasmiṁ. ",
         "variant": "",
         "translations": {
-         "ru_o": "Это, монахи, называется благородной истиной о страдании.",
-         "en_thanissaro": "This, monks, is called the noble truth of stress."
-        }
-       }
-      ]
-     },
-     {
-      "segment": "dn22:1.4",
-      "root_text": "Mahākacchapānaṁ pana rūpaṁ evaṁ hoti.",
-      "variant": "",
-      "translations": {
-       "ru_o": "У больших черепах облик именно таков.",
-       "en_thanissaro": "Of great tortoises the form is thus."
-      },
-      "lb_context": [
-       {
-        "segment": "dn22:1.3",
-        "root_text": "Seyyathāpi kacchapo aṅgāni sake kapāle samodahati.",
-        "variant": "kacchapo → kacchapa",
-        "translations": {
-         "ru_o": "Подобно тому, как черепаха втягивает конечности в панцирь.",
-         "en_thanissaro": "Just as a tortoise gathers its limbs in its own shell."
-        }
-       }
-      ],
-      "la_context": [
-       {
-        "segment": "dn22:1.5",
-        "root_text": "Idaṁ vuccati, bhikkhave, dukkhaṁ ariyasaccaṁ.",
-        "variant": "",
-        "translations": {
-         "ru_o": "Это, монахи, называется благородной истиной о страдании.",
-         "en_thanissaro": "This, monks, is called the noble truth of stress."
+         "ru_syrkin+edited+o": "Это и есть часть его нравственности. "
         }
        }
       ]
      }
     ]
    },
-   "sn56.11": {
-    "sutta_id": "sn56.11",
+   "mn129": {
+    "sutta_id": "mn129",
     "category": "dhamma",
-    "dir_path": "pli/ms/sutta/sn/sn56",
+    "dir_path": "pli/ms/sutta/mn",
     "titles": {
-     "root": "Saṁyutta Nikāya 56.11",
-     "ru_o": "Саньютта Никая 56.11",
-     "en_sujato": "Linked Discourses 56.11"
+     "root": "Bālapaṇḍitasutta ",
+     "en_sujato": "The Foolish and the Astute ",
+     "ru_sv+edited+o": "Глупцы и мудрецы "
     },
-    "mr": 9,
+    "mr": 13,
     "count": 1,
     "unique_words": [
-     "kacchapānaṁ"
+     "kacchapā"
     ],
     "segments": [
      {
-      "segment": "sn56.11:2.2",
-      "root_text": "Kacchapānaṁ viya gati dukkhā hoti.",
+      "segment": "mn129:21.3",
+      "root_text": "Macchā kacchapā susumārā, ye vā panaññepi keci tiracchānagatā pāṇā udakasmiṁ jāyanti udakasmiṁ jīyanti udakasmiṁ mīyanti. ",
       "variant": "",
       "translations": {
-       "ru_o": "Участь их тяжка, словно у черепах.",
-       "en_sujato": "Their going is hard, as of turtles."
+       "en_sujato": "Fish, turtles, dolphins, and various others. ",
+       "ru_sv+edited+o": "Рыбы, черепахи, крокодилы, и другие подобные животные.  "
       },
       "lb_context": [
        {
-        "segment": "sn56.11:2.1",
-        "root_text": "Idaṁ kho pana, bhikkhave, dukkhaṁ ariyasaccaṁ.",
-        "variant": "dukkhaṁ → dukkha",
+        "segment": "mn129:21.2",
+        "root_text": "Katame ca, bhikkhave, tiracchānagatā pāṇā udakasmiṁ jāyanti udakasmiṁ jīyanti udakasmiṁ mīyanti? ",
+        "variant": "",
         "translations": {
-         "ru_o": "Это, монахи, благородная истина о страдании.",
-         "en_sujato": "Now this, mendicants, is the noble truth of suffering."
+         "en_sujato": "And what animals are born, live, and die in water? ",
+         "ru_sv+edited+o": "И какие животные рождаются, стареют, умирают в воде?  "
         }
        }
       ],
-      "la_context": []
+      "la_context": [
+       {
+        "segment": "mn129:21.4",
+        "root_text": "Sa kho so, bhikkhave, bālo idha pubbe rasādo idha pāpāni kammāni karitvā kāyassa bhedā paraṁ maraṇā tesaṁ sattānaṁ sahabyataṁ upapajjati ye te sattā udakasmiṁ jāyanti udakasmiṁ jīyanti udakasmiṁ mīyanti. ",
+        "variant": "",
+        "translations": {
+         "en_sujato": "A fool who used to be a glutton here and did bad deeds here, after death is reborn in the company of those sentient beings who are born, live, and die in water. ",
+         "ru_sv+edited+o": "Глупец, который прежде наслаждался вкусами здесь [в этой жизни], и здесь совершал плохие поступки, с распадом тела, после смерти, перерождается среди животных, которые умирают в воде.  "
+        }
+       },
+       {
+        "segment": "mn129:22.1",
+        "root_text": "Santi, bhikkhave, tiracchānagatā pāṇā asucismiṁ jāyanti asucismiṁ jīyanti asucismiṁ mīyanti. ",
+        "variant": "",
+        "translations": {
+         "en_sujato": "There are animals who are born, live, and die in filth. ",
+         "ru_sv+edited+o": "Есть животные, которые рождаются, стареют, умирают в нечистотах.  "
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "dn1": {
+    "sutta_id": "dn1",
+    "category": "dhamma",
+    "dir_path": "pli/ms/sutta/dn",
+    "titles": {
+     "root": "Brahmajālasutta ",
+     "en_thanissaro": "The Brahmā Net ",
+     "ru_syrkin+edited+o": "Брахмаджала Сутта "
+    },
+    "mr": 2,
+    "count": 1,
+    "unique_words": [
+     "kacchapalakkhaṇaṁ"
+    ],
+    "segments": [
+     {
+      "segment": "dn1:1.22.2",
+      "root_text": "seyyathidaṁ—maṇilakkhaṇaṁ vatthalakkhaṇaṁ daṇḍalakkhaṇaṁ satthalakkhaṇaṁ asilakkhaṇaṁ usulakkhaṇaṁ dhanulakkhaṇaṁ āvudhalakkhaṇaṁ itthilakkhaṇaṁ purisalakkhaṇaṁ kumāralakkhaṇaṁ kumārilakkhaṇaṁ dāsalakkhaṇaṁ dāsilakkhaṇaṁ hatthilakkhaṇaṁ assalakkhaṇaṁ mahiṁsalakkhaṇaṁ usabhalakkhaṇaṁ golakkhaṇaṁ ajalakkhaṇaṁ meṇḍalakkhaṇaṁ kukkuṭalakkhaṇaṁ vaṭṭakalakkhaṇaṁ godhālakkhaṇaṁ kaṇṇikālakkhaṇaṁ kacchapalakkhaṇaṁ migalakkhaṇaṁ ",
+      "variant": "",
+      "translations": {
+       "en_thanissaro": "as: determining lucky & unlucky gems, staffs, garments, swords, arrows, bows, & other weapons; women, men, boys, girls, male slaves, female slaves; elephants, horses, buffaloes, bulls, cows, goats, rams, fowl, quails, lizards, rabbits, tortoises, & other animals— ",
+       "ru_syrkin+edited+o": "а именно: [истолковывая] знаки на драгоценностях, знаки на палках, знаки на одеждах, знаки на мечах, знаки на стрелах, знаки на луках, знаки на оружии, знаки на женщинах, знаки на мужчинах, знаки на юношах, знаки на девушках, знаки на рабах, знаки на рабынях, знаки на слонах, знаки на конях, знаки на буйволах, знаки на быках, знаки на коровах, знаки на козлах, знаки на баранах, знаки на петухах, знаки на перепелах, знаки на ящерицах, знаки на длинноухих животных, знаки на черепахах, знаки на диких зверях, —  "
+      },
+      "lb_context": [
+       {
+        "segment": "dn1:1.22.1",
+        "root_text": "‘Yathā vā paneke bhonto samaṇabrāhmaṇā saddhādeyyāni bhojanāni bhuñjitvā te evarūpāya tiracchānavijjāya micchājīvena jīvitaṁ kappenti, ",
+        "variant": "",
+        "translations": {
+         "en_thanissaro": "“Or: ‘Whereas some contemplatives & brahmans, living off food given in faith, maintain themselves by wrong livelihood, by such “animal” arts ",
+         "ru_syrkin+edited+o": "„В то время как некоторые почтенные отшельники и брахманы, поедая пищу, поданную верующими, добывают таким образом средства к существованию низменными знаниями и неправедной жизнью, "
+        }
+       }
+      ],
+      "la_context": [
+       {
+        "segment": "dn1:1.22.3",
+        "root_text": "iti vā iti evarūpāya tiracchānavijjāya micchājīvā paṭivirato samaṇo gotamo’ti—",
+        "variant": "",
+        "translations": {
+         "en_thanissaro": "the contemplative Gotama abstains from wrong livelihood, from “animal” arts such as these.’ ",
+         "ru_syrkin+edited+o": "отшельник Готама избегает таким образом низменных знаний и неправедной жизни“, — "
+        }
+       },
+       {
+        "segment": "dn1:1.22.4",
+        "root_text": "iti vā hi, bhikkhave, puthujjano tathāgatassa vaṇṇaṁ vadamāno vadeyya. ",
+        "variant": "",
+        "translations": {
+         "ru_syrkin+edited+o": "вот что, монахи, способен произнести мирской человек, произнося хвалу Татхагате. "
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "sn20.9": {
+    "sutta_id": "sn20.9",
+    "category": "dhamma",
+    "dir_path": "pli/ms/sutta/sn/sn20",
+    "titles": {
+     "root": "Nāgasutta ",
+     "en_thanissaro": "Sutta Bull Elephants ",
+     "ru_sv+edited+o": "Сутта Наг"
+    },
+    "mr": 1,
+    "count": 1,
+    "unique_words": [
+     "bhiṅkacchāpā"
+    ],
+    "segments": [
+     {
+      "segment": "sn20.9:3.5",
+      "root_text": "Tesaṁyeva kho pana, bhikkhave, mahānāgānaṁ anusikkhamānā taruṇā bhiṅkacchāpā taṁ sarasiṁ ogāhetvā soṇḍāya bhisamuḷālaṁ abbuhetvā na suvikkhālitaṁ vikkhāletvā sakaddamaṁ asaṅkhāditvā ajjhoharanti. ",
+      "variant": "",
+      "translations": {
+       "en_thanissaro": "“But young calf elephants, imitating them, plunged into the lake and pulled up lotus roots & stalks with their trunks. Without washing them so that they were well washed, they chewed them while they were still muddy and swallowed them. ",
+       "ru_sv+edited+o": "Их отпрыски, подражая этим огромным слонам, плюхались в озеро, срывали стебли лотосов хоботами но, тщательно не отмыв их, "
+      },
+      "lb_context": [
+       {
+        "segment": "sn20.9:3.4",
+        "root_text": "Tesaṁ taṁ vaṇṇāya ceva hoti balāya ca, na ca tatonidānaṁ maraṇaṁ vā nigacchanti maraṇamattaṁ vā dukkhaṁ. ",
+        "variant": "",
+        "translations": {
+         "en_thanissaro": "This led to beauty & strength for them, and from that cause there came neither death nor death-like pain. ",
+         "ru_sv+edited+o": "Это укрепляло их красоту и силу, и в этом случае они не встречали смерть или соизмеримую с умиранием боль."
+        }
+       }
+      ],
+      "la_context": [
+       {
+        "segment": "sn20.9:3.6",
+        "root_text": "Tesaṁ taṁ neva vaṇṇāya hoti na balāya. ",
+        "variant": "",
+        "translations": {
+         "en_thanissaro": "This did not lead to beauty & strength for them, ",
+         "ru_sv+edited+o": "они жевали их и проглатывали вместе с илом. "
+        }
+       },
+       {
+        "segment": "sn20.9:3.7",
+        "root_text": "Tatonidānaṁ maraṇaṁ vā nigacchanti maraṇamattaṁ vā dukkhaṁ. ",
+        "variant": "",
+        "translations": {
+         "en_thanissaro": "and from that cause there came either death or death-like pain. ",
+         "ru_sv+edited+o": "Это не укрепляло их красоту и силу, и в этом случае они встречали смерть или соизмеримую с умиранием боль."
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "sn35.240": {
+    "sutta_id": "sn35.240",
+    "category": "dhamma",
+    "dir_path": "pli/ms/sutta/sn/sn35",
+    "titles": {
+     "root": "Kummopamasutta ",
+     "en_thanissaro": "Sutta The Turtle ",
+     "ru_o": "Сутта Подобие Черепахи (o)"
+    },
+    "mr": 1,
+    "count": 2,
+    "unique_words": [
+     "kacchapaṁ"
+    ],
+    "segments": [
+     {
+      "segment": "sn35.240:1.5",
+      "root_text": "Siṅgālopi kho, bhikkhave, addasa kummaṁ kacchapaṁ dūratova gocarapasutaṁ. ",
+      "variant": "",
+      "translations": {
+       "en_thanissaro": "But the jackal also saw the turtle from afar, foraging for food, ",
+       "ru_o": "И шакал тоже, монахи, увидел черепаху издали, пищу-ищущую,"
+      },
+      "lb_context": [
+       {
+        "segment": "sn35.240:1.4",
+        "root_text": "Disvāna soṇḍipañcamāni aṅgāni sake kapāle samodahitvā appossukko tuṇhībhūto saṅkasāyati. ",
+        "variant": "",
+        "translations": {
+         "en_thanissaro": "and so—withdrawing its four legs, with its neck as a fifth, into its own shell—it remained perfectly quiet and still. ",
+         "ru_o": "Увидев, шею, как пятую, лапы в свой панцирь собрав, не-озабоченная, молчащая, ¿собранная."
+        }
+       }
+      ],
+      "la_context": [
+       {
+        "segment": "sn35.240:1.6",
+        "root_text": "Disvāna yena kummo kacchapo tenupasaṅkami; upasaṅkamitvā kummaṁ kacchapaṁ paccupaṭṭhito ahosi: ",
+        "variant": "",
+        "translations": {
+         "en_thanissaro": "and so it went to the turtle and, on arrival, hovered around it, (thinking,) ",
+         "ru_o": "Увидев, где черепаха подошёл; подойдя черепахи напротив встал (напротив-стоящим стал):"
+        }
+       },
+       {
+        "segment": "sn35.240:1.7",
+        "root_text": "‘yadāyaṁ kummo kacchapo soṇḍipañcamānaṁ aṅgānaṁ aññataraṁ vā aññataraṁ vā aṅgaṁ abhininnāmessati, tattheva naṁ gahetvā uddālitvā khādissāmī’ti. ",
+        "variant": "",
+        "translations": {
+         "en_thanissaro": "“As soon as the turtle stretches out one or another of its four limbs—or its neck as a fifth—I’ll seize it right there, tear it off, and eat it.” ",
+         "ru_o": "“Когда эта черепаха шею, как пятую из лап ту или другую лапу разогнёт, вот тогда её схватив, вырвав поглощу”."
+        }
+       }
+      ]
+     },
+     {
+      "segment": "sn35.240:1.6",
+      "root_text": "Disvāna yena kummo kacchapo tenupasaṅkami; upasaṅkamitvā kummaṁ kacchapaṁ paccupaṭṭhito ahosi: ",
+      "variant": "",
+      "translations": {
+       "en_thanissaro": "and so it went to the turtle and, on arrival, hovered around it, (thinking,) ",
+       "ru_o": "Увидев, где черепаха подошёл; подойдя черепахи напротив встал (напротив-стоящим стал):"
+      },
+      "lb_context": [
+       {
+        "segment": "sn35.240:1.5",
+        "root_text": "Siṅgālopi kho, bhikkhave, addasa kummaṁ kacchapaṁ dūratova gocarapasutaṁ. ",
+        "variant": "",
+        "translations": {
+         "en_thanissaro": "But the jackal also saw the turtle from afar, foraging for food, ",
+         "ru_o": "И шакал тоже, монахи, увидел черепаху издали, пищу-ищущую,"
+        }
+       }
+      ],
+      "la_context": [
+       {
+        "segment": "sn35.240:1.7",
+        "root_text": "‘yadāyaṁ kummo kacchapo soṇḍipañcamānaṁ aṅgānaṁ aññataraṁ vā aññataraṁ vā aṅgaṁ abhininnāmessati, tattheva naṁ gahetvā uddālitvā khādissāmī’ti. ",
+        "variant": "",
+        "translations": {
+         "en_thanissaro": "“As soon as the turtle stretches out one or another of its four limbs—or its neck as a fifth—I’ll seize it right there, tear it off, and eat it.” ",
+         "ru_o": "“Когда эта черепаха шею, как пятую из лап ту или другую лапу разогнёт, вот тогда её схватив, вырвав поглощу”."
+        }
+       },
+       {
+        "segment": "sn35.240:1.8",
+        "root_text": "Yadā kho, bhikkhave, kummo kacchapo soṇḍipañcamānaṁ aṅgānaṁ aññataraṁ vā aññataraṁ vā aṅgaṁ na abhininnāmi, atha siṅgālo kummamhā nibbijja pakkāmi, otāraṁ alabhamāno. ",
+        "variant": "",
+        "translations": {
+         "en_thanissaro": "But when the turtle didn’t stretch out any of its four limbs—or its neck as a fifth—the jackal, not having gotten any opportunity, lost interest and left. ",
+         "ru_o": "Но когда, монахи, черепаха шею, как пятую из лап ту или другую лапу не потянула, тогда шакал от черепахи потеряв-интерес пошёл, случай не-получивший."
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "thig16.1": {
+    "sutta_id": "thig16.1",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/thig",
+    "titles": {
+     "root": "Sumedhātherīgāthā ",
+     "en_soma": "Verses of the Elder Sumedhā ",
+     "ru_narinyanievmenenko+edited+o": "Сумедха Тхери "
+    },
+    "mr": 1,
+    "count": 1,
+    "unique_words": [
+     "kāṇakacchapaṁ"
+    ],
+    "segments": [
+     {
+      "segment": "thig16.1:53.1",
+      "root_text": "Sara kāṇakacchapaṁ pubba- ",
+      "variant": "",
+      "translations": {
+       "en_soma": "Bear in mind the one-eyed turtle in the eastern sea, ",
+       "ru_narinyanievmenenko+edited+o": "Задумайся ты об ослепшей черепахе, "
+      },
+      "lb_context": [
+       {
+        "segment": "thig16.1:52.4",
+        "root_text": "Pitupitusveva nappahonti. ",
+        "variant": "",
+        "translations": {
+         "en_soma": "they would still not add up to all of fathers among fathers. ",
+         "ru_narinyanievmenenko+edited+o": "Сравнивая их с числом отцов своих отцов, — <j>Последних будет больше всё равно. "
+        }
+       }
+      ],
+      "la_context": [
+       {
+        "segment": "thig16.1:53.2",
+        "root_text": "samudde aparato ca yugachiddaṁ; ",
+        "variant": "",
+        "translations": {
+         "en_soma": "and, far away, a block of wood with a hole in it; ",
+         "ru_narinyanievmenenko+edited+o": "Что плавает в бездонном океане: "
+        }
+       },
+       {
+        "segment": "thig16.1:53.3",
+        "root_text": "Siraṁ tassa ca paṭimukkaṁ, ",
+        "variant": "Siraṁ → sara (bj) ",
+        "translations": {
+         "en_soma": "the chance of gaining a human rebirth ",
+         "ru_narinyanievmenenko+edited+o": "Как трудно головою ей попасть <j>В узкий хомут, плывущий где-то наверху; "
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "thig12.1": {
+    "sutta_id": "thig12.1",
+    "category": "khudakka",
+    "dir_path": "pli/ms/sutta/kn/thig",
+    "titles": {
+     "root": "Puṇṇātherīgāthā ",
+     "ru_narinyanievmenenko+edited+o": "Пунна Тхери "
+    },
+    "mr": 0,
+    "count": 1,
+    "unique_words": [
+     "maṇḍūkakacchapā"
+    ],
+    "segments": [
+     {
+      "segment": "thig12.1:6.2",
+      "root_text": "sabbe maṇḍūkakacchapā; ",
+      "variant": "",
+      "translations": {
+       "en_thanissaro": "all the frogs, turtles,",
+       "ru_narinyanievmenenko+edited+o": "Змеи водяные, крокодилы —"
+      },
+      "lb_context": [
+       {
+        "segment": "thig12.1:6.1",
+        "root_text": "Saggaṁ nūna gamissanti, ",
+        "variant": "",
+        "translations": {
+         "en_thanissaro": "In that case, they’d all go to heaven:",
+         "ru_narinyanievmenenko+edited+o": "Неужто все лягушки, черепахи, "
+        }
+       }
+      ],
+      "la_context": [
+       {
+        "segment": "thig12.1:6.3",
+        "root_text": "Nāgā ca susumārā ca, ",
+        "variant": "Nāgā → nakkā (bj) ",
+        "translations": {
+         "en_thanissaro": "serpents, crocodiles,",
+         "ru_narinyanievmenenko+edited+o": "Создания, что обитают в водах, "
+        }
+       },
+       {
+        "segment": "thig12.1:6.4",
+        "root_text": "ye caññe udake carā. ",
+        "variant": "",
+        "translations": {
+         "en_thanissaro": "& anything else that lives in the water.",
+         "ru_narinyanievmenenko+edited+o": "Отправятся в небесные чертоги? "
+        }
+       }
+      ]
      }
     ]
    }
   },
   "wordReport": [
    {
-    "word": "kacchapa",
-    "textCount": 1,
-    "matchCount": 1,
+    "word": "kacchapalakkhaṇaṁ",
+    "textCount": 2,
+    "matchCount": 2,
     "links": [
      {
-      "sutta_id": "dn22",
-      "segment": "dn22:1.3"
+      "sutta_id": "dn1",
+      "segment": "dn1:1.22.2"
+     },
+     {
+      "sutta_id": "dn2",
+      "segment": "dn2:57.2"
      }
     ]
    },
    {
-    "word": "kacchapānaṁ",
+    "word": "bhiṅkacchāpā",
     "textCount": 1,
     "matchCount": 1,
     "links": [
      {
-      "sutta_id": "sn56.11",
-      "segment": "sn56.11:2.2"
+      "sutta_id": "sn20.9",
+      "segment": "sn20.9:3.5"
      }
     ]
    },
    {
-    "word": "mahākacchapānaṁ",
+    "word": "kacchapā",
     "textCount": 1,
     "matchCount": 1,
     "links": [
      {
-      "sutta_id": "dn22",
-      "segment": "dn22:1.4"
+      "sutta_id": "mn129",
+      "segment": "mn129:21.3"
+     }
+    ]
+   },
+   {
+    "word": "kacchapaṁ",
+    "textCount": 1,
+    "matchCount": 2,
+    "links": [
+     {
+      "sutta_id": "sn35.240",
+      "segment": "sn35.240:1.5"
+     }
+    ]
+   },
+   {
+    "word": "kāṇakacchapaṁ",
+    "textCount": 1,
+    "matchCount": 1,
+    "links": [
+     {
+      "sutta_id": "thig16.1",
+      "segment": "thig16.1:53.1"
+     }
+    ]
+   },
+   {
+    "word": "maṇḍūkakacchapā",
+    "textCount": 1,
+    "matchCount": 1,
+    "links": [
+     {
+      "sutta_id": "thig12.1",
+      "segment": "thig12.1:6.2"
      }
     ]
    }
   ],
   "variantSegments": [
    {
-    "sutta_id": "dn22",
-    "segment": "dn22:1.3",
-    "text": "kacchapo → kacchapa"
+    "sutta_id": "tha-ap407",
+    "segment": "tha-ap407:3.3",
+    "text": "Macchakacchapasañchannā → macchakacchapasampannā (?) "
+   },
+   {
+    "sutta_id": "tha-ap414",
+    "segment": "tha-ap414:2.3",
+    "text": "Macchakacchapasampannā → … sañchannā (mr) "
    }
   ]
  }

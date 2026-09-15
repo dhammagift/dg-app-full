@@ -25,31 +25,31 @@
    "exactMatch": true,
    "totalFiles": 1,
    "totalMatches": 1,
-   "hasVariantMatch": true
+   "hasVariantMatch": false
   },
   "data": {
-   "dn22": {
-    "sutta_id": "dn22",
+   "mn129": {
+    "sutta_id": "mn129",
     "category": "dhamma",
-    "dir_path": "pli/ms/sutta/dn",
+    "dir_path": "pli/ms/sutta/mn",
     "titles": {
-     "root": "Dīgha Nikāya 22",
-     "ru_o": "Дигха Никая 22",
-     "en_thanissaro": "DN 22"
+     "root": "Bālapaṇḍitasutta ",
+     "en_sujato": "The Foolish and the Astute ",
+     "ru_sv+edited+o": "Глупцы и мудрецы "
     },
-    "mr": 12,
+    "mr": 13,
     "count": 1,
     "unique_words": [
-     "kacchapa"
+     "kacchapā"
     ],
     "segments": [
      {
-      "segment": "dn22:1.3",
-      "root_text": "Seyyathāpi kacchapo aṅgāni sake kapāle samodahati.",
-      "variant": "kacchapo → kacchapa",
+      "segment": "mn129:21.3",
+      "root_text": "Macchā kacchapā susumārā, ye vā panaññepi keci tiracchānagatā pāṇā udakasmiṁ jāyanti udakasmiṁ jīyanti udakasmiṁ mīyanti. ",
+      "variant": "",
       "translations": {
-       "ru_o": "Подобно тому, как черепаха втягивает конечности в панцирь.",
-       "en_thanissaro": "Just as a tortoise gathers its limbs in its own shell."
+       "en_sujato": "Fish, turtles, dolphins, and various others. ",
+       "ru_sv+edited+o": "Рыбы, черепахи, крокодилы, и другие подобные животные.  "
       },
       "lb_context": [],
       "la_context": []
@@ -59,23 +59,17 @@
   },
   "wordReport": [
    {
-    "word": "kacchapa",
+    "word": "kacchapā",
     "textCount": 1,
     "matchCount": 1,
     "links": [
      {
-      "sutta_id": "dn22",
-      "segment": "dn22:1.3"
+      "sutta_id": "mn129",
+      "segment": "mn129:21.3"
      }
     ]
    }
   ],
-  "variantSegments": [
-   {
-    "sutta_id": "dn22",
-    "segment": "dn22:1.3",
-    "text": "kacchapo → kacchapa"
-   }
-  ]
+  "variantSegments": []
  }
 }

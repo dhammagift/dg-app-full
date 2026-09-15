@@ -1,30 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Static App Shortcuts (long-press the launcher icon). Ported from dg-twa's web manifest
-     (app/src/main/res/raw/web_app_manifest.json "shortcuts") — a Capacitor WebView isn't a
-     Trusted Web Activity, so the OS doesn't wire these up from a web manifest automatically;
-     each one is a plain Android shortcut that launches MainActivity with a "route" extra
-     (see MainActivity.handleIntent), which loads that path in the already-running SPA.
+<!-- Static App Shortcuts (long-press the launcher icon).
 
-     All 4 slots used, matching the TWA lifehack of never leaving one idle — "Dict.Dhamma.gift"
-     (online-only DPD dictionary) and "DG Read" (legacy /read.php, superseded by this app's own
-     reader) from the original 4 were dropped as before (a shortcut into a page that doesn't work
-     offline, or a route this app doesn't have, defeats the point of a fast offline entry point),
-     but the freed slots go to TOC and Favorites/History instead of sitting unused:
-     - "toc" replaces the old plain "/" shortcut, which just duplicated launching the app icon
-       itself — TOC is a genuinely distinct entry point.
-     - "Bhikkhu/Bhikkhuni Patimokkha" point at the TOC entries for those books
-       (/toc/pli-tv-bu-pm, /toc/pli-tv-bi-pm) rather than the legacy /pm.php-rendered single page
-       (reader/bu-pm.html) — that page's own logic wasn't ported into the offline shim, TOC
-       already reaches the same content.
-     - "favorites" has no route of its own (Favorites/History live inside the Quick Modal, not
-       the SPA router) — MainActivity passes a boolean "openQuickModal" extra instead of "route",
-       app.js opens the modal once it loads (see rewriteNativeShortcutRoute). tab-fav (Favorites+
-       History combined) is already the modal's default tab, no tab-switch needed. -->
+     Icons come from dg-twa (owner: "шорткаты и иконки неактуальные возьми из dg-twa там последняя
+     версия") — drawable-*/shortcut_N.png, mirrored here.
+
+     The order below is dg-twa's (app/build.gradle twaManifest.shortcuts, owner: "twa актуальнее"):
+     Table of Contents, Favorites & History, Memo, Dictionary (owner's order, 2026-09-15). It has to be STATIC — the first attempt kept
+     Contents/Favorites as dynamic shortcuts with rank 0/1, on the assumption that Android lists
+     dynamic ones above static ones. On the owner's launcher the opposite happens: the static pair
+     (Dictionary, Memo) came first and the pinned two fell to the bottom, which is exactly the
+     screenshot that reopened this. Dynamic shortcuts are now only what they are good for —
+     "recently read" (native-bridge.js, filtered to real texts, at most two).
+
+     Two of the four cannot run inside this app and are routed to the real browser by
+     native-bridge.js (see EXTERNAL_ROUTES there):
+       - Dictionary (/dict): a server-rendered page of dict.dhamma.gift, not part of the SPA;
+       - Memo (/memo): deliberately not bundled (owner: the APK should not carry occasionally-read
+         sections — see native-bridge.js).
+     TOC (/toc) and Favorites (/4as) are SPA routes and open in place.
+
+     Each shortcut launches MainActivity with a "route" extra; MainActivity turns it into
+     https://localhost/?_nativeRoute=..., and the page rewrites the visible URL before its own
+     bootstrap reads it. Dynamic "recently read" shortcuts (DgShortcutsPlugin) fill whatever slots
+     the launcher has left. -->
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
     <shortcut
         android:shortcutId="toc"
         android:enabled="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/shortcut_2"
         android:shortcutShortLabel="@string/shortcut_toc_short"
         android:shortcutLongLabel="@string/shortcut_toc_long">
         <intent
@@ -35,42 +38,42 @@
         </intent>
     </shortcut>
     <shortcut
-        android:shortcutId="bhikkhu_patimokkha"
+        android:shortcutId="favorites_history"
         android:enabled="true"
-        android:icon="@drawable/shortcut_monk"
-        android:shortcutShortLabel="@string/shortcut_bu_pm_short"
-        android:shortcutLongLabel="@string/shortcut_bu_pm_long">
+        android:icon="@drawable/shortcut_0"
+        android:shortcutShortLabel="@string/shortcut_fav_short"
+        android:shortcutLongLabel="@string/shortcut_fav_long">
         <intent
             android:action="android.intent.action.MAIN"
             android:targetPackage="gift.dhamma.mobile"
             android:targetClass="gift.dhamma.mobile.MainActivity">
-            <extra android:name="route" android:value="/toc/pli-tv-bu-pm" />
+            <extra android:name="route" android:value="/4as" />
         </intent>
     </shortcut>
     <shortcut
-        android:shortcutId="bhikkhuni_patimokkha"
+        android:shortcutId="memo"
         android:enabled="true"
-        android:icon="@drawable/shortcut_nun"
-        android:shortcutShortLabel="@string/shortcut_bi_pm_short"
-        android:shortcutLongLabel="@string/shortcut_bi_pm_long">
+        android:icon="@drawable/shortcut_3"
+        android:shortcutShortLabel="@string/shortcut_memo_short"
+        android:shortcutLongLabel="@string/shortcut_memo_long">
         <intent
             android:action="android.intent.action.MAIN"
             android:targetPackage="gift.dhamma.mobile"
             android:targetClass="gift.dhamma.mobile.MainActivity">
-            <extra android:name="route" android:value="/toc/pli-tv-bi-pm" />
+            <extra android:name="route" android:value="/memo" />
         </intent>
     </shortcut>
     <shortcut
-        android:shortcutId="favorites"
+        android:shortcutId="dictionary"
         android:enabled="true"
-        android:icon="@drawable/shortcut_favorites"
-        android:shortcutShortLabel="@string/shortcut_favorites_short"
-        android:shortcutLongLabel="@string/shortcut_favorites_long">
+        android:icon="@drawable/shortcut_1"
+        android:shortcutShortLabel="@string/shortcut_dict_short"
+        android:shortcutLongLabel="@string/shortcut_dict_long">
         <intent
             android:action="android.intent.action.MAIN"
             android:targetPackage="gift.dhamma.mobile"
             android:targetClass="gift.dhamma.mobile.MainActivity">
-            <extra android:name="openQuickModal" android:value="true" />
+            <extra android:name="route" android:value="/dict" />
         </intent>
     </shortcut>
 </shortcuts>

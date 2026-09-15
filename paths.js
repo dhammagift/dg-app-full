@@ -37,9 +37,9 @@ const LEGACY_ASSETS = resolveLegacyAssets();
 // Fail loudly and with the fix in the message — a missing dg-node checkout otherwise surfaces as
 // a pile of "MISSING: /assets/..." warnings that look like a content problem, not a setup one.
 function requireNodeRoot() {
-    if (!fs.existsSync(path.join(NODEJS_ROOT, 'dg-light.js'))) {
+    if (!fs.existsSync(path.join(NODEJS_ROOT, 'dg-fastify.js'))) {
         throw new Error(
-            `dg-node not found at ${NODEJS_ROOT} (no dg-light.js there).\n` +
+            `dg-node not found at ${NODEJS_ROOT} (no dg-fastify.js there).\n` +
             `Point DG_NODE_PATH at a dg-node checkout, e.g. DG_NODE_PATH=../dg-node npm run build-assets`
         );
     }
@@ -52,7 +52,15 @@ module.exports = {
     SRC: path.join(__dirname, 'src'),
     DIST: path.join(__dirname, 'dist'),
     requireNodeRoot,
-    // Resolve a path inside dg-node / inside the legacy asset tree.
+    // Resolve a path inside dg-node / inside the /assets tree. l() follows the site's own /assets
+    // mount (dg-fastify.js: public/overrides first, then siteroot/assets): the app used to ship 44
+    // stale legacy copies (openRu.js, openFdg.js, styles.css, ...) of files dg-node had replaced.
     f: rel => path.join(NODEJS_ROOT, rel),
-    l: rel => path.join(LEGACY_ASSETS, rel),
+    // Files only: the mount merges file by file, so a folder with one override (img/read) must not
+    // replace the whole legacy folder.
+    l: rel => {
+        const override = path.join(NODEJS_ROOT, 'public', 'overrides', rel);
+        const isFile = !rel.startsWith('..') && fs.existsSync(override) && fs.statSync(override).isFile();
+        return isFile ? override : path.join(LEGACY_ASSETS, rel);
+    },
 };
