@@ -764,6 +764,69 @@
     // is computed from the native WebView's own back/forward list, which faithfully tracks every
     // pushState navigation the SPA already does (search → reader → TOC, etc.) — so this is
     // exactly "go back one step in the app", not a full page reload.
+    // ---------------------------------------------------------------------------------------
+    // Google sign-in through the system browser
+    // ---------------------------------------------------------------------------------------
+
+    // Google refuses OAuth inside an app's WebView, so settings.js's signInWithPopup cannot work here.
+    // The app opens <site>/login/app-google.html in the system browser with a one-time state; that page
+    // signs in normally and hands the Google ID token back (intent:// naming this app's package ->
+    // MainActivity -> /login/index.html#dg_google=...&state=...), and here the same Firebase account is
+    // signed in with it. The merge/overwrite choice made before leaving is kept with the state: the
+    // login page reloads on the way back.
+    (function googleSignInViaBrowser() {
+        var KEY = 'dg.app.googleSignIn';
+        var origin = window.DG_ONLINE_ORIGIN || 'https://dhamma.gift';
+        var Plugins = (window.Capacitor && window.Capacitor.Plugins) || {};
+
+        function start() {
+            var bytes = new Uint8Array(16);
+            crypto.getRandomValues(bytes);
+            var state = Array.prototype.map.call(bytes, function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+            try {
+                localStorage.setItem(KEY, JSON.stringify({ state: state, overwrite: window.pendingOverwrite === true, at: Date.now() }));
+            } catch (e) { /* no storage: the state check on return fails closed */ }
+            var ru = /^\/ru\//.test(location.pathname) ||
+                (localStorage.getItem('dhammaLanguage') || localStorage.getItem('siteLanguage') || 'en') === 'ru';
+            var info = Plugins.App && Plugins.App.getInfo ? Plugins.App.getInfo() : Promise.resolve({});
+            return info.catch(function () { return {}; }).then(function (i) {
+                openExternal(origin + '/login/app-google.html?state=' + state +
+                    '&pkg=' + encodeURIComponent(i.id || 'gift.dhamma.mobile') + '&lang=' + (ru ? 'ru' : 'en'));
+            });
+        }
+        // settings.js defines its own syncLoginGoogle, and on some pages it loads after this file.
+        try {
+            Object.defineProperty(window, 'syncLoginGoogle', { configurable: true, get: function () { return start; }, set: function () {} });
+        } catch (e) { window.syncLoginGoogle = start; }
+
+        function finish() {
+            var m = /^#dg_google=([^&]+)&state=([a-f0-9]+)$/.exec(location.hash);
+            if (!m) return;
+            history.replaceState(history.state, '', location.pathname + location.search);
+            var saved = null;
+            try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); localStorage.removeItem(KEY); } catch (e) { /* unreadable: rejected below */ }
+            if (!saved || saved.state !== m[2] || Date.now() - saved.at > 15 * 60 * 1000) {
+                console.error('[dg-google] sign-in reply does not match a request from this app; ignored');
+                return;
+            }
+            window.pendingOverwrite = saved.overwrite === true;
+            Promise.resolve(typeof window.initFirebase === 'function' && window.initFirebase()).then(function () {
+                return firebase.auth().signInWithCredential(firebase.auth.GoogleAuthProvider.credential(decodeURIComponent(m[1])));
+            }).then(function () {
+                localStorage.setItem('dg_cloud_session', 'true');
+            }).catch(function (e) {
+                console.error('[dg-google] Firebase sign-in with the Google token failed:', e && (e.code || e.message));
+                if (typeof window.showBubbleNotification === 'function') {
+                    var ru = /^\/ru\//.test(location.pathname);
+                    window.showBubbleNotification(ru ? 'Не получилось войти через Google. Попробуйте ещё раз' : 'Google sign-in failed. Please try again', 6000, 'error');
+                }
+            });
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', finish);
+        else finish();
+        window.addEventListener('hashchange', finish);
+    })();
+
     var CapApp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
     if (CapApp) {
         CapApp.addListener('backButton', function (ev) {

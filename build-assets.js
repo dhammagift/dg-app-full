@@ -766,6 +766,8 @@ function copyMemoApp() {
         for (const dest of [path.join(WWW, 'login'), path.join(WWW, 'ru', 'login')]) {
             copyTree(login, dest);
             fs.rmSync(path.join(dest, 'sso.html'), { force: true });
+            // The app opens the Google sign-in page on the site, in the system browser (native-bridge.js).
+            fs.rmSync(path.join(dest, 'app-google.html'), { force: true });
         }
     }
     return fs.readdirSync(path.join(WWW, 'memo')).length;

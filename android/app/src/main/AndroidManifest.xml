@@ -64,6 +64,16 @@
                 <data android:scheme="https" android:host="www.find.dhamma.gift" />
             </intent-filter>
 
+            <!-- Google sign-in handoff: dhamma.gift/login/app-google.html, opened in the system
+                 browser, returns through an intent:// URL that names this app's package (see
+                 MainActivity.handleIntent). A custom scheme, so no autoVerify. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="dhammagift" android:host="auth" />
+            </intent-filter>
+
         </activity>
 
         <provider

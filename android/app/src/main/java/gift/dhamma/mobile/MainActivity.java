@@ -90,6 +90,18 @@ public class MainActivity extends BridgeActivity {
                 // incoming shares belongs in a wrapper.
                 url = "https://localhost/?q=" + Uri.encode(sharedText);
             }
+        } else if (Intent.ACTION_VIEW.equals(intent.getAction()) && intent.getData() != null
+                && "dhammagift".equals(intent.getData().getScheme())) {
+            // Google sign-in handoff: dhamma.gift/login/app-google.html (system browser) returns the
+            // Google ID token and the app's one-time state as extras. The bundled login page finishes
+            // the Firebase sign-in (native-bridge.js googleSignInViaBrowser); they travel in the
+            // fragment, which never leaves the WebView.
+            String token = intent.getStringExtra("id_token");
+            String state = intent.getStringExtra("state");
+            if (token != null && state != null) {
+                String page = "ru".equals(intent.getStringExtra("lang")) ? "ru/login/index.html" : "login/index.html";
+                url = "https://localhost/" + page + "#dg_google=" + Uri.encode(token) + "&state=" + Uri.encode(state);
+            }
         } else if (Intent.ACTION_VIEW.equals(intent.getAction()) && intent.getData() != null) {
             // A dhamma.gift/f.dhamma.gift/find.dhamma.gift link opened from outside the app (see
             // the VIEW intent-filter in AndroidManifest.xml) — same _nativeRoute handoff as the
