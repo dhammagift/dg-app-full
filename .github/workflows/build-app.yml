@@ -507,7 +507,7 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD || secrets.KEY_PASSWORD }}
         # The signing certificate's SHA-256 is public: it is what assetlinks.json must list for gift.dhamma.mobile.
         run: |
-          ./gradlew assembleRelease --stacktrace
+          ./gradlew assembleRelease -PdgVersionCode=${{ github.run_number }} --stacktrace
           "$ANDROID_HOME"/build-tools/36.0.0/apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk | grep -m1 'SHA-256'
 
       - name: Upload release APK artifact
@@ -531,7 +531,13 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD || secrets.KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || secrets.KEYSTORE_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD || secrets.KEY_PASSWORD }}
-        run: ./gradlew bundleRelease --stacktrace
+        # Google Play's package for this listing is gift.dhamma.twa (the app replaces the TWA). Static shortcuts
+        # name their package literally in res/xml, so that file follows the id; the test APK above keeps
+        # gift.dhamma.mobile. ponytail: an in-place sed after the APK step, a Gradle-generated resource if it grows.
+        run: |
+          sed -i 's/android:targetPackage="gift.dhamma.mobile"/android:targetPackage="gift.dhamma.twa"/' app/src/main/res/xml/shortcuts.xml
+          grep -c 'android:targetPackage="gift.dhamma.twa"' app/src/main/res/xml/shortcuts.xml
+          ./gradlew bundleRelease -PdgAppId=gift.dhamma.twa -PdgVersionCode=${{ github.run_number }} --stacktrace
 
       - name: Upload release AAB artifact
         if: success() && env.skip != 'true'

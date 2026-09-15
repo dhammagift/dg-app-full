@@ -3,11 +3,14 @@ apply plugin: 'com.android.application'
 android {
     namespace = "gift.dhamma.mobile"
     compileSdk = rootProject.ext.compileSdkVersion
+    // Google Play knows this app as gift.dhamma.twa: it replaces the TWA's listing, whose package id cannot
+    // change. Test APKs stay gift.dhamma.mobile so both can sit on one phone; CI passes -PdgAppId for the AAB.
+    // versionCode from the CI run number: Play refuses a code it has already seen (17 was fixed before).
     defaultConfig {
-        applicationId "gift.dhamma.mobile"
+        applicationId (project.findProperty('dgAppId') ?: "gift.dhamma.mobile")
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 17
+        versionCode ((project.findProperty('dgVersionCode') ?: '17') as Integer)
         versionName "1.16"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
