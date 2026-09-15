@@ -14,18 +14,18 @@
     "test-parity": "node test/core-parity.mjs"
   },
   "dependencies": {
-    "@capacitor/app": "^6.0.3",
-    "@capacitor/browser": "^6.0.6",
-    "@capacitor/core": "^6.2.1",
-    "@capacitor/dialog": "^6.0.3",
-    "@capacitor/filesystem": "^6.0.4",
-    "@capacitor/network": "^6.0.4",
-    "@capacitor/share": "^6.0.4",
-    "@capacitor/status-bar": "^6.0.3",
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/browser": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/dialog": "^8.0.0",
+    "@capacitor/filesystem": "^8.0.0",
+    "@capacitor/network": "^8.0.0",
+    "@capacitor/share": "^8.0.0",
+    "@capacitor/status-bar": "^8.0.0",
     "@sqlite.org/sqlite-wasm": "^3.53.0-build1"
   },
   "devDependencies": {
-    "@capacitor/android": "^6.2.1",
-    "@capacitor/cli": "^6.2.1"
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/cli": "^8.0.0"
   }
 }

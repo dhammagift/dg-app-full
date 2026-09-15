@@ -42,14 +42,14 @@ on:
         required: false
         type: string
       online_origin:
-        description: 'Site the app talks to (default: test.dhamma.gift; tags build for dhamma.gift)'
+        description: 'Site the app talks to (default: dhamma.gift; https://test.dhamma.gift to try unreleased site changes)'
         required: false
         type: string
 
 env:
-  # Everyday builds are test APKs against test.dhamma.gift, so app work never needs a prod deploy
-  # first. A tag push (a real release, the AAB for Google Play) targets dhamma.gift.
-  DG_ONLINE_ORIGIN: ${{ inputs.online_origin || (startsWith(github.ref, 'refs/tags/') && 'https://dhamma.gift') || 'https://test.dhamma.gift' }}
+  # Builds talk to dhamma.gift (owner, 2026-09-15: the site's app layer is deployed to prod). For
+  # unreleased site changes run the workflow by hand with online_origin=https://test.dhamma.gift.
+  DG_ONLINE_ORIGIN: ${{ inputs.online_origin || 'https://dhamma.gift' }}
   REPOS_ROOT: ${{ github.workspace }}/repos
   DG_NODE_PATH: /var/www/html/nodejs
   # Port dg-fastify.js is started on for the TOC snapshot — see that step for why it is pinned.
@@ -234,7 +234,7 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'  # Capacitor 8 (AGP 8.13) needs JDK 21
           distribution: 'temurin'
           cache: 'gradle'
 
