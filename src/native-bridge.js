@@ -172,19 +172,26 @@
             });
         };
 
-        // With the offline library installed, get the dictionary too, so the first tap without a network works.
+        // The dictionary travels with the offline library (owner: not "library ready, now tap a word"): it is
+        // fetched alongside the library's download as soon as that starts, and at every launch where the
+        // library is already installed — which is also the moment a changed dictionary on the site is picked
+        // up. Once per launch; files already current cost a revalidation each.
+        var prepared = false;
+        function prepare() {
+            if (prepared) return;
+            prepared = true;
+            caches.open(CACHE).then(function (cache) {
+                return FILES.reduce(function (chain, src) {
+                    return chain.then(function () {
+                        return cache.match(src).then(function (hit) { return fromSite(cache, src, hit || null); });
+                    });
+                }, Promise.resolve());
+            }).catch(function (e) { prepared = false; console.warn('[dg-dict] could not cache the dictionary:', e && e.message); });
+        }
+        window.addEventListener('dg:dl-progress', prepare); // the library's download has started
         if (window.dgOfflineLibrary && typeof window.dgOfflineLibrary.then === 'function') {
             window.dgOfflineLibrary.then(function (state) {
-                if (!state || !state.local) return;
-                setTimeout(function () {
-                    caches.open(CACHE).then(function (cache) {
-                        return FILES.reduce(function (chain, src) {
-                            return chain.then(function () {
-                                return cache.match(src).then(function (hit) { return fromSite(cache, src, hit || null); });
-                            });
-                        }, Promise.resolve());
-                    }).catch(function (e) { console.warn('[dg-dict] could not cache the dictionary:', e && e.message); });
-                }, 5000);
+                if (state && state.local) setTimeout(prepare, 3000); // after the page itself has settled
             }, function () { /* no library: the dictionary still loads on first use */ });
         }
     })();
