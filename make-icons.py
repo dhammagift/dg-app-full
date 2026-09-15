@@ -28,9 +28,9 @@ LEGACY_DENSITIES = {'mdpi': 48, 'hdpi': 72, 'xhdpi': 96, 'xxhdpi': 144, 'xxxhdpi
 # zone and left transparent outside it (the OS composites this over ic_launcher_background.xml).
 FOREGROUND_DENSITIES = {'mdpi': 108, 'hdpi': 162, 'xhdpi': 216, 'xxhdpi': 324, 'xxxhdpi': 432}
 LEGACY_LOGO_SCALE = 0.72
-# The glyph itself, not the whole 512px image, is 39% of the 108dp canvas — same as dg-twa's site and
-# dictionary icons. Filling the 66dp safe zone put the wheel against the mask's edge (owner: "кривая").
-FOREGROUND_GLYPH_SCALE = 0.39
+# The glyph itself, not the whole 512px image, is 48% of the 108dp canvas: 72% of the visible tile, the size Chrome's mark has
+# on the same launcher (owner: "как у всех"). 59% reached the mask edge, 39% looked too small.
+FOREGROUND_GLYPH_SCALE = 0.48
 
 logo = Image.open(SRC).convert('RGBA')
 glyph = logo.crop(logo.split()[-1].getbbox())
