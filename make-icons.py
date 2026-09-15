@@ -28,9 +28,12 @@ LEGACY_DENSITIES = {'mdpi': 48, 'hdpi': 72, 'xhdpi': 96, 'xxhdpi': 144, 'xxxhdpi
 # zone and left transparent outside it (the OS composites this over ic_launcher_background.xml).
 FOREGROUND_DENSITIES = {'mdpi': 108, 'hdpi': 162, 'xhdpi': 216, 'xxhdpi': 324, 'xxxhdpi': 432}
 LEGACY_LOGO_SCALE = 0.72
-SAFE_ZONE_SCALE = 66 / 108
+# The glyph itself, not the whole 512px image, is 39% of the 108dp canvas — same as dg-twa's site and
+# dictionary icons. Filling the 66dp safe zone put the wheel against the mask's edge (owner: "кривая").
+FOREGROUND_GLYPH_SCALE = 0.39
 
 logo = Image.open(SRC).convert('RGBA')
+glyph = logo.crop(logo.split()[-1].getbbox())
 
 def composite_square(canvas_size, logo_scale):
     canvas = Image.new('RGBA', (canvas_size, canvas_size), BG_COLOR)
@@ -54,10 +57,10 @@ for density, px in LEGACY_DENSITIES.items():
 
 for density, px in FOREGROUND_DENSITIES.items():
     canvas = Image.new('RGBA', (px, px), (0, 0, 0, 0))
-    logo_size = int(px * SAFE_ZONE_SCALE)
-    resized = logo.resize((logo_size, logo_size), Image.LANCZOS)
-    offset = (px - logo_size) // 2
-    canvas.paste(resized, (offset, offset), resized)
+    w = round(px * FOREGROUND_GLYPH_SCALE)
+    h = round(w * glyph.height / glyph.width)
+    resized = glyph.resize((w, h), Image.LANCZOS)
+    canvas.paste(resized, ((px - w) // 2, (px - h) // 2), resized)
     canvas.save(os.path.join(OUT, f'mipmap-{density}', 'ic_launcher_foreground.png'))
 
 print(f'Generated {len(LEGACY_DENSITIES)} legacy + {len(FOREGROUND_DENSITIES)} adaptive-foreground icon(s) from {SRC}.')
