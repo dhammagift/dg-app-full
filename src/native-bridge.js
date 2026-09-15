@@ -106,6 +106,20 @@
                 if (u.origin === location.origin && /^\/config\/[\w.-]+\.json$/.test(u.pathname)) {
                     return pageFetch.call(window, origin + u.pathname + u.search, init);
                 }
+                // Google voices with the site's trial key: Google only accepts it from dhamma.gift pages,
+                // so the call goes through the site (dg-fastify /api/tts/*), which adds the key. A reader's
+                // own key still goes straight to Google. text/plain keeps the POST a simple CORS request.
+                if (u.host === 'texttospeech.googleapis.com' && window.TRIAL_KEY && u.searchParams.get('key') === window.TRIAL_KEY) {
+                    if (u.pathname === '/v1/voices') {
+                        u.searchParams.delete('key');
+                        return pageFetch.call(window, origin + '/api/tts/voices' + u.search);
+                    }
+                    if (u.pathname === '/v1/text:synthesize') {
+                        return pageFetch.call(window, origin + '/api/tts/synthesize', {
+                            method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: init && init.body,
+                        });
+                    }
+                }
             } catch (e) { /* not a URL: leave it to the page's fetch */ }
             return pageFetch.apply(window, arguments);
         };
