@@ -598,6 +598,10 @@ function verifyPageAssets() {
 // index.html (the reader sees the search page), so an exception here must be a decision, not a
 // convenience.
 const REFERENCE_EXCEPTIONS = [
+    // The Pali dictionary data (DPD, ~24MB) is deliberately not bundled: it is updated regularly, so the
+    // app fetches it from the site and keeps it in the Cache API for offline use (native-bridge.js
+    // dictionaryFromSite; paliLookup.js/ai-search.js load it through window.dgDictScript).
+    /^\/assets\/js\/standalone-dpd\//,
     // Font subsets referenced from search/css/home.css and player CSS. Absent from the legacy
     // checkout AND from the site itself (verified: the same 404 in a browser) — a font the
     // platform falls back from, not a page or a script.

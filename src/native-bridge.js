@@ -106,6 +106,14 @@
                 if (u.origin === location.origin && /^\/config\/[\w.-]+\.json$/.test(u.pathname)) {
                     return pageFetch.call(window, origin + u.pathname + u.search, init);
                 }
+                // The dictionary data is not bundled (dictionaryFromSite below): ai-search.js fetches it as
+                // text, so the same cached-or-site copy answers here.
+                if (u.origin === location.origin && u.pathname.indexOf('/assets/js/standalone-dpd/') === 0 &&
+                    typeof window.dgDictScript === 'function') {
+                    return window.dgDictScript(u.pathname).then(function (text) {
+                        return new Response(text, { status: 200, headers: { 'Content-Type': 'application/javascript' } });
+                    });
+                }
                 // Google voices with the site's trial key: Google only accepts it from dhamma.gift pages,
                 // so the call goes through the site (dg-fastify /api/tts/*), which adds the key. A reader's
                 // own key still goes straight to Google. text/plain keeps the POST a simple CORS request.
