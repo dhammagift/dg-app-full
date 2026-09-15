@@ -92,6 +92,25 @@
     // did nothing (tablet test). In the app the file goes to the cache directory and the system share
     // sheet opens with it — "save to Files", Drive, a messenger, a PDF viewer. pdfmake is loaded on
     // demand (settings.js), so its global is patched the moment the library assigns it.
+    // Site configs (/config/sync-config.json — Firebase for cloud sync, /config/tts-config.json — Google
+    // voices) are read from the site, not bundled: owner wants a changed key to reach the app without
+    // an app release. Both features need the network anyway. The literal default, not ONLINE_ORIGIN:
+    // that var is declared further down and is still undefined here.
+    (function siteConfigsFromSite() {
+        var origin = window.DG_ONLINE_ORIGIN || 'https://dhamma.gift';
+        var pageFetch = window.fetch;
+        window.fetch = function (input, init) {
+            var raw = typeof input === 'string' ? input : (input && input.url) || '';
+            try {
+                var u = new URL(raw, location.href);
+                if (u.origin === location.origin && /^\/config\/[\w.-]+\.json$/.test(u.pathname)) {
+                    return pageFetch.call(window, origin + u.pathname + u.search, init);
+                }
+            } catch (e) { /* not a URL: leave it to the page's fetch */ }
+            return pageFetch.apply(window, arguments);
+        };
+    })();
+
     (function sharePdfDownloads() {
         var Plugins = window.Capacitor && window.Capacitor.Plugins;
         if (!Plugins || !Plugins.Filesystem || !Plugins.Share) return;
