@@ -340,6 +340,10 @@ jobs:
 
       - name: Build web assets (www/**)
         run: node build-assets.js
+        env:
+          # Goes into www/app-version.json, i.e. the "App version" row — the same number gradle
+          # gets as -PdgVersionCode below (see build-assets.js's writeAppVersion).
+          DG_VERSION_CODE: ${{ github.run_number }}
 
 
 

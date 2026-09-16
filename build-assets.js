@@ -852,7 +852,12 @@ function writeAppVersion() {
     if (!fs.existsSync(gradle)) return null;
     const text = fs.readFileSync(gradle, 'utf8');
     const version = (text.match(/versionName\s+"([^"]+)"/) || [])[1];
-    const build = (text.match(/versionCode\s+(\d+)/) || [])[1];
+    // versionCode is `((project.findProperty('dgVersionCode') ?: '17') as Integer)` — not a bare
+    // number — so match the first digits on the line, whichever form it takes. CI passes the real
+    // build number in DG_VERSION_CODE (gradle gets the same one as -PdgVersionCode), which is what
+    // the settings row shows: it used to fall through to "?" and the app read "v1.16 (?)".
+    const build = process.env.DG_VERSION_CODE
+        || (text.match(/versionCode[^\n]*?(\d+)/) || [])[1];
     if (!version) return null;
     fs.writeFileSync(path.join(WWW, 'app-version.json'),
         JSON.stringify({ version: version, build: build || '?', app: 'gift.dhamma.mobile' }, null, 2) + '\n');
