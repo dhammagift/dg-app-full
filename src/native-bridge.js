@@ -579,42 +579,10 @@
         });
     })();
 
-    // ---------------------------------------------------------------------------------------
-    // Native chrome follows the page's theme
-    // ---------------------------------------------------------------------------------------
-
-    // The owner's report: "тема у нас установлена, но тема приложения не установлена" — the page
-    // switched to dark while the status bar stayed a light-theme bar, so the app never looked like
-    // it was in dark mode. The page's theme lives in `data-bs-theme` on <html> (set by
-    // themeswitch.js from localStorage.theme, which can be light/dark/auto), so the native side
-    // just follows that attribute — no second source of truth, and 'auto' resolves to whatever the
-    // page already computed for this device.
-    (function followPageTheme() {
-        var StatusBar = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar;
-        if (!StatusBar) return;
-
-        var COLORS = { dark: '#101816', light: '#ffffff' };
-
-        function apply() {
-            var theme = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'dark' : 'light';
-            // Capacitor's Style.Dark means "light content on a dark bar" — the naming is inverted
-            // relative to the theme, which is why this reads backwards and is correct.
-            var style = theme === 'dark' ? 'DARK' : 'LIGHT';
-            try {
-                StatusBar.setStyle({ style: style }).catch(function () {});
-                StatusBar.setBackgroundColor({ color: COLORS[theme] }).catch(function () {});
-            } catch (e) { /* older plugin: the page itself is still themed */ }
-        }
-
-        apply();
-        new MutationObserver(apply).observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['data-bs-theme'],
-        });
-        // The theme script runs after this file and may set the attribute without a mutation we
-        // can catch if it writes the same value twice in a row — one delayed re-read is enough.
-        document.addEventListener('DOMContentLoaded', apply);
-    })();
+    // The status-bar strip is the site's own dark navbar band, always (issue #15): it is the
+    // window background now (android/app/src/main/res/values/{colors,styles}.xml), so there is
+    // nothing for this file to switch — the old per-theme StatusBar calls repainted it white in
+    // the light theme and set dark icons on it, both wrong for a band that never changes.
 
     function openExternal(url) {
         var Browser = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
