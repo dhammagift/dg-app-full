@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The window background is what shows through the strips the WebView does not cover: the
+     status-bar strip on top (the site's dark navbar band, always — see colors.xml) and the
+     gesture-bar strip at the bottom (the page background, which follows the theme). One colour
+     cannot do both, hence a layer: the band on top, the page colour underneath. 120dp is a
+     generous stand-in for any status-bar inset; the rest of it is hidden under the WebView. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/dg_page" />
+    <item android:drawable="@color/dg_navbar" android:gravity="top" android:height="120dp" />
+</layer-list>

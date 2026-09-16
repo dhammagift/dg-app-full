@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The site's dark page background (dg-page in home.css), so the strip behind the gesture
+         bar is dark on a dark device and white on a light one. -->
+    <color name="dg_page">#111111</color>
+</resources>
