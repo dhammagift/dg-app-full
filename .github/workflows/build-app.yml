@@ -71,6 +71,14 @@ jobs:
 
       # The pin lives in a committed file rather than only in this workflow so a dg-node upgrade
       # is a reviewable one-line diff, and so local builds can read the same value.
+      # Read once, near the top, so both the artifact names and the release step (near the bottom
+      # of this job) can use it without re-parsing build.gradle.
+      - name: Read app version
+        id: appver
+        run: |
+          name=$(grep -oP 'versionName\s+"\K[^"]+' android/app/build.gradle)
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+
       - name: Resolve dg-node ref
         id: pin
         run: |
@@ -506,9 +514,12 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || secrets.KEYSTORE_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD || secrets.KEY_PASSWORD }}
         # The signing certificate's SHA-256 is public: it is what assetlinks.json must list for gift.dhamma.mobile.
+        id: sig
         run: |
           ./gradlew assembleRelease -PdgVersionCode=${{ github.run_number }} --stacktrace
-          "$ANDROID_HOME"/build-tools/36.0.0/apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk | grep -m1 'SHA-256'
+          digest=$("$ANDROID_HOME"/build-tools/36.0.0/apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk | grep -m1 'SHA-256' | sed -E 's/.*: *//')
+          echo "$digest"
+          echo "cert=$digest" >> "$GITHUB_OUTPUT"
 
       - name: Upload release APK artifact
         if: success() && env.skip != 'true'
@@ -561,16 +572,32 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      # Named, clearly-labelled copies for the two very different things this build produces — a
+      # sideloadable APK (gift.dhamma.mobile, for testing) and the Google Play bundle (gift.dhamma.twa,
+      # replaces the TWA listing) — so the release page doesn't just show two files both called
+      # "app-release.*" with no way to tell which is which. The debug APK is a CI smoke-test build
+      # (assembleDebug earlier in this job); it was attached to old releases by mistake and confused
+      # "which one do I install" — dropped here, still in the per-run artifacts above if ever needed.
+      - name: Rename release assets
+        if: success() && startsWith(github.ref, 'refs/tags/')
+        run: |
+          mkdir -p release-assets
+          cp android/app/build/outputs/apk/release/app-release.apk "release-assets/dhamma-gift-${{ steps.appver.outputs.name }}-sideload.apk"
+          cp android/app/build/outputs/bundle/release/app-release.aab "release-assets/dhamma-gift-${{ steps.appver.outputs.name }}-play.aab"
+          cp /var/www/html/nodejs/siteroot/mobile-data/dg.db.gz release-assets/
+          cp /var/www/html/nodejs/siteroot/mobile-data/db-manifest.json release-assets/
+
       - name: Create Release
         if: success() && startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            android/app/build/outputs/apk/debug/app-debug.apk
-            android/app/build/outputs/apk/release/*.apk
-            android/app/build/outputs/bundle/release/*.aab
-            /var/www/html/nodejs/siteroot/mobile-data/dg.db.gz
-            /var/www/html/nodejs/siteroot/mobile-data/db-manifest.json
+          files: release-assets/*
           body: |
-            UI built from dg-node@${{ steps.pin.outputs.ref }}.
+            Built from dg-node@${{ steps.pin.outputs.ref }}, app version ${{ steps.appver.outputs.name }} (code ${{ github.run_number }}).
+
+            - `*-sideload.apk` — package `gift.dhamma.mobile`, install directly on a device for testing. Points at https://dhamma.gift.
+            - `*-play.aab` — package `gift.dhamma.twa`, upload to Google Play (updates the existing TWA listing).
+            - `dg.db.gz` / `db-manifest.json` — the offline library this build expects.
+
+            Signing certificate SHA-256: `${{ steps.sig.outputs.cert }}`
           token: ${{ secrets.GITHUB_TOKEN }}
