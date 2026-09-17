@@ -13,7 +13,7 @@ function judge(report) {
     console.log(`online origin     ${report.onlineOrigin}  (deliberately dead: an answer below can only be local)`);
 
     if (report.wakeLock) {
-        console.log(`screen wake lock  api=${report.wakeLock.api} requested=${report.wakeLock.requests} released=${report.wakeLock.releases}`);
+        console.log(`screen wake lock  api=${report.wakeLock.api} via=${report.wakeLock.how} requested=${report.wakeLock.requests} released=${report.wakeLock.releases}`);
     }
 
     console.log('--- the offline library ---');

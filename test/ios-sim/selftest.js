@@ -244,17 +244,34 @@
     // device question (and the reason the owner's iPhone measurement matters).
     function spyWakeLock() {
         var wl = navigator.wakeLock;
-        var out = { api: !!(wl && typeof wl.request === 'function'), requests: 0, releases: 0 };
+        var out = { api: !!(wl && typeof wl.request === 'function'), requests: 0, releases: 0, how: null };
         if (!out.api) return out;
-        var request = wl.request.bind(wl);
-        wl.request = function (type) {
-            out.requests++;
-            return request(type).then(function (lock) {
-                var release = lock.release.bind(lock);
-                lock.release = function () { out.releases++; return release(); };
-                return lock;
-            });
-        };
+
+        function wrapRequest(owner) {
+            var request = owner.request;
+            owner.request = function (type) {
+                out.requests++;
+                return request.call(this === owner ? owner : this, type).then(function (lock) {
+                    var release = lock.release.bind(lock);
+                    lock.release = function () { out.releases++; return release(); };
+                    return lock;
+                });
+            };
+        }
+
+        // The PROTOTYPE, not the instance: WebKit hands out a fresh WakeLock object on every
+        // `navigator.wakeLock` access, so wrapping the one this script sees catches nothing — which is
+        // exactly what run 135 reported ("api: true, requests: 0") while the layer was requesting a
+        // lock on an object the spy had never met. Chromium caches the object, which is why the same
+        // spy looked correct locally.
+        var proto = window.WakeLock && window.WakeLock.prototype;
+        if (proto && typeof proto.request === 'function') {
+            wrapRequest(proto);
+            out.how = 'prototype';
+        } else {
+            wrapRequest(wl);
+            out.how = 'instance';
+        }
         return out;
     }
 
