@@ -6,5 +6,5 @@
          that strip. The colour is the site's own navbar band (#dg-hero-navbar, its 'dg-navy' token), which
          is the same dark strip in both themes, so this is deliberately NOT a themed colour and the
          page theme no longer takes part. -->
-    <color name="dg_navbar">#243448</color>
+    <color name="dg_navbar">#1b2836</color>
 </resources>
