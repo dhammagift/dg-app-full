@@ -387,12 +387,16 @@ jobs:
           PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
         run: |
           npm install --no-save playwright-core@1.49.1
+          # webkit as well as chromium: the deep-link check below runs in both engines. Not because a
+          # Linux WebKit is iOS (it is not — the simulator job tests the real WKWebView), but because
+          # the same mapping and handoff are engine-independent code, and this is the cheapest place
+          # to notice WebKit-only breakage in them.
           # The CLI's `install` subcommand lives in the "playwright" package, not the
           # library-only "playwright-core" this repo actually requires at runtime (confirmed
           # locally: `npx --package=playwright-core ... playwright install` fails instantly with
           # "playwright: not found" — playwright-core ships no such binary at all). Same version
           # pin either way, so both packages agree on which Chromium revision to fetch/resolve.
-          npx --yes playwright@1.49.1 install --with-deps chromium
+          npx --yes playwright@1.49.1 install --with-deps chromium webkit
 
       # The app's own checks, run in dg-node against the server that is already up: every bundled
       # page compared with the live site (the "tile opens the search page" family — a missing path
@@ -483,6 +487,19 @@ jobs:
           set -o pipefail
           node test/deep-link-routes.js 2>&1 | tee deep-links-output.log
 
+      # The same four links in WebKit. Routing is failed here as strictly as in Chromium; a missing
+      # search-result marker is not — that needs OPFS, and WebKitGTK's storage is not WKWebView's
+      # (iOS proves its own in the simulator job). The point is to catch engine-only breakage in the
+      # handoff on a runner that costs seconds, not minutes.
+      - name: Check the deep links in WebKit
+        env:
+          DG_PLAYWRIGHT: ${{ github.workspace }}/node_modules/playwright-core
+          DG_BROWSER: webkit
+          PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
+        run: |
+          set -o pipefail
+          node test/deep-link-routes.js 2>&1 | tee deep-links-webkit.log
+
       # Job log downloads need admin rights on this repo, which this workflow's own token doesn't
       # have — an artifact is the one way to actually read what this step printed when it fails
       # without that. Only uploaded on failure: the log is redundant with the console output on a
@@ -497,6 +514,7 @@ jobs:
             e2e-output.log
             links-output.log
             deep-links-output.log
+            deep-links-webkit.log
           retention-days: 7
 
       - name: Sync Capacitor
@@ -856,8 +874,12 @@ jobs:
       - name: Judge the report
         run: node test/ios-sim/assert.js .tmp/ios-ui/selftest.json
 
-      - name: Judge the deep link
-        run: node test/ios-sim/assert-deeplink.js .tmp/ios-ui/selftest.json /toc
+      # No gate on the deep link here on purpose: iOS shows its own "Open in Dhamma.gift?" prompt for
+      # a custom scheme opened from OUTSIDE the app (SpringBoard, and `simctl openurl` behaves like
+      # that), and a headless simulator cannot tap it — the app never receives the URL. The self-test
+      # opens dhammagift://route/toc from the page instead, and the path it lands on is in the report
+      # this job uploads; test/ios-sim/assert-deeplink.js is the assertion to run on a device or from
+      # an XCUITest that can tap. docs/DEEP_LINKS.md says which half is automated.
 
       # Always, not only on failure: the screenshots ARE the deliverable for the owner (light/dark x
       # en/ru), and the report is what makes a red run diagnosable without admin rights on this repo.

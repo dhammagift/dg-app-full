@@ -47,3 +47,7 @@ test/snapshots/after/
 .gradle-home/
 .android-home/
 .tmp/
+
+# Screenshots and the report copied out of a simulator run, so they can be reviewed as files instead
+# of only inside a CI run's artifacts (the run keeps its own copy for 30 days).
+ios-screenshots/

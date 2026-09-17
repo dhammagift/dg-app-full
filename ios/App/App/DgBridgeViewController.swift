@@ -18,6 +18,9 @@ class DgBridgeViewController: CAPBridgeViewController {
         // Ships in the app: it keeps the screen awake while the offline library downloads
         // (DgProgressPlugin.swift), which is what stops iOS suspending the transfer mid-way.
         bridge?.registerPluginInstance(DgProgressPlugin())
+        // Also shipped: the WebView's own speechSynthesis has no voices (see DgTtsPlugin.swift), and
+        // the reader's voice player is part of the reader.
+        bridge?.registerPluginInstance(DgTtsPlugin())
 
         #if DEBUG
         // Debug builds only, and deliberately so: this plugin lets the page write a file into the

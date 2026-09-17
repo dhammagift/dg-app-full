@@ -8,7 +8,13 @@
 // "Cannot set properties of undefined (setting 'onvoiceschanged')".
 (function () {
     var P = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.DgTts;
-    if (window.speechSynthesis || !P) return;
+    if (!P) return;
+    // "Has the API" is not "can speak": WKWebView exposes speechSynthesis with ZERO voices and a
+    // speak() that never starts (measured in a simulator), which is worse than Android's honest
+    // absence — the player got no sound AND no end event, so its close button never closed. Install
+    // over it when there is not a single voice to speak with. Android (no API at all) and any real
+    // browser with voices are unaffected.
+    if (window.speechSynthesis && (window.speechSynthesis.getVoices() || []).length) return;
     var voices = [], pending = {}, seq = 0, listeners = [];
     // Both styles Web Speech callers use: utterance.onend = … (voice.js) and
     // utterance.addEventListener('start', …) (memo.js — "addEventListener is not a function" on Play).

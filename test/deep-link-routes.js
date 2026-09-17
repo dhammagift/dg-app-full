@@ -11,9 +11,15 @@
 //
 // Usage: node test/deep-link-routes.js          (needs a served www — see test/serve-local.js)
 
-const { chromium } = require(process.env.DG_PLAYWRIGHT || 'playwright-core');
-const BROWSER = process.env.DG_CHROMIUM || chromium.executablePath();
+const playwright = require(process.env.DG_PLAYWRIGHT || 'playwright-core');
+const engine = process.env.DG_BROWSER || 'chromium';
+const BROWSER = process.env.DG_CHROMIUM || playwright.chromium.executablePath();
 const BASE = process.env.DG_BASE_URL || 'http://localhost:8097';
+// The same four links also run in WebKit (DG_BROWSER=webkit, ubuntu): the mapping and the handoff
+// are engine-independent, and WebKit is the engine family iOS ships. What is NOT the same is the
+// storage: WebKitGTK on Linux is not WKWebView, and whether it exposes OPFS says nothing about iOS
+// (the simulator job tests the real thing). So a missing marker is reported, not failed when WebKit
+// is the engine — the routing assertion, which needs no database, is failed.
 
 // [scheme url, where the SPA must end up, a marker that only the right page shows]
 const CASES = [
@@ -27,7 +33,11 @@ const CASES = [
 ];
 
 (async () => {
-    const browser = await chromium.launch({ executablePath: BROWSER, args: ['--no-sandbox'] });
+    const browser = await playwright[engine].launch({
+        ...(engine === 'chromium' ? { executablePath: BROWSER } : {}),
+        args: engine === 'chromium' ? ['--no-sandbox'] : [],
+    });
+    console.log(`deep links in ${engine}`);
     let failed = 0;
 
     for (const [deepLink, expected, marker] of CASES) {
@@ -45,12 +55,15 @@ const CASES = [
         const text = await page.evaluate(() => document.body.innerText || '');
         const routed = landed === expected || landed.indexOf(expected + '?') === 0;
         const rendered = marker ? text.indexOf(marker) !== -1 : true;
-        const ok = routed && rendered && errors.length === 0;
+        const strictMarker = engine === 'chromium';
+        const ok = routed && errors.length === 0 && (!strictMarker || rendered);
         if (!ok) failed++;
 
         console.log(`${ok ? 'ok  ' : 'FAIL'} ${deepLink} -> ${landed}${marker ? ` (page ${rendered ? 'shows' : 'does NOT show'} "${marker}")` : ''}`);
-        if (!ok) {
+        if (!ok || (marker && !rendered)) {
             if (!routed) console.log(`     expected ${expected}`);
+            if (marker && !rendered && strictMarker) console.log(`     the page did not show "${marker}"`);
+            if (marker && !rendered && !strictMarker) console.log(`     note: no "${marker}" in the page — expected in WebKit if it exposes no OPFS`);
             if (errors.length) console.log(`     page errors: ${errors.join(' | ')}`);
         }
         await context.close();

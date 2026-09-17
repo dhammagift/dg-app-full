@@ -26,6 +26,8 @@ function judge(report) {
         console.log(`speechSynthesis   api=${report.speech.api} voices=${report.speech.voices} speaks=${report.speech.speaks}`);
         const pp = report.progressPlugin || {};
         console.log(`DgProgress        present=${pp.present} awake=${pp.awake}${pp.error ? ' error=' + pp.error : ''}`);
+        const tp = report.ttsPlugin;
+        if (tp) console.log(`DgTts             present=${tp.present} voices=${tp.voices} speak=${tp.speak}${tp.error ? ' error=' + tp.error : ''}${tp.sample ? ' [' + tp.sample.join(', ') + ']' : ''}`);
     }
 
     if (report.deepLinksSeen) {
@@ -51,6 +53,9 @@ function judge(report) {
     // is not: it ships in the app and is what keeps the screen awake during the download.
     if (report.progressPlugin && report.progressPlugin.present === false && report.progressPlugin.capacitor) {
         problems.push('the native DgProgress plugin is not registered (screen will lock mid-download)');
+    }
+    if (report.ttsPlugin && report.ttsPlugin.present === false && report.ttsPlugin.capacitor) {
+        problems.push('the native DgTts plugin is not registered (the reader cannot speak)');
     }
 
     if (problems.length) {

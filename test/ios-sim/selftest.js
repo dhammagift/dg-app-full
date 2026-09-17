@@ -180,6 +180,28 @@
             .catch(function (e) { return { present: true, error: e.message }; });
     }
 
+    // The native voice, mirrored from Android's DgTtsPlugin. The WebView's own speechSynthesis is
+    // what the probe above is for; this one asks the plugin the player will actually use, so a
+    // missing or mute engine is a CI result rather than a silent reader.
+    function probeTtsPlugin() {
+        var p = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.DgTts;
+        if (!p || typeof p.getVoices !== 'function') {
+            return Promise.resolve({ present: false, capacitor: !!window.Capacitor });
+        }
+        return Promise.resolve(p.getVoices()).then(function (r) {
+            var voices = (r && r.voices) || [];
+            var out = {
+                present: true,
+                voices: voices.length,
+                sample: voices.slice(0, 3).map(function (v) { return v.lang + '/' + v.name; })
+            };
+            var lang = voices.length && voices[0].lang ? voices[0].lang : 'en-US';
+            return Promise.resolve(p.speak({ id: 'selftest', text: 'Dhamma gift self test', lang: lang, rate: 1 }))
+                .then(function () { out.speak = 'queued'; return out; })
+                .catch(function (e) { out.speak = 'rejected: ' + e.message; return out; });
+        }).catch(function (e) { return { present: true, error: e.message }; });
+    }
+
     function report$write() {
         // Serialised and remembered before anything else: the plugin branch below returns early in a
         // plain browser, and a later load of this page (the deep-link watcher) merges whatever is
@@ -280,6 +302,9 @@
         })
         .then(function () {
             return probeProgressPlugin().then(function (r) { report.progressPlugin = r; });
+        })
+        .then(function () {
+            return probeTtsPlugin().then(function (r) { report.ttsPlugin = r; });
         })
         .then(function () {
             // Before answering, so a reload cannot make this page run the cases a second time.
