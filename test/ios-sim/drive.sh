@@ -11,6 +11,7 @@ set -euo pipefail
 
 APP=""
 OUT=".tmp/ios-ui"
+LIBRARY=
 DEVICE="${DG_SIM_DEVICE:-iPhone 17}"
 BUNDLE="gift.dhamma.mobile"
 WAIT_SECONDS="${DG_SELFTEST_TIMEOUT:-300}"
@@ -20,6 +21,7 @@ while [ $# -gt 0 ]; do
         --app) APP="$2"; shift 2 ;;
         --out) OUT="$2"; shift 2 ;;
         --device) DEVICE="$2"; shift 2 ;;
+        --library) LIBRARY="$2"; shift 2 ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;
     esac
 done
@@ -40,6 +42,16 @@ xcrun simctl bootstatus "$UDID" -b
 xcrun simctl uninstall "$UDID" "$BUNDLE" 2>/dev/null || true
 
 xcrun simctl install "$UDID" "$APP"
+
+# --library: put the packaged fixture where DgDownloadPlugin downloads to (Application Support,
+# excluded from backup), BEFORE the first launch. That is the whole point of the run: the app must
+# find the archive in its own storage and import it, with no network involved at all.
+if [ -n "$LIBRARY" ]; then
+    CONTAINER=$(xcrun simctl get_app_container "$UDID" "$BUNDLE" data)
+    mkdir -p "$CONTAINER/Library/Application Support/dg-library"
+    cp "$LIBRARY"/* "$CONTAINER/Library/Application Support/dg-library/"
+    ls -la "$CONTAINER/Library/Application Support/dg-library"
+fi
 # --console-pty keeps the app's stdout/stderr in the job log, which is where NSString NSLog lines
 # and WebKit's own complaints show up. Backgrounded: the run below waits on a file, not on the
 # process (simctl launch stays in the foreground for as long as the app lives).

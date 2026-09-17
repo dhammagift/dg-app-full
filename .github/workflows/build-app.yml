@@ -863,8 +863,12 @@ jobs:
       - name: Build the fixture database
         run: node test/make-fixture-db.js test/fixture.db
 
+      # --library-dir: the fixture is NOT bundled this time. It is written beside the build and
+      # copied into the app's own storage by drive.sh, so the app has to find it through
+      # DgDownloadPlugin and import it from there — the native path, exercised with no network at
+      # all (every origin in the bundle points at a dead port).
       - name: Turn www/ into a simulator test bundle
-        run: node test/ios-sim/prepare-www.js
+        run: node test/ios-sim/prepare-www.js --library-dir .tmp/ios-library
 
       - name: Sync Capacitor into ios/
         run: npx cap sync ios
@@ -883,7 +887,7 @@ jobs:
             build 2>&1 | tee ios-ui-build.log | tail -30
 
       - name: Run the app in the simulator and pull its report out
-        run: test/ios-sim/drive.sh --app ios/DerivedData/Build/Products/Debug-iphonesimulator/App.app --out .tmp/ios-ui
+        run: test/ios-sim/drive.sh --app ios/DerivedData/Build/Products/Debug-iphonesimulator/App.app --out .tmp/ios-ui --library .tmp/ios-library
 
       - name: Judge the report
         run: node test/ios-sim/assert.js .tmp/ios-ui/selftest.json

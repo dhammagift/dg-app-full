@@ -298,6 +298,26 @@
 
     var HANDLED_KEY = 'dg.deeplink.handled';
 
+    // The offline layer's progress card is driven by dg:dl-progress events, and while
+    // DgDownloadPlugin does the transfer (src/platform.js's prepareArchive) those bytes cross on the
+    // native side — so the plugin's own events are forwarded in the same shape. Deliberately NOT the
+    // plugin's "done": the library is not usable until the worker has imported the file, and that
+    // import reports its own progress a moment later.
+    (function bridgeNativeDownloadProgress() {
+        var Plugins = window.Capacitor && window.Capacitor.Plugins;
+        var D = Plugins && Plugins.DgDownload;
+        if (!D || typeof D.addListener !== 'function') return;
+        D.addListener('progress', function (e) {
+            var detail = e || {};
+            window.dispatchEvent(new CustomEvent('dg:dl-progress', { detail: {
+                phase: 'download',
+                loaded: detail.loaded || 0,
+                total: detail.total || 0,
+                done: false,
+            } }));
+        });
+    })();
+
     (function followLiveDeepLinks() {
         var CapApp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
         if (!CapApp || typeof CapApp.addListener !== 'function' || !window.dgDeepLinkToLocalUrl) return;

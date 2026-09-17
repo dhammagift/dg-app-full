@@ -39,10 +39,61 @@
     // search/index.html's quote popup / "open in new tab" check this to take their app branch (a
     // phone has no server behind a second copy of the page); nothing set it since app.js moved to dg-node.
     window.dgOfflineReady = true;
+    // Where the published archive and its manifest live on the real site. Always the NETWORK base,
+    // even after the archive has been fetched onto the device: the manifest is a few hundred bytes,
+    // and pointing it at the local file handler would turn a 404 into "the library is not
+    // published" during the update check.
+    var REMOTE_BASE = ONLINE_ORIGIN + '/mobile-data';
+    var ARCHIVE = 'dg.db.gz';
+    var MANIFEST = 'db-manifest.json';
+
+    // The archive, when iOS can fetch it better than a Web Worker can: a WebView's JavaScript is
+    // suspended the moment the app leaves the foreground, so DgDownloadPlugin.swift puts the 216 MB
+    // transfer on the system's background URLSession. What the worker then downloads is the FILE,
+    // from the app's own handler — a local read that takes seconds instead of minutes, which is why
+    // it survives the round trip to the background. The offline layer asks for this after consent
+    // and before its transfer (dg-node's offline/app.js, prepareArchive), so the consent sheet, the
+    // progress card and the update path are untouched: only the source of the bytes moves.
+    //
+    // Android has no such plugin (its foreground service does the same job for the worker's own
+    // fetch) and a browser has no Capacitor at all, so both keep the code path they have always had.
+    function localBaseFor(path) {
+        var Cap = window.Capacitor;
+        if (!path || !Cap || typeof Cap.convertFileSrc !== 'function') return null;
+        var dir = path.replace(/\/[^/]*$/, '');
+        var url = Cap.convertFileSrc(dir);
+        return url ? url.replace(/\/$/, '') : null;
+    }
+
+    function prepareArchive() {
+        var Plugins = window.Capacitor && window.Capacitor.Plugins;
+        var D = Plugins && Plugins.DgDownload;
+        if (!D || typeof D.start !== 'function' || typeof D.existing !== 'function') return Promise.resolve(false);
+
+        function adopt(file) {
+            var base = file && file.bytes ? localBaseFor(file.path) : null;
+            if (!base) return false;
+            window.dgPlatform.distBase = base;
+            return true;
+        }
+
+        return Promise.resolve(D.existing()).then(function (onDisk) {
+            if (adopt(onDisk)) return true;   // a previous run's archive: import it, no transfer at all
+            return Promise.resolve(D.start({ url: REMOTE_BASE + '/' + ARCHIVE })).then(function (file) {
+                // The manifest has to sit beside the archive: db-worker.js names the OPFS file after
+                // its build_id and reads file_gz from it, so a local base without one would be read
+                // as a plain, uncompressed database and rejected.
+                return Promise.resolve(D.start({ url: REMOTE_BASE + '/' + MANIFEST }))
+                    .then(function () { return file; });
+            }).then(adopt);
+        }).catch(function () { return false; });   // refused, offline, plugin unhappy: the worker's own path
+    }
+
     window.dgPlatform = {
         name: 'native',
-        distBase: window.DG_DIST_BASE || (ONLINE_ORIGIN + '/mobile-data'),
+        distBase: window.DG_DIST_BASE || REMOTE_BASE,
         onlineBase: ONLINE_ORIGIN,
+        prepareArchive: prepareArchive,
 
         mapStatic: function (p) {
             if (p === '/api/toc') return '/api-snapshots/toc.json';
@@ -102,7 +153,7 @@
     // The published manifest carries the real sizes: bytes_gz is what crosses the connection, bytes is
     // the database it unpacks into. A few hundred bytes.
     function readManifest() {
-        var base = (window.dgPlatform && window.dgPlatform.distBase) || (ONLINE_ORIGIN + '/mobile-data');
+        var base = REMOTE_BASE;
         return fetch(base.replace(/\/$/, '') + '/db-manifest.json')
             .then(function (r) { return r.ok ? r.json() : null; })
             .catch(function () { return null; });

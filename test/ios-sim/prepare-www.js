@@ -22,7 +22,12 @@
 //                                             "connection refused".
 //   3. the self-test script itself, appended at the end of the page (test/ios-sim/selftest.js).
 //
-// Usage: node test/ios-sim/prepare-www.js [--www www] [--fixture test/fixture.db]
+// Usage: node test/ios-sim/prepare-www.js [--www www] [--fixture test/fixture.db] [--library-dir DIR]
+//
+// --library-dir DIR puts the packaged fixture INTO DIR instead of www/mobile-data, for the run that
+// tests the native path: DgDownloadPlugin downloads into the app's own storage, so the archive the
+// app imports must already sit there (drive.sh copies it in) and NOT inside the bundle. Without the
+// flag the fixture is bundled, which is the quick Chromium pre-flight's mode — it needs no plugin.
 
 const fs = require('fs');
 const path = require('path');
@@ -56,6 +61,7 @@ function arg(name, fallback) {
 
 const WWW = path.resolve(REPO, arg('www', 'www'));
 const FIXTURE = path.resolve(REPO, arg('fixture', 'test/fixture.db'));
+const LIBRARY_DIR = arg('library-dir', '') ? path.resolve(REPO, arg('library-dir', '')) : '';
 const DEAD_ORIGIN = 'http://127.0.0.1:59999';
 const originLine = /^window\.DG_ONLINE_ORIGIN = .*;$/m;
 
@@ -86,7 +92,7 @@ if (!fs.existsSync(FIXTURE)) fail(`no fixture database at ${FIXTURE} — run nod
 const dbBytes = fs.readFileSync(FIXTURE);
 const meta = readMeta(FIXTURE);
 const gzBytes = zlib.gzipSync(dbBytes, { level: 9 });
-const dataDir = path.join(WWW, 'mobile-data');
+const dataDir = LIBRARY_DIR || path.join(WWW, 'mobile-data');
 fs.mkdirSync(dataDir, { recursive: true });
 fs.writeFileSync(path.join(dataDir, 'dg.db.gz'), gzBytes);
 const manifest = {
@@ -103,6 +109,7 @@ const manifest = {
 };
 fs.writeFileSync(path.join(dataDir, 'db-manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
 console.log(`fixture: ${(dbBytes.length / 1024).toFixed(0)} kB -> ${(gzBytes.length / 1024).toFixed(0)} kB gz, build_id ${manifest.build_id}`);
+console.log(`library: written to ${dataDir}${LIBRARY_DIR ? ' (the app will import it from its own storage)' : ' (bundled with the app)'}`);
 
 // 2. The config script, before the offline layer reads window.DG_* at load time.
 const pagePath = path.join(WWW, 'index.html');
@@ -112,10 +119,10 @@ if (page.indexOf(platformTag) === -1) fail('www/index.html has no /offline/platf
 const configTag = [
     '<script>',
     '/* Injected by test/ios-sim/prepare-www.js for a simulator run — never in a shipped build. */',
-    `window.DG_DIST_BASE = ${JSON.stringify('/mobile-data')};`,
+    LIBRARY_DIR ? null : `window.DG_DIST_BASE = ${JSON.stringify('/mobile-data')};`,
     `window.DG_ONLINE_ORIGIN = ${JSON.stringify(DEAD_ORIGIN)};`,
     '</script>',
-].join('\n');
+].filter(Boolean).join('\n');
 if (page.indexOf('window.DG_DIST_BASE') !== -1) fail('www/index.html already carries a test config — rebuild www');
 page = page.replace(platformTag, configTag + '\n' + platformTag);
 
@@ -144,4 +151,4 @@ page = page.replace('</body>', selftestTag + '\n</body>');
 fs.writeFileSync(pagePath, page);
 
 console.log(`page: config + ${selftestTag} injected`);
-console.log(`ready: www/ is now a simulator test bundle (origin ${DEAD_ORIGIN}, library from /mobile-data)`);
+console.log(`ready: www/ is now a simulator test bundle (origin ${DEAD_ORIGIN}, library from ${LIBRARY_DIR ? 'the app\'s own storage via DgDownload' : '/mobile-data'})`);
