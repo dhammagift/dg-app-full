@@ -11,6 +11,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return true
     }
 
+    // A background URLSession outlives the app: when a transfer finishes while the app is not
+    // running, iOS launches it in the background with this handler, which must be called once the
+    // session has delivered its events — DgDownloadPlugin holds it and calls it from
+    // urlSessionDidFinishEvents. Without this, iOS kills the app and the finished library is lost.
+    func application(_ application: UIApplication,
+                     handleEventsForBackgroundURLSession identifier: String,
+                     completionHandler: @escaping () -> Void) {
+        DgDownloadPlugin.backgroundCompletionHandler = completionHandler
+    }
+
     func applicationWillResignActive(_ application: UIApplication) {
         // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
         // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.

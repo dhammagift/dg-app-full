@@ -12,6 +12,7 @@ import Capacitor
 // What is registered here, and why:
 //   DgProgressPlugin  the idle timer that keeps the screen awake while the library downloads
 //   DgTtsPlugin       the reader's voice (WKWebView's own speechSynthesis has no voices)
+//   DgDownloadPlugin  the library download, on a background URLSession
 //   DgSelfTestPlugin  debug builds only: the CI simulator run's way of getting results out
 //
 // Note for the next plugin: Capacitor 8's iOS CAPPlugin has no handleOnDestroy (Android's has), so a
@@ -26,6 +27,10 @@ class DgBridgeViewController: CAPBridgeViewController {
         // Also shipped: the WebView's own speechSynthesis has no voices (see DgTtsPlugin.swift), and
         // the reader's voice player is part of the reader.
         bridge?.registerPluginInstance(DgTtsPlugin())
+        // The library download on the system's background transfer service (DgDownloadPlugin.swift):
+        // the WebView's own fetch dies when the app leaves the foreground, and this is the iOS
+        // answer to Android's foreground service.
+        bridge?.registerPluginInstance(DgDownloadPlugin())
 
         #if DEBUG
         // Debug builds only, and deliberately so: this plugin lets the page write a file into the

@@ -20,6 +20,7 @@
 		D60000042FE00000000000A4 /* DgSelfTestPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = D60000032FE00000000000A3 /* DgSelfTestPlugin.swift */; };
 		D60000062FE00000000000A6 /* DgProgressPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = D60000052FE00000000000A5 /* DgProgressPlugin.swift */; };
 		D60000082FE00000000000A8 /* DgTtsPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = D60000072FE00000000000A7 /* DgTtsPlugin.swift */; };
+		D600000A2FE00000000000AA /* DgDownloadPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = D60000092FE00000000000A9 /* DgDownloadPlugin.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,6 +38,7 @@
 		D60000032FE00000000000A3 /* DgSelfTestPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DgSelfTestPlugin.swift; sourceTree = "<group>"; };
 		D60000052FE00000000000A5 /* DgProgressPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DgProgressPlugin.swift; sourceTree = "<group>"; };
 		D60000072FE00000000000A7 /* DgTtsPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DgTtsPlugin.swift; sourceTree = "<group>"; };
+		D60000092FE00000000000A9 /* DgDownloadPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DgDownloadPlugin.swift; sourceTree = "<group>"; };
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -77,6 +79,7 @@
 				D60000032FE00000000000A3 /* DgSelfTestPlugin.swift */,
 				D60000052FE00000000000A5 /* DgProgressPlugin.swift */,
 				D60000072FE00000000000A7 /* DgTtsPlugin.swift */,
+				D60000092FE00000000000A9 /* DgDownloadPlugin.swift */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
@@ -176,6 +179,7 @@
 				D60000042FE00000000000A4 /* DgSelfTestPlugin.swift in Sources */,
 				D60000062FE00000000000A6 /* DgProgressPlugin.swift in Sources */,
 				D60000082FE00000000000A8 /* DgTtsPlugin.swift in Sources */,
+				D600000A2FE00000000000AA /* DgDownloadPlugin.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
