@@ -20,6 +20,9 @@
     // The run happened / its report, in localStorage: the page reloads as part of this test (it has
     // to — it ends on a real page of the app), and without a flag every reload runs the whole
     // sequence again, navigating again, for as long as the app lives.
+    // Opened by the run itself (see selfDeepLink): a route, not a search, so the path it lands on
+    // cannot be confused with anything the page does on its own.
+    var SELF_DEEP_LINK = 'dhammagift://route/toc';
     var DONE_KEY = 'dg.selftest.done';
     var REPORT_KEY = 'dg.selftest.report';
     var DEADLINE_MS = 5 * 60 * 1000;   // a cold simulator, a cold worker, a small fixture
@@ -210,6 +213,17 @@
         setTimeout(function () { location.replace(target); }, 250);
     }
 
+    function selfDeepLink() {
+        report.selfDeepLink = SELF_DEEP_LINK;
+        try {
+            location.href = SELF_DEEP_LINK;
+        } catch (e) {
+            report.selfDeepLinkError = e.message;
+        }
+        // If nothing took over, the same page as before: search results from the local database.
+        setTimeout(showLocalResults, 3000);
+    }
+
     // ---------------------------------------------------------------------------------------
     // Second and later loads: the run is done (see DONE_KEY), so this page exists only to report
     // where the app ended up, immediately and unconditionally. That is how the deep-link check
@@ -274,9 +288,12 @@
         })
         .then(function (written) {
             window.__dgSelftest = { written: written, report: report };
-            // Navigate either way: the report is already out (file or console), and leaving the app
-            // on a page that shows local data is what makes the screenshots CI takes show the app
-            // itself rather than its home screen.
-            showLocalResults();
+            // The report is out. Now try the app's own URL scheme, opened FROM THE PAGE: that is the
+            // same chain the outside world uses — CFBundleURLTypes, SceneDelegate, Capacitor's
+            // appUrlOpen event, then src/deep-link.js's mapping — minus SpringBoard's "Open in
+            // Dhamma.gift?" confirmation, which iOS shows for a scheme opened from outside the app
+            // and which no headless run can tap. Whatever happens, the app then lands on a page that
+            // shows local data, so the screenshots are never a blank frame.
+            selfDeepLink();
         });
 })();

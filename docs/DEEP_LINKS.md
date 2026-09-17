@@ -49,6 +49,18 @@ adb shell am start -a android.intent.action.VIEW -d "dhammagift://mn1"
 | iOS | `CFBundleURLTypes` (Info.plist) → SceneDelegate → Capacitor App plugin → событие `appUrlOpen` → `location.replace()` |
 | Android/iOS, пока приложение уже открыто | то же событие `appUrlOpen` |
 
+## Что делает сама iOS (и это не наш баг)
+
+Ссылку `dhammagift://…` на iOS, открытую **извне приложения** (Safari, чужое приложение, `simctl
+openurl`), система сначала показывает диалогом «Open in "Dhamma.gift"?» — нужен один тап. Это
+поведение SpringBoard для кастомных схем, обойти его нельзя; на Android ссылка открывается сразу
+(или через стандартный выбор приложения). Первый прогон проверки в CI упал именно на этом: приложение
+не получало URL без тапа, а тапнуть в headless-симуляторе нечем.
+
+Поэтому проверка в симуляторе открывает схему **из самой страницы** (`dhammagift://route/toc`) —
+это та же цепочка (CFBundleURLTypes → SceneDelegate → appUrlOpen → маппинг), но без диалога системы.
+Внешний сценарий с тапом проверяется руками на устройстве.
+
 ## Проверки
 
 | Что | Где |

@@ -2,8 +2,8 @@
 // Custom Tabs on Android) instead of the app's own WebView. Two reasons this can't just be a
 // plain navigation/window.open like on the real site:
 //
-// 1. Capacitor's WebView only navigates within its own local origin (https://localhost, this
-//    app's static asset server) by default — a plain `location.href`/`<a href>` to an external
+// 1. Capacitor's WebView only navigates within its own local origin (https://localhost on Android,
+//    capacitor://localhost on iOS — this app's static asset server) by default — a plain `location.href`/`<a href>` to an external
 //    https:// URL is silently swallowed (no server.allowNavigation configured, and adding one
 //    would still leave the user "trapped" in the app's WebView with no obvious way back).
 // 2. /login specifically is Firebase/Google auth — Google actively rejects OAuth sign-in

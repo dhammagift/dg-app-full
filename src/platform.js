@@ -4,9 +4,15 @@
 // dg:app-scripts marker) so the site's browser platform.js — which loads right after with a
 // `if (window.dgPlatform) return` guard — becomes a no-op.
 //
+// The app's own origin is https://localhost on Android and capacitor://localhost on iOS — Capacitor's
+// defaults, and NOT configurable to https on iOS (it refuses a scheme WKWebView itself handles).
+// Nothing here hardcodes either one: this file and native-bridge.js compare against location.origin.
+// The difference matters for one thing only — the offline layer needs a secure context, which both
+// are (WebKit treats a scheme registered by the embedding app as trustworthy).
+//
 // Differences from the browser implementation, all of them app constraints:
-//   - distBase: the app's own origin (https://localhost) has no server behind it, so the
-//     database and its manifest are fetched from the real site.
+//   - distBase: the app's own origin has no server behind it, so the database and its manifest are
+//     fetched from the real site.
 //   - onlineBase: every "needs the internet" data request (a language outside the ru+en slice,
 //     script conversion, /api/transliterate, and any data request before the library is open)
 //     is forwarded to the real site instead of the dead-end local origin.
