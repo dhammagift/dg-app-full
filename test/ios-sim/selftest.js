@@ -148,7 +148,9 @@
     //    knowing before a 216 MB transfer dies on a locked phone.
     function probeSpeech() {
         var s = window.speechSynthesis;
-        var out = { api: !!s, voices: null, speaks: null };
+        // engine: 'plugin' means src/tts.js installed its shim over the WebView's own speech (see its
+        // guard) — the thing the reader's player actually needs to work.
+        var out = { api: !!s, engine: window.__dgTtsShim ? 'plugin' : 'native', voices: null, speaks: null };
         if (!s) return Promise.resolve(out);
         try { out.voices = (s.getVoices() || []).length; } catch (e) { out.voices = 'threw'; }
         if (typeof SpeechSynthesisUtterance !== 'function') return Promise.resolve(out);

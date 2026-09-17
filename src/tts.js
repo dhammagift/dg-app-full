@@ -9,12 +9,15 @@
 (function () {
     var P = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.DgTts;
     if (!P) return;
-    // "Has the API" is not "can speak": WKWebView exposes speechSynthesis with ZERO voices and a
-    // speak() that never starts (measured in a simulator), which is worse than Android's honest
-    // absence — the player got no sound AND no end event, so its close button never closed. Install
-    // over it when there is not a single voice to speak with. Android (no API at all) and any real
-    // browser with voices are unaffected.
-    if (window.speechSynthesis && (window.speechSynthesis.getVoices() || []).length) return;
+    // In an app the plugin IS the engine, and neither WebView's own speech is worth trusting:
+    // Android System WebView has no speechSynthesis at all, and WKWebView's is a trap — it reports
+    // voices (68 of them, measured in a simulator) and then throws on speak() ("Argument 1
+    // ('utterance') to SpeechSynthesis.speak must be an instance of SpeechSynthesisUtterance"), so
+    // the player got no sound AND no end event, and its close button never closed. A real browser
+    // keeps its own implementation.
+    var inApp = !!(window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() !== 'web');
+    if (!inApp && window.speechSynthesis && (window.speechSynthesis.getVoices() || []).length) return;
+    window.__dgTtsShim = true; // the self-test reports which engine ended up speaking
     var voices = [], pending = {}, seq = 0, listeners = [];
     // Both styles Web Speech callers use: utterance.onend = … (voice.js) and
     // utterance.addEventListener('start', …) (memo.js — "addEventListener is not a function" on Play).

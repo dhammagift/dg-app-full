@@ -70,14 +70,15 @@ fi
 cp "$REPORT" "$OUT/selftest.json"
 echo "drive: self-test report at $REPORT"
 
-# A deep link, opened the way the system opens one: while the app is up, through its scheme. The
-# page records where it ended up (selftest.js's route watcher), which is the only way to see this
-# from outside the WebView — and it proves the whole chain at once: Info.plist's CFBundleURLTypes,
-# SceneDelegate, Capacitor's appUrlOpen event, and src/deep-link.js's mapping.
-xcrun simctl openurl "$UDID" "dhammagift://route/toc" || echo "drive: openurl failed" >&2
-for i in $(seq 1 15); do
-    cp "$REPORT" "$OUT/selftest.json"
-    if grep -q '"/toc' "$OUT/selftest.json" 2>/dev/null; then break; fi
+# The deep link, opened by the page itself (selftest.js, dhammagift://route/toc). NOT through
+# `simctl openurl`: that is an open from OUTSIDE the app, and iOS answers it with SpringBoard's
+# "Open in Dhamma.gift?" confirmation — which no headless run can tap, and which then sits in every
+# screenshot. The chain being tested is the same either way: CFBundleURLTypes, SceneDelegate,
+# Capacitor's appUrlOpen event, src/deep-link.js's mapping. What is different is only the tap, and
+# that is what a device test is for.
+for i in $(seq 1 20); do
+    cp "$REPORT" "$OUT/selftest.json" 2>/dev/null || true
+    if grep -q '"currentPath": "/toc' "$OUT/selftest.json" 2>/dev/null; then break; fi
     sleep 1
 done
 cp "$REPORT" "$OUT/selftest.json"

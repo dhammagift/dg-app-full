@@ -23,6 +23,7 @@ function judge(report) {
 
     if (report.speech) {
         console.log('--- speech and the native progress plugin ---');
+        console.log(`speech engine     ${report.speech.engine} (plugin = src/tts.js's shim over DgTts; native = the WebView's own)`);
         console.log(`speechSynthesis   api=${report.speech.api} voices=${report.speech.voices} speaks=${report.speech.speaks}`);
         const pp = report.progressPlugin || {};
         console.log(`DgProgress        present=${pp.present} awake=${pp.awake}${pp.error ? ' error=' + pp.error : ''}`);
@@ -61,6 +62,10 @@ function judge(report) {
     }
     if (report.ttsPlugin && report.ttsPlugin.present === false && report.ttsPlugin.capacitor) {
         problems.push('the native DgTts plugin is not registered (the reader cannot speak)');
+    }
+    // In the app the plugin-backed shim is the only engine that speaks: the WebView's own throws.
+    if (report.speech && report.speech.engine === 'native' && report.progressPlugin && report.progressPlugin.capacitor) {
+        problems.push("the reader would use the WebView's own speechSynthesis (WKWebView throws on speak)");
     }
 
     if (problems.length) {
