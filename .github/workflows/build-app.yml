@@ -794,6 +794,22 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+      # The share extension is a second target: it builds into the app's PlugIns directory, and the
+      # app is useless as a share target if it is missing or points at the wrong extension point.
+      # Everything the extension DOES (read the payload, hand it over) is covered by the deep-link
+      # checks: it delivers dhammagift://search?q=…, which is already a tested contract.
+      - name: Check the share extension is inside the app
+        run: |
+          APP="ios/DerivedData/Build/Products/Debug-iphonesimulator/App.app"
+          EX="$APP/PlugIns/ShareExtension.appex"
+          test -d "$EX" || { echo "::error::the share extension is not embedded in the app"; exit 1; }
+          xcrun plutil -p "$EX/Info.plist" | grep -q "com.apple.share-services" \
+            || { echo "::error::the embedded extension is not a share extension"; xcrun plutil -p "$EX/Info.plist"; exit 1; }
+          xcrun plutil -p "$EX/Info.plist" | grep -q "NSExtensionActivationSupportsText" \
+            || { echo "::error::the extension no longer accepts text"; exit 1; }
+          ls "$APP/PlugIns"
+          echo "share extension embedded and configured"
+
       - name: Upload the simulator .app
         if: success()
         uses: actions/upload-artifact@v4
