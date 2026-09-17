@@ -550,7 +550,11 @@ function copyNative(name, to) {
 function copyNativeFiles() {
     copyNative('native-bridge.js', path.join(WWW, 'native-bridge.js'));
     fs.copyFileSync(path.join(SRC, 'tts.js'), path.join(WWW, 'tts.js'));
-    return 2;
+    // A plain copy, not copyNative(): the dhammagift:// mapping needs no baked origin and no
+    // site-only path list, and it is the file with a node test (test/deep-link.test.js), so it
+    // should stay as close to its source as possible.
+    fs.copyFileSync(path.join(SRC, 'deep-link.js'), path.join(WWW, 'deep-link.js'));
+    return 3;
 }
 
 // The ASSETS list above is hand-maintained, so a NEW <script>/<link> added to the site is copied

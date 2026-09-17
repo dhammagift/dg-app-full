@@ -11,11 +11,15 @@
 //   2. a config script BEFORE /offline/platform.js — which is what makes the run meaningful:
 //        DG_DIST_BASE   = '/mobile-data'      the fixture comes from the app's own bundle instead of
 //                                             the network, so the test needs no server and no CORS;
-//        DG_ONLINE_ORIGIN = 'http://127.0.0.1:9'  nothing listens there, deliberately. Every
+//        DG_ONLINE_ORIGIN = 'http://127.0.0.1:59999'  nothing listens there, deliberately. Every
 //                                             "needs the internet" fallback in the offline layer is
 //                                             now guaranteed to fail, so an answer can ONLY have come
 //                                             from the local database. A reachable dhamma.gift would
-//                                             let this test pass with OPFS broken.
+//                                             let this test pass with OPFS broken. A high, closed port
+//                                             on purpose: 9 (the discard port) is on Chromium's
+//                                             blocked-port list and fails with ERR_UNSAFE_PORT before
+//                                             a socket is even opened, which is a weaker statement than
+//                                             "connection refused".
 //   3. the self-test script itself, appended at the end of the page (test/ios-sim/selftest.js).
 //
 // Usage: node test/ios-sim/prepare-www.js [--www www] [--fixture test/fixture.db]
@@ -52,7 +56,7 @@ function arg(name, fallback) {
 
 const WWW = path.resolve(REPO, arg('www', 'www'));
 const FIXTURE = path.resolve(REPO, arg('fixture', 'test/fixture.db'));
-const DEAD_ORIGIN = 'http://127.0.0.1:9';
+const DEAD_ORIGIN = 'http://127.0.0.1:59999';
 const originLine = /^window\.DG_ONLINE_ORIGIN = .*;$/m;
 
 // Every .js under www, package and vendor directories included: the two files carrying the baked

@@ -38,6 +38,10 @@ const APP_SCRIPTS = `<!-- Offline data shim: installs window.fetch interception 
 <script src="/tts.js"></script>
 <script src="/offline/app.js"></script>
 <script src="/offline/offline-status.js"></script>
+<!-- The dhammagift:// scheme, mapped in ONE place for both platforms (src/deep-link.js). Loaded
+     before native-bridge.js, which is what asks the native side for incoming URLs and hands them
+     to it; see docs/DEEP_LINKS.md for the contract. -->
+<script src="/deep-link.js"></script>
 <!-- Routes memo/login/mirror-link's external opens through the device's real browser instead of
      this app's own WebView — see native-bridge.js for why plain navigation doesn't work here. -->
 <script src="/native-bridge.js"></script>`;

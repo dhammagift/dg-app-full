@@ -375,6 +375,13 @@ jobs:
       # out from under a workflow without any warning. `playwright install` pins an EXACT Chromium
       # build matched to this playwright-core version instead, the same guarantee build-app.yml
       # already gives every other dependency (npm's lockfile, DG_NODE_REF, the JDK/SDK versions).
+      # The dhammagift:// contract, checked as pure string work: 25 cases covering every documented
+      # form and every documented refusal. It is the test for Android and iOS at once, because both
+      # hand the same raw URL to the same mapping (src/deep-link.js) — and it needs nothing but node,
+      # so it runs here rather than only on a macOS runner.
+      - name: Check the deep-link contract
+        run: node test/deep-link.test.js
+
       - name: Install a browser driver for the end-to-end checks
         env:
           PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
@@ -463,6 +470,19 @@ jobs:
           set -o pipefail
           node test/links.js 2>&1 | tee links-output.log
 
+      # The dhammagift:// handoff, on a real served bundle: /?_deepLink=<url> must land the SPA on a
+      # page the contract promises, rendered from a database rather than merely changing the address.
+      # This is the web half of the deep-link proof — Android's MainActivity builds exactly this URL,
+      # and iOS calls the same mapping from its appUrlOpen handler. The other half runs in the iOS
+      # simulator job (test/ios-sim/assert-deeplink.js).
+      - name: Check the deep links land where they promise
+        env:
+          DG_PLAYWRIGHT: ${{ github.workspace }}/node_modules/playwright-core
+          PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
+        run: |
+          set -o pipefail
+          node test/deep-link-routes.js 2>&1 | tee deep-links-output.log
+
       # Job log downloads need admin rights on this repo, which this workflow's own token doesn't
       # have — an artifact is the one way to actually read what this step printed when it fails
       # without that. Only uploaded on failure: the log is redundant with the console output on a
@@ -473,7 +493,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: e2e-output-${{ github.run_number }}
-          path: e2e-output.log
+          path: |
+            e2e-output.log
+            links-output.log
+            deep-links-output.log
           retention-days: 7
 
       - name: Sync Capacitor
@@ -660,6 +683,34 @@ jobs:
         with:
           node-version: '24.20.0'
 
+      # SwiftPM fetches capacitor-swift-pm and resolves every plugin package from GitHub on a cold
+      # runner, and Xcode then compiles all of them into DerivedData — between them the slowest part
+      # of these jobs. Cached, and cached BEFORE anything is installed or built:
+      #   ~/.npm                                  the npm install below
+      #   ~/Library/Caches/org.swift.swiftpm      the shared repository cache SwiftPM clones into
+      #   ios/DerivedData/SourcePackages          the checkouts and build products these jobs use:
+      #                                           both build with -derivedDataPath, so they are NOT
+      #                                           under ~/Library/Developer/Xcode/DerivedData (the
+      #                                           path generic CI advice names — a cache there would
+      #                                           stay empty and save nothing)
+      #   ~/Library/Developer/Xcode/DerivedData   kept for any build that runs without the flag
+      # Keyed on what decides the dependency graph rather than on source: Package.swift (Capacitor's
+      # exact version), the pbxproj (target and package wiring), Package.resolved if one is ever
+      # committed, and package-lock.json (the npm packages the plugin packages are referenced from).
+      # restore-keys means a run that bumps one of them still reuses the previous checkouts instead of
+      # re-cloning everything.
+      - name: Restore npm and SwiftPM caches
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            ~/Library/Caches/org.swift.swiftpm
+            ~/Library/Developer/Xcode/DerivedData
+            ios/DerivedData/SourcePackages
+          key: ${{ runner.os }}-ios-${{ hashFiles('ios/App/CapApp-SPM/Package.swift', 'ios/App/App.xcodeproj/project.pbxproj', 'ios/**/Package.resolved', 'package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-ios-
+
       - name: Install app dependencies
         run: npm install --legacy-peer-deps --no-audit
 
@@ -669,20 +720,6 @@ jobs:
           echo "Using $XCODE"
           sudo xcode-select -s "$XCODE"
           xcodebuild -version
-
-      # SwiftPM fetches capacitor-swift-pm and each plugin package from GitHub on the first build,
-      # and Xcode compiles them all into DerivedData — several minutes on a cold runner. Keyed on
-      # the three files that decide which packages and versions are involved, so a plugin bump
-      # invalidates it and an ordinary source edit does not.
-      - name: Cache SwiftPM packages and build products
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/Library/Caches/org.swift.swiftpm
-            ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-ios-${{ hashFiles('ios/App/CapApp-SPM/Package.swift', 'ios/App/App.xcodeproj/project.pbxproj', 'package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-ios-
 
       - name: Sync Capacitor into ios/
         run: npx cap sync ios
@@ -750,6 +787,34 @@ jobs:
         with:
           node-version: '24.20.0'
 
+      # SwiftPM fetches capacitor-swift-pm and resolves every plugin package from GitHub on a cold
+      # runner, and Xcode then compiles all of them into DerivedData — between them the slowest part
+      # of these jobs. Cached, and cached BEFORE anything is installed or built:
+      #   ~/.npm                                  the npm install below
+      #   ~/Library/Caches/org.swift.swiftpm      the shared repository cache SwiftPM clones into
+      #   ios/DerivedData/SourcePackages          the checkouts and build products these jobs use:
+      #                                           both build with -derivedDataPath, so they are NOT
+      #                                           under ~/Library/Developer/Xcode/DerivedData (the
+      #                                           path generic CI advice names — a cache there would
+      #                                           stay empty and save nothing)
+      #   ~/Library/Developer/Xcode/DerivedData   kept for any build that runs without the flag
+      # Keyed on what decides the dependency graph rather than on source: Package.swift (Capacitor's
+      # exact version), the pbxproj (target and package wiring), Package.resolved if one is ever
+      # committed, and package-lock.json (the npm packages the plugin packages are referenced from).
+      # restore-keys means a run that bumps one of them still reuses the previous checkouts instead of
+      # re-cloning everything.
+      - name: Restore npm and SwiftPM caches
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            ~/Library/Caches/org.swift.swiftpm
+            ~/Library/Developer/Xcode/DerivedData
+            ios/DerivedData/SourcePackages
+          key: ${{ runner.os }}-ios-${{ hashFiles('ios/App/CapApp-SPM/Package.swift', 'ios/App/App.xcodeproj/project.pbxproj', 'ios/**/Package.resolved', 'package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-ios-
+
       - name: Install app dependencies
         run: npm install --legacy-peer-deps --no-audit
 
@@ -790,6 +855,9 @@ jobs:
 
       - name: Judge the report
         run: node test/ios-sim/assert.js .tmp/ios-ui/selftest.json
+
+      - name: Judge the deep link
+        run: node test/ios-sim/assert-deeplink.js .tmp/ios-ui/selftest.json /toc
 
       # Always, not only on failure: the screenshots ARE the deliverable for the owner (light/dark x
       # en/ru), and the report is what makes a red run diagnosable without admin rights on this repo.

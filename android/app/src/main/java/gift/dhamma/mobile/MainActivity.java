@@ -98,9 +98,15 @@ public class MainActivity extends BridgeActivity {
             // fragment, which never leaves the WebView.
             String token = intent.getStringExtra("id_token");
             String state = intent.getStringExtra("state");
-            if (token != null && state != null) {
+            if ("auth".equals(intent.getData().getHost()) && token != null && state != null) {
                 String page = "ru".equals(intent.getStringExtra("lang")) ? "ru/login/index.html" : "login/index.html";
                 url = "https://localhost/" + page + "#dg_google=" + Uri.encode(token) + "&state=" + Uri.encode(state);
+            } else if (!"auth".equals(intent.getData().getHost())) {
+                // Any other dhammagift:// URL is one of the app's own deep links (docs/DEEP_LINKS.md).
+                // Handed over RAW, in the same ?_deepLink= handoff the shortcut routes use: the page
+                // maps it in src/deep-link.js, which is also what iOS uses — one implementation for
+                // both platforms, so `dhammagift://mn1` cannot come to mean two different things.
+                url = "https://localhost/?_deepLink=" + Uri.encode(intent.getData().toString());
             }
         } else if (Intent.ACTION_VIEW.equals(intent.getAction()) && intent.getData() != null) {
             // A dhamma.gift/f.dhamma.gift/find.dhamma.gift link opened from outside the app (see

@@ -270,6 +270,41 @@
         history.replaceState(null, '', route);
     })();
 
+    // ---------------------------------------------------------------------------------------
+    // dhammagift:// — the app's own URL scheme (docs/DEEP_LINKS.md)
+    // ---------------------------------------------------------------------------------------
+
+    // Two ways one arrives, one mapping for both (src/deep-link.js, loaded before this file):
+    //
+    //   * Android's MainActivity cannot hand a custom-scheme URL to the page directly (the asset
+    //     server has no file behind /mn1), so it loads the root with ?_deepLink=<the url> and this
+    //     rewrites the location to what the mapping returns — same trick as _nativeRoute above, and
+    //     the same reason it has to happen at parse time, before the SPA's bootstrap reads
+    //     window.location. Android's Google-login return does NOT come through here: it travels in
+    //     intent extras, which no URL carries (see MainActivity.handleIntent).
+    //   * iOS has no such handoff: a custom scheme arrives through the SceneDelegate, and Capacitor's
+    //     App plugin turns it into an appUrlOpen event. That covers both a cold launch and a link
+    //     tapped while the app is already running, which is why the listener below uses
+    //     location.replace() — the app is up and the SPA is already initialised.
+    (function followIncomingDeepLink() {
+        if (!window.dgDeepLinkToLocalUrl) return;
+        var raw = new URLSearchParams(location.search).get('_deepLink');
+        if (!raw) return;
+        var target = window.dgDeepLinkToLocalUrl(raw);
+        // Not ours, or an auth return without its token: leave the page where it is rather than
+        // navigating somewhere meaningless.
+        if (target) location.replace(target);
+    })();
+
+    (function followLiveDeepLinks() {
+        var CapApp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+        if (!CapApp || typeof CapApp.addListener !== 'function' || !window.dgDeepLinkToLocalUrl) return;
+        CapApp.addListener('appUrlOpen', function (event) {
+            var target = window.dgDeepLinkToLocalUrl(event && event.url);
+            if (target) location.replace(target);
+        });
+    })();
+
     // The reader pushState's clean URLs like /sn22.56. Going Back to one from another document
     // (Log in, Memo) or reloading it makes Capacitor load that path as a file: the dot reads as an
     // extension and the WebView shows ERR_INVALID_RESPONSE. On the way out, park the entry on the

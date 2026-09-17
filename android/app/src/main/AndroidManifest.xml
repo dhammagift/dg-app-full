@@ -74,6 +74,22 @@
                 <data android:scheme="dhammagift" android:host="auth" />
             </intent-filter>
 
+            <!-- Every other dhammagift:// URL is one of the app's own deep links (docs/DEEP_LINKS.md):
+                 dhammagift://mn1 opens a text, dhammagift://kacchapa searches, dhammagift://route/toc
+                 opens an SPA route. A separate filter rather than widening the one above, so the
+                 login handoff keeps exactly the filter it has always had. No host attribute on
+                 purpose: the host IS the route here, and MainActivity hands the whole URL to the
+                 page, which maps it in src/deep-link.js — the same file iOS uses, so one scheme
+                 cannot come to mean two different things on two platforms.
+                 Like the auth filter, no autoVerify: a custom scheme cannot be verified against a
+                 server, which is why dhamma.gift itself is claimed by the https filter above. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="dhammagift" />
+            </intent-filter>
+
         </activity>
 
         <provider
