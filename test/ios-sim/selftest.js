@@ -258,6 +258,227 @@
         return out;
     }
 
+    // ---------------------------------------------------------------------------------------
+    // The link crawler, inside the real WebView.
+    //
+    // test/links.js crawls this from outside with Playwright (Linux, Chromium): seven pages, and it
+    // really clicks every link, because "a path the device cannot serve is not a 404 in a WebView, it
+    // is index.html". A simulator's WebView cannot be driven from outside, so the same classes of
+    // failure are checked from inside, on the links the page ACTUALLY renders — the results view, the
+    // TOC and the reader are rendered first through the SPA's own router (pushState + popstate, the
+    // same handoff native-bridge uses for shortcuts), then their links are resolved:
+    //
+    //   * a link with a real file extension (.html, .php, .js, ...) must load: a 404 is a page the
+    //     reader cannot reach,
+    //   * a folder link (a trailing slash) always shows the home page in this WebView, whatever the
+    //     folder contains — the asset handler answers every dotless path with the root index.html,
+    //   * a legacy reader route (/read/, /r.php, /memorize/, ...) is not in this app at all.
+    //
+    // Everything else without an extension is a route the SPA handles in place (/toc, /sn56.11) — the
+    // router intercepts the click and no document is ever fetched. Those are counted, not failed: a
+    // fetch-based check cannot judge them, and calling them broken was this check's first version's
+    // mistake (41 "failures" that were all routes the app serves perfectly well).
+    //
+    // Click-specific verdicts (a second window, a URL handed to the outside browser) belong to the
+    // native side and are covered by the deep-link and routing checks.
+    // ---------------------------------------------------------------------------------------
+    var LINK_VIEWS = ['/?q=kacchapa&langs=ru,en', '/toc', '/dn22:2.2'];
+    var STATIC_PAGES = ['/settings/index.html'];
+    var LEGACY_ROUTE = /^\/(ru\/)?(read|r|d|ml|mt|multi|mlth|memorize|th)(\/|$)|^\/(ru\/)?(read|history)\.php$/;
+    var FILE_EXT = /\.(html?|php|js|mjs|css|json|png|jpe?g|svg|webp|gif|pdf|woff2?|ttf|txt|csv|xml)$/i;
+
+    function sameOriginLinks(root) {
+        var seen = {};
+        Array.prototype.forEach.call(root.querySelectorAll('a[href]'), function (a) {
+            var href = a.getAttribute('href');
+            if (!href || /^(#|javascript:|mailto:|tel:)/i.test(href)) return;
+            // Not rendered, not a link the reader can click: every view keeps the previous view's
+            // markup in the DOM (the reader's legacy link rows are still there while results are
+            // shown), and test/links.js skips those too ("link no longer on the page"). Without this
+            // the crawler reported four dead links three times over — all of them invisible.
+            if (!a.getClientRects || a.getClientRects().length === 0) return;
+            if (a.closest('[hidden]') || a.closest('[aria-hidden="true"]')) return;
+            var u;
+            try { u = new URL(a.href || href, location.href); } catch (e) { return; }
+            if (u.origin !== location.origin) { seen.__external = (seen.__external || 0) + 1; return; }
+            seen[u.pathname + u.search] = 1;
+        });
+        return seen;
+    }
+
+    // Render a route in place and hand back the links the view now shows.
+    function linksOfView(route) {
+        return new Promise(function (resolve) {
+            try {
+                history.pushState({}, '', route);
+                window.dispatchEvent(new PopStateEvent('popstate', { state: history.state }));
+            } catch (e) { /* the view stays as it was */ }
+            setTimeout(function () { resolve(sameOriginLinks(document)); }, 2500);
+        });
+    }
+
+    function checkLinks() {
+        var out = { views: {}, checked: 0, external: 0, routes: 0, failed: [] };
+
+        function resolve(map) {
+            var hrefs = Object.keys(map);
+            out.external += map.__external || 0;
+            return hrefs.reduce(function (chain, href) {
+                return chain.then(function () {
+                    var path = href.split('?')[0];
+                    // The app's own verdict first: a link it deliberately opens in the browser
+                    // (/r.php, /dict, /docs, the mirrors) is not something this WebView has to serve.
+                    if (typeof window.dgIsExternalUrl === 'function' && window.dgIsExternalUrl(href)) {
+                        out.external++;
+                        return;
+                    }
+                    if (LEGACY_ROUTE.test(path)) {
+                        out.failed.push({ href: href, why: 'legacy reader route — not in this app' });
+                        return;
+                    }
+                    if (/\/$/.test(path) && path !== '/') {
+                        out.failed.push({ href: href, why: 'folder link — this WebView shows the home page for it' });
+                        return;
+                    }
+                    if (!FILE_EXT.test(path)) {
+                        // A route the SPA handles in place: no document load, nothing to fetch.
+                        out.routes++;
+                        return;
+                    }
+                    out.checked++;
+                    return fetch(href, { cache: 'no-store' }).then(function (r) {
+                        if (r.status !== 200) out.failed.push({ href: href, why: 'the device cannot load it (' + r.status + ')' });
+                    }).catch(function (e) {
+                        out.failed.push({ href: href, why: 'fetch threw: ' + e.message });
+                    });
+                });
+            }, Promise.resolve());
+        }
+
+        return LINK_VIEWS.reduce(function (chain, route) {
+            return chain.then(function () {
+                return linksOfView(route).then(function (map) {
+                    out.views[route] = Object.keys(map).length;
+                    return resolve(map);
+                });
+            });
+        }, Promise.resolve()).then(function () {
+            return STATIC_PAGES.reduce(function (chain, page) {
+                return chain.then(function () {
+                    return fetch(page, { cache: 'no-store' }).then(function (r) {
+                        if (r.status !== 200) {
+                            out.failed.push({ href: page, why: 'page does not load (' + r.status + ')' });
+                            return null;
+                        }
+                        return r.text();
+                    }).then(function (html) {
+                        if (!html) return;
+                        var doc = new DOMParser().parseFromString(html, 'text/html');
+                        var map = sameOriginLinks(doc);
+                        out.views[page] = Object.keys(map).length;
+                        return resolve(map);
+                    });
+                });
+            }, Promise.resolve());
+        }).then(function () { return out; });
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // The functionality that has to work, checked as PAGES WITH CONTENT.
+    //
+    // A 200 is not enough on this platform: a path the app cannot serve is answered with index.html,
+    // which is also a 200 — the failure mode that once put a History link into a search box. So each
+    // page is checked for a marker only that page carries, grouped by the area the owner named:
+    // multi-tool, search, reader, dictionary, TTS, cloud and Google sign-in.
+    //
+    // search and reader are covered by the eight request cases above (they answer from the local
+    // database); what is left is everything that ships as a file of its own.
+    // ---------------------------------------------------------------------------------------
+    var PAGE_CHECKS = [
+        // Tools / multi-tool. The multi-tool itself is deliberately NOT bundled (owner: the APK
+        // should not carry it) — native-bridge opens it in the device's browser, which the routing
+        // checks cover. These are the ones that must open inside the app.
+        { url: '/assets/lbl.html', title: 'Построчные Переводы', area: 'tools' },
+        { url: '/assets/listdiff.html', title: 'Text Links Diff', area: 'tools' },
+        { url: '/assets/makelist.html', title: 'Make List from Text', area: 'tools' },
+        { url: '/assets/rr.html', title: 'Random Rule', area: 'tools' },
+        { url: '/assets/common/abbr.html', title: 'Edition Abbreviations', area: 'tools' },
+        { url: '/assets/materials/prat.html', title: 'Буддийский монашеский кодекс', area: 'materials' },
+        // Memorisation app, settings, and the two pages the cloud sign-in lives on.
+        { url: '/memo/index.html', title: 'Memorize', area: 'memo' },
+        { url: '/settings/index.html', title: 'Настройки', area: 'settings' },
+        { url: '/login/index.html', title: 'Cloud Sync', area: 'cloud' },
+        { url: '/ru/login/index.html', title: 'Cloud Sync', area: 'cloud' },
+        // The dictionary's own code (the DPD data itself is fetched from the site on purpose: ~24 MB
+        // and updated often) and the reader's voice player, which is what TTS runs through.
+        { url: '/assets/js/dict-mode-shared.js', body: 'dict', area: 'dictionary' },
+        { url: '/read/js/voice.js', body: 'speechSynthesis', area: 'tts' },
+    ];
+
+    function checkPages() {
+        var out = { checked: 0, byArea: {}, failed: [] };
+        return PAGE_CHECKS.reduce(function (chain, c) {
+            return chain.then(function () {
+                out.checked++;
+                return fetch(c.url, { cache: 'no-store' }).then(function (r) {
+                    if (r.status !== 200) {
+                        out.failed.push({ area: c.area, url: c.url, why: 'the device cannot load it (' + r.status + ')' });
+                        return null;
+                    }
+                    return r.text();
+                }).then(function (body) {
+                    if (body === null) return;
+                    out.byArea[c.area] = (out.byArea[c.area] || 0) + 1;
+                    var want = c.title || c.body;
+                    if (body.toLowerCase().indexOf(want.toLowerCase()) === -1) {
+                        out.failed.push({ area: c.area, url: c.url, why: 'served something else (no "' + want + '" in it)' });
+                    }
+                }).catch(function (e) {
+                    out.failed.push({ area: c.area, url: c.url, why: 'fetch threw: ' + e.message });
+                });
+            });
+        }, Promise.resolve()).then(function () { return out; });
+    }
+
+    // The dictionary's own code. build-assets deliberately does NOT bundle it (nor the ~24 MB DPD
+    // data behind it): the app fetches both from the site and caches them, so with no network the
+    // honest outcomes are "served from the cache" or "refused, and says why". Silence or a raw stack
+    // trace is the failure — a reader tapping a word must be told something they can act on.
+    function checkDictionaryCode() {
+        return fetch('/assets/js/standalone-dpd/pali-lookup-standalone.js', { cache: 'no-store' })
+            .then(function (r) { return r.status === 200 ? { ok: true, how: 'served' } : { ok: false, why: 'HTTP ' + r.status }; })
+            .catch(function (e) {
+                var msg = (e && e.message) || String(e);
+                var honest = /not downloaded|no network/i.test(msg);
+                return { ok: honest, how: 'refused: ' + msg, why: honest ? null : 'refused without saying why: ' + msg };
+            });
+    }
+
+    // The dictionary's mode table: a JSON file the settings UI reads, and the one dictionary asset
+    // whose absence is silent (the dropdown would simply be empty).
+    function checkDictionaryModes() {
+        return fetch('/nodejs/res/dict-modes.json', { cache: 'no-store' })
+            .then(function (r) {
+                if (r.status !== 200) return { ok: false, why: 'dict-modes.json: ' + r.status };
+                return r.json().then(function (data) {
+                    var keys = Object.keys(data || {});
+                    return { ok: keys.length > 1, keys: keys.length, why: keys.length > 1 ? null : 'the mode table is empty' };
+                });
+            })
+            .catch(function (e) { return { ok: false, why: 'dict-modes.json: ' + e.message }; });
+    }
+
+    // Google sign-in, client side: the URL the system browser is sent to. The shape is the contract
+    // with dg-node's app-google.html (a one-time state it validates, the package it compares, the
+    // language, and the platform that decides whether the token returns through intent:// or
+    // dhammagift://). test/login-handoff.test.js checks the other half — what that page sends back.
+    function checkSignInUrl() {
+        if (typeof window.dgSignInUrl !== 'function') return { ok: false, why: 'no sign-in URL builder in the page' };
+        var url = window.dgSignInUrl();
+        var ok = /\/login\/app-google\.html\?state=[a-f0-9]{16,64}&pkg=[^&]+&lang=(ru|en)&plat=[a-z]+$/.test(url);
+        return { ok: ok, url: url, why: ok ? null : 'unexpected sign-in URL shape' };
+    }
+
     function report$write() {
         // Serialised and remembered before anything else: the plugin branch below returns early in a
         // plain browser, and a later load of this page (the deep-link watcher) merges whatever is
@@ -366,6 +587,25 @@
         })
         .then(function () {
             return probeDownloadPlugin().then(function (r) { report.downloadPlugin = r; });
+        })
+        .then(function () {
+            return checkLinks().then(function (r) { report.linkCheck = r; });
+        })
+        .then(function () {
+            return checkPages().then(function (r) { report.pageChecks = r; });
+        })
+        .then(function () {
+            report.dictionaryModes = checkDictionaryModes();
+            report.signInUrl = checkSignInUrl();
+            report.dictionaryCode = checkDictionaryCode();
+            return report.dictionaryModes;
+        })
+        .then(function (modes) {
+            report.dictionaryModes = modes;
+            return report.dictionaryCode;
+        })
+        .then(function (code) {
+            report.dictionaryCode = code;
         })
         .then(function () {
             report.viewport = probeViewport();

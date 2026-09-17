@@ -46,6 +46,28 @@ function judge(report) {
         console.log(`viewport          inner ${v.innerWidth}x${v.innerHeight} of screen ${v.screenWidth}x${v.screenHeight}, visual offsetTop ${v.visualOffsetTop}`);
     }
 
+    if (report.linkCheck) {
+        const l = report.linkCheck;
+        console.log(`--- links, resolved inside the WebView ---`);
+        if (l.views) console.log(`views crawled ${JSON.stringify(l.views)}`);
+        if (l.pageStatus) console.log(`pages ${JSON.stringify(l.pageStatus)}`);
+        console.log(`checked ${l.checked} same-origin links, ${l.external} external (opened by the device browser), ${l.failed.length} failed`);
+        for (const f of l.failed.slice(0, 12)) console.log(`  FAIL ${f.href} — ${f.why}`);
+        if (l.spaFallbacks && l.spaFallbacks.length) {
+            console.log(`  routes served as the SPA shell (expected): ${l.spaFallbacks.slice(0, 8).join(', ')}${l.spaFallbacks.length > 8 ? ', …' : ''}`);
+        }
+    }
+
+    if (report.pageChecks) {
+        const p = report.pageChecks;
+        console.log(`--- mandatory functionality, page by page ---`);
+        console.log(`areas ${JSON.stringify(p.byArea)}`);
+        for (const f of p.failed) console.log(`  FAIL [${f.area}] ${f.url} — ${f.why}`);
+        if (report.dictionaryModes) console.log(`dictionary modes  ${report.dictionaryModes.ok ? 'ok (' + report.dictionaryModes.keys + ' keys)' : 'FAIL — ' + report.dictionaryModes.why}`);
+        if (report.dictionaryCode) console.log(`dictionary code   ${report.dictionaryCode.ok ? 'ok — ' + report.dictionaryCode.how : 'FAIL — ' + report.dictionaryCode.why}`);
+        if (report.signInUrl) console.log(`sign-in URL       ${report.signInUrl.ok ? 'ok' : 'FAIL — ' + report.signInUrl.why}${report.signInUrl.url ? '\n                  ' + report.signInUrl.url : ''}`);
+    }
+
     console.log('--- answers, asked from inside the app ---');
     let failed = 0;
     for (const c of report.cases || []) {
@@ -61,6 +83,15 @@ function judge(report) {
     if (!report.libraryPresent) problems.push(`the library never opened${report.error ? ': ' + report.error : ''}`);
     if (!report.cases || report.cases.length === 0) problems.push('no case ran');
     if (failed) problems.push(`${failed} case(s) answered wrongly`);
+    if (report.pageChecks && report.pageChecks.failed.length) {
+        problems.push(`${report.pageChecks.failed.length} page(s) of the mandatory functionality do not open in the app`);
+    }
+    if (report.dictionaryModes && !report.dictionaryModes.ok) problems.push('the dictionary mode table is missing: ' + report.dictionaryModes.why);
+    if (report.dictionaryCode && !report.dictionaryCode.ok) problems.push('the dictionary code cannot be loaded or refuses silently: ' + report.dictionaryCode.why);
+    if (report.signInUrl && !report.signInUrl.ok) problems.push('the Google sign-in URL is wrong: ' + report.signInUrl.why);
+    if (report.linkCheck && report.linkCheck.failed.length) {
+        problems.push(`${report.linkCheck.failed.length} link(s) the device cannot serve (the reader would get the home page)`);
+    }
     // Speech is informational (it decides whether a TTS plugin is ever needed). The progress plugin
     // is not: it ships in the app and is what keeps the screen awake during the download.
     if (report.progressPlugin && report.progressPlugin.present === false && report.progressPlugin.capacitor) {

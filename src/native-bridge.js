@@ -697,6 +697,11 @@
     function isExternal(url) {
         return onlineUrlFor(url) !== null;
     }
+    // Reachable from a test: whether a link leaves this WebView (the browser, or the site) is the
+    // app's own decision — NOT_BUNDLED_RE plus the baked site-only list — and a link checker that
+    // re-implements it would either duplicate the rule or, worse, call a correctly-routed link
+    // broken (its first version reported /r.php, which this predicate sends to the site on purpose).
+    window.dgIsExternalUrl = isExternal;
 
     // mirror-link.js (public/overrides/js/mirror-link.js) already resolves 4nt/TBW/Th.ru/Th.su
     // etc. to the right URL (local mirror vs. online fallback — this app never bundles the local
@@ -905,6 +910,23 @@
         var origin = window.DG_ONLINE_ORIGIN || 'https://dhamma.gift';
         var Plugins = (window.Capacitor && window.Capacitor.Plugins) || {};
 
+        // The URL the system browser is sent to, built in one place and reachable from a test:
+        // whether the handoff is right (a one-time state, the package the page validates, the
+        // language, and the platform that decides how the token comes back) is a contract with a page
+        // on the site, and a contract nobody can call is a contract nobody checks.
+        function signInUrl(state, pkg) {
+            var ru = /^\/ru\//.test(location.pathname) ||
+                (localStorage.getItem('dhammaLanguage') || localStorage.getItem('siteLanguage') || 'en') === 'ru';
+            // &plat: the page must return through intent:// on Android and dhammagift:// on iOS, and
+            // only the app knows which it is — a user-agent guess would be a second thing to keep
+            // correct on every iOS release.
+            var plat = (window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform()) || 'web';
+            return origin + '/login/app-google.html?state=' + state +
+                '&pkg=' + encodeURIComponent(pkg || 'gift.dhamma.mobile') + '&lang=' + (ru ? 'ru' : 'en') +
+                '&plat=' + encodeURIComponent(plat);
+        }
+        window.dgSignInUrl = function (state, pkg) { return signInUrl(state || 'a1b2c3d4e5f60718293a4b5c6d7e8f90', pkg); };
+
         function start() {
             var bytes = new Uint8Array(16);
             crypto.getRandomValues(bytes);
@@ -912,17 +934,9 @@
             try {
                 localStorage.setItem(KEY, JSON.stringify({ state: state, overwrite: window.pendingOverwrite === true, at: Date.now() }));
             } catch (e) { /* no storage: the state check on return fails closed */ }
-            var ru = /^\/ru\//.test(location.pathname) ||
-                (localStorage.getItem('dhammaLanguage') || localStorage.getItem('siteLanguage') || 'en') === 'ru';
             var info = Plugins.App && Plugins.App.getInfo ? Plugins.App.getInfo() : Promise.resolve({});
             return info.catch(function () { return {}; }).then(function (i) {
-                // &plat: the page must return through intent:// on Android and dhammagift:// on iOS,
-                // and only the app knows which it is — a user-agent guess would be a second thing to
-                // keep correct on every iOS release.
-                var plat = (window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform()) || 'web';
-                openExternal(origin + '/login/app-google.html?state=' + state +
-                    '&pkg=' + encodeURIComponent(i.id || 'gift.dhamma.mobile') + '&lang=' + (ru ? 'ru' : 'en') +
-                    '&plat=' + encodeURIComponent(plat));
+                openExternal(signInUrl(state, i.id));
             });
         }
         // settings.js defines its own syncLoginGoogle, and on some pages it loads after this file.
