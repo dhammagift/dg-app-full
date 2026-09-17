@@ -753,6 +753,20 @@ jobs:
           sudo xcode-select -s "$XCODE"
           xcodebuild -version
 
+      # Apple's required-reason APIs have to be DECLARED in the app's own PrivacyInfo.xcprivacy:
+      # FileManager's size/timestamp/metadata reads, UserDefaults, system boot time, disk space and
+      # active keyboards. This app avoids them instead — DgDownloadPlugin lists file NAMES only — so
+      # there is no manifest to keep in step with anything, and this check is what keeps that true.
+      # The day one of them appears, the build names the category to declare (FileTimestamp reason
+      # C617.1 for app-container files) instead of leaving App Store upload to discover it.
+      - name: Check for Apple required-reason APIs in our own Swift
+        run: |
+          if grep -nE "attributesOfItem|contentModificationDateKey|creationDateKey|fileModificationDate|resourceValues\(forKeys|UserDefaults\.standard|systemUptime|mach_absolute_time|volumeAvailableCapacity|\bstatfs?\(" ios/App/App/*.swift; then
+            echo "::error::a required-reason API is used in our own Swift — either declare it in a PrivacyInfo.xcprivacy or stop using it"
+            exit 1
+          fi
+          echo "no required-reason APIs in our own Swift"
+
       - name: Sync Capacitor into ios/
         run: npx cap sync ios
 

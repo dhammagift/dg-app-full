@@ -71,7 +71,10 @@
         if (!D || typeof D.start !== 'function' || typeof D.existing !== 'function') return Promise.resolve(false);
 
         function adopt(file) {
-            var base = file && file.bytes ? localBaseFor(file.path) : null;
+            // A non-empty path, not a size: the plugin deliberately does not read file metadata (see
+            // DgDownloadPlugin.swift — it is a required-reason API and would drag a privacy manifest
+            // in behind it), and the byte counts arrive through the download's progress events.
+            var base = file && file.path ? localBaseFor(file.path) : null;
             if (!base) return false;
             window.dgPlatform.distBase = base;
             return true;

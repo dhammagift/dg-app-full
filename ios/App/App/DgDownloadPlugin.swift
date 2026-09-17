@@ -9,8 +9,13 @@ import Capacitor
 // foreground service (DgDownloadService); iOS's answer is a background URLSession, which the system
 // keeps running, and relaunches the app for when it finishes.
 //
-//   start({url})  -> {path, bytes} once the archive is on disk; "progress" events {loaded, total}
-//   existing()    -> {path, bytes} or {path: null} if nothing was downloaded yet
+//   start({url})  -> {path} once the archive is on disk; "progress" events {loaded, total}
+//   existing()    -> {path} or {path: null} if nothing was downloaded yet
+//
+// Deliberately no file size in either answer: FileManager's size/metadata reads are Apple's
+// required-reason FileTimestamp APIs, and a plugin that does not use them needs no privacy manifest
+// of its own (the ones Capacitor ships cover Capacitor). If a size is ever genuinely needed, this is
+// the place to add the manifest with reason C617.1 — not to read it silently.
 //   cancel()      -> stops the transfer; the partial file is discarded (the caller can start again)
 //
 // The file lands in Application Support, NOT Caches: Caches can be purged under storage pressure,
@@ -71,14 +76,19 @@ public class DgDownloadPlugin: CAPPlugin, CAPBridgedPlugin, URLSessionDownloadDe
 
     @objc func existing(_ call: CAPPluginCall) {
         do {
+            // Names only, deliberately: asking FileManager for a file's SIZE or metadata puts this
+            // app in Apple's NSPrivacyAccessedAPICategoryFileTimestamp, which then requires a
+            // PrivacyInfo.xcprivacy declaring a reason (C617.1 — "size or metadata for files in the
+            // app container"). The size is not needed here: a non-empty path is what "an archive is
+            // on disk" means, the page gets real byte counts from the download's progress events, and
+            // nothing else reads a size.
             let dir = try libraryDir()
-            let files = try FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: [.fileSizeKey])
-            guard let file = files.first else {
-                call.resolve(["path": NSNull(), "bytes": 0])
+            let names = try FileManager.default.contentsOfDirectory(atPath: dir.path)
+            guard let name = names.first else {
+                call.resolve(["path": NSNull()])
                 return
             }
-            let size = (try? file.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
-            call.resolve(["path": file.path, "bytes": size])
+            call.resolve(["path": dir.appendingPathComponent(name).path])
         } catch {
             call.reject("could not look for a downloaded archive: \(error.localizedDescription)")
         }
@@ -126,9 +136,9 @@ public class DgDownloadPlugin: CAPPlugin, CAPBridgedPlugin, URLSessionDownloadDe
             calls.forEach { $0.reject("download failed: \(error.localizedDescription)") }
             return
         }
-        let attrs = try? FileManager.default.attributesOfItem(atPath: path)
-        let size = (attrs?[.size] as? Int) ?? 0
-        calls.forEach { $0.resolve(["path": path, "bytes": size]) }
+        // No size: see existing() — reading it is a required-reason API, and the caller does not
+        // need it (the progress events carried the byte counts while the transfer ran).
+        calls.forEach { $0.resolve(["path": path]) }
     }
 
     // MARK: - URLSessionDownloadDelegate

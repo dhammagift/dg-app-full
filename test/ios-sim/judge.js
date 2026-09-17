@@ -32,7 +32,7 @@ function judge(report) {
         const pp = report.progressPlugin || {};
         console.log(`DgProgress        present=${pp.present} awake=${pp.awake}${pp.error ? ' error=' + pp.error : ''}`);
         const dp = report.downloadPlugin;
-        if (dp) console.log(`DgDownload        present=${dp.present} archive=${dp.bytes ? dp.bytes + ' bytes at ' + dp.path : 'none yet'}${dp.error ? ' error=' + dp.error : ''}`);
+        if (dp) console.log(`DgDownload        present=${dp.present} archive=${dp.found ? dp.path : 'none yet'}${dp.error ? ' error=' + dp.error : ''}`);
         const tp = report.ttsPlugin;
         if (tp) console.log(`DgTts             present=${tp.present} voices=${tp.voices} speak=${tp.speak}${tp.error ? ' error=' + tp.error : ''}${tp.sample ? ' [' + tp.sample.join(', ') + ']' : ''}`);
     }

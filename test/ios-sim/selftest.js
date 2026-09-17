@@ -233,7 +233,7 @@
             return Promise.resolve({ present: false, capacitor: !!window.Capacitor });
         }
         return Promise.resolve(p.existing())
-            .then(function (r) { return { present: true, path: r && r.path, bytes: (r && r.bytes) || 0 }; })
+            .then(function (r) { return { present: true, path: (r && r.path) || null, found: !!(r && r.path) }; })
             .catch(function (e) { return { present: true, error: e.message }; });
     }
 
