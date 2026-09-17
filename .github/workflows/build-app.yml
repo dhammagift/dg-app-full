@@ -719,3 +719,89 @@ jobs:
           path: ios/DerivedData/Build/Products/Debug-iphonesimulator/App.app
           retention-days: 14
           if-no-files-found: error
+
+  # ---------------------------------------------------------------------------------------------
+  # iOS: run the real app in a simulator and prove the offline data layer works THERE.
+  #
+  # This is the check that matters most and the one that needs the least: no Apple account, no
+  # certificate, no device, no server. The bundle is prepared so the fixture database sits inside the
+  # app itself (/mobile-data) and every internet fallback points at a dead port, so a 200 answer can
+  # only have come from the SQLite database opened in WKWebView through OPFS. Then CI reads the
+  # app's own JSON report out of its container and fails on a wrong answer.
+  #
+  # It also produces the light/dark x en/ru screenshots the owner reviews — the same requirement the
+  # web work is held to, on the platform where the WebView is a different engine.
+  ios-ui:
+    name: iOS simulator checks
+    needs: build
+    runs-on: macos-26
+    steps:
+      - name: Checkout this repo (the app)
+        uses: actions/checkout@v4
+
+      - name: Download the built web bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: www-${{ github.run_number }}
+          path: www
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.20.0'
+
+      - name: Install app dependencies
+        run: npm install --legacy-peer-deps --no-audit
+
+      - name: Select the newest Xcode 26
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)
+          echo "Using $XCODE"
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+          xcrun simctl list devices available | head -20
+
+      # The fixture is built from source (test/make-fixture-db.js needs no corpus and no dg.db):
+      # a small database in the real schema, with the texts the self-test asks about.
+      - name: Build the fixture database
+        run: node test/make-fixture-db.js test/fixture.db
+
+      - name: Turn www/ into a simulator test bundle
+        run: node test/ios-sim/prepare-www.js
+
+      - name: Sync Capacitor into ios/
+        run: npx cap sync ios
+
+      - name: Build for the iOS Simulator
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 17' \
+            -derivedDataPath ios/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            build 2>&1 | tee ios-ui-build.log | tail -30
+
+      - name: Run the app in the simulator and pull its report out
+        run: test/ios-sim/drive.sh --app ios/DerivedData/Build/Products/Debug-iphonesimulator/App.app --out .tmp/ios-ui
+
+      - name: Judge the report
+        run: node test/ios-sim/assert.js .tmp/ios-ui/selftest.json
+
+      # Always, not only on failure: the screenshots ARE the deliverable for the owner (light/dark x
+      # en/ru), and the report is what makes a red run diagnosable without admin rights on this repo.
+      - name: Upload the report, the screenshots and the logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dg-app-ios-ui-${{ github.run_number }}
+          path: |
+            .tmp/ios-ui/selftest.json
+            .tmp/ios-ui/*.png
+            .tmp/ios-ui/app-console.log
+            ios-ui-build.log
+          retention-days: 30
+          if-no-files-found: warn

@@ -16,6 +16,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { DatabaseSync } = require('node:sqlite');
 
 const OUT = process.argv[2] || path.join(__dirname, 'fixture.db');
@@ -146,7 +147,33 @@ function build() {
         translators: db.prepare("SELECT count(DISTINCT lang || '_' || translator) c FROM texts WHERE kind='translation'").get().c,
     };
     db.close();
-    console.log(`${OUT}: ${counts.suttas} suttas, ${counts.texts} text rows, ${counts.html} html rows, ${counts.translators} translators`);
+
+    // The meta table, exactly as build-search-db.js writes it for the real dg.db. Without it the
+    // offline layer rejects the database it just unpacked: public/offline/db-worker.js reads
+    // `SELECT key, value FROM meta` and refuses a file whose build_id is not the one the file was
+    // saved under ("incomplete download") — which is how a truncated download is caught, and why a
+    // fixture without meta can never be downloaded by the app, only opened from memory as
+    // core-parity.mjs does.
+    //
+    // build_id is the hash of the finished file, copied from the real builder: content in, id out, so
+    // the same corpus always names the same file and a device does not re-download it. It has to be
+    // computed before the meta rows are inserted or it would depend on itself; the bytes differ by
+    // those rows, and that is deliberate — the real builder does the same.
+    const buildId = crypto.createHash('sha256').update(fs.readFileSync(OUT)).digest('hex').slice(0, 16);
+    const meta = new DatabaseSync(OUT);
+    meta.exec('CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT) WITHOUT ROWID');
+    const insMeta = meta.prepare('INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)');
+    for (const [k, v] of [
+        ['schema_version', '1'],
+        ['build_id', buildId],
+        ['langs', 'ru,en'],
+        ['fts', 'trigram'],
+        ['source', path.basename(OUT)],
+        ['built_at', new Date().toISOString()],
+    ]) insMeta.run(k, v);
+    meta.close();
+
+    console.log(`${OUT}: ${counts.suttas} suttas, ${counts.texts} text rows, ${counts.html} html rows, ${counts.translators} translators, build ${buildId}`);
 }
 
 build();
