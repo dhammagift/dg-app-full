@@ -474,6 +474,19 @@ jobs:
           set -o pipefail
           node test/links.js 2>&1 | tee links-output.log
 
+      # The Google sign-in handoff page (dg-node's siteroot/login/app-google.html), driven for real
+      # with Firebase stubbed: after a popup sign-in it must return the ID token to the app, through
+      # intent:// on Android and dhammagift:// on iOS. Both the iOS form and the fact that Android's
+      # is unchanged are asserted — the page is shared with the shipped Android app, so a regression
+      # here breaks sign-in on phones this repository no longer builds.
+      - name: Check the Google sign-in handoff
+        env:
+          DG_PLAYWRIGHT: ${{ github.workspace }}/node_modules/playwright-core
+          PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
+        run: |
+          set -o pipefail
+          node test/login-handoff.test.js 2>&1 | tee login-handoff.log
+
       # The dhammagift:// handoff, on a real served bundle: /?_deepLink=<url> must land the SPA on a
       # page the contract promises, rendered from a database rather than merely changing the address.
       # This is the web half of the deep-link proof — Android's MainActivity builds exactly this URL,
@@ -515,6 +528,7 @@ jobs:
             links-output.log
             deep-links-output.log
             deep-links-webkit.log
+            login-handoff.log
           retention-days: 7
 
       - name: Sync Capacitor

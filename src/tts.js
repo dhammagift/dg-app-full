@@ -17,7 +17,8 @@
     // keeps its own implementation.
     var inApp = !!(window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() !== 'web');
     if (!inApp && window.speechSynthesis && (window.speechSynthesis.getVoices() || []).length) return;
-    window.__dgTtsShim = true; // the self-test reports which engine ended up speaking
+    // Marked on the object, not on a hopeful global: a readonly IDL attribute can swallow the
+    // assignment below, and then "the shim is installed" would be a claim nobody verified.
     var voices = [], pending = {}, seq = 0, listeners = [];
     // Both styles Web Speech callers use: utterance.onend = … (voice.js) and
     // utterance.addEventListener('start', …) (memo.js — "addEventListener is not a function" on Play).
@@ -43,7 +44,10 @@
     window.SpeechSynthesisUtterance.prototype.removeEventListener = function (type, f) {
         this._listeners[type] = (this._listeners[type] || []).filter(function (x) { return x !== f; });
     };
-    var synth = window.speechSynthesis = {
+    var synth = {
+        // The self-test reads this off the object the page actually got, so a shim that failed to
+        // install cannot report itself as installed.
+        __dgTtsPlugin: true,
         onvoiceschanged: null,
         getVoices: function () { return voices; },
         speak: function (u) {
@@ -60,6 +64,15 @@
         addEventListener: function (type, f) { if (type === 'voiceschanged') listeners.push(f); },
         removeEventListener: function (type, f) { listeners = listeners.filter(function (x) { return x !== f; }); },
     };
+    // NOT `window.speechSynthesis = synth`: in WKWebView speechSynthesis is a readonly IDL attribute,
+    // so that assignment is a silent no-op in sloppy mode and the player kept the native engine —
+    // which has voices and THROWS on speak() (measured: the shim "installed", speak still threw the
+    // native error). defineProperty replaces it whatever the attribute says.
+    try {
+        Object.defineProperty(window, 'speechSynthesis', { configurable: true, writable: true, value: synth });
+    } catch (e) {
+        window.speechSynthesis = synth;
+    }
     P.getVoices().then(function (r) {
         voices = (r && r.voices) || [];
         var ev = { type: 'voiceschanged' };

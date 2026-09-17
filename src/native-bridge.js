@@ -896,8 +896,13 @@
                 (localStorage.getItem('dhammaLanguage') || localStorage.getItem('siteLanguage') || 'en') === 'ru';
             var info = Plugins.App && Plugins.App.getInfo ? Plugins.App.getInfo() : Promise.resolve({});
             return info.catch(function () { return {}; }).then(function (i) {
+                // &plat: the page must return through intent:// on Android and dhammagift:// on iOS,
+                // and only the app knows which it is — a user-agent guess would be a second thing to
+                // keep correct on every iOS release.
+                var plat = (window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform()) || 'web';
                 openExternal(origin + '/login/app-google.html?state=' + state +
-                    '&pkg=' + encodeURIComponent(i.id || 'gift.dhamma.mobile') + '&lang=' + (ru ? 'ru' : 'en'));
+                    '&pkg=' + encodeURIComponent(i.id || 'gift.dhamma.mobile') + '&lang=' + (ru ? 'ru' : 'en') +
+                    '&plat=' + encodeURIComponent(plat));
             });
         }
         // settings.js defines its own syncLoginGoogle, and on some pages it loads after this file.
