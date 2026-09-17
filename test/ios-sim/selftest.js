@@ -346,6 +346,12 @@
         })
         .then(function () {
             report.viewport = probeViewport();
+            // Read at WRITE time, not at parse time: prepareArchive moves dgPlatform.distBase when
+            // the native downloader hands the archive over, so the value captured when this script
+            // loaded is the network base and says nothing about where the library actually came
+            // from. Run 130's report showed the dead origin next to a library that could only have
+            // been imported from the app's own storage — the numbers were right, the label was not.
+            report.distBase = (window.dgPlatform && window.dgPlatform.distBase) || report.distBase;
         })
         .then(function () {
             // Before answering, so a reload cannot make this page run the cases a second time.
