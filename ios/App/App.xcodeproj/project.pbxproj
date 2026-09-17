@@ -21,6 +21,7 @@
 		D60000062FE00000000000A6 /* DgProgressPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = D60000052FE00000000000A5 /* DgProgressPlugin.swift */; };
 		D60000082FE00000000000A8 /* DgTtsPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = D60000072FE00000000000A7 /* DgTtsPlugin.swift */; };
 		D600000A2FE00000000000AA /* DgDownloadPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = D60000092FE00000000000A9 /* DgDownloadPlugin.swift */; };
+		D60000222FE00000000000C2 /* DgShortcutsPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = D60000212FE00000000000C1 /* DgShortcutsPlugin.swift */; };
 		D60000122FE00000000000B2 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D60000112FE00000000000B1 /* ShareViewController.swift */; };
 		D600001B2FE00000000000BB /* ShareExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = D60000142FE00000000000B4 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
@@ -73,6 +74,7 @@
 		D60000052FE00000000000A5 /* DgProgressPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DgProgressPlugin.swift; sourceTree = "<group>"; };
 		D60000072FE00000000000A7 /* DgTtsPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DgTtsPlugin.swift; sourceTree = "<group>"; };
 		D60000092FE00000000000A9 /* DgDownloadPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DgDownloadPlugin.swift; sourceTree = "<group>"; };
+		D60000212FE00000000000C1 /* DgShortcutsPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DgShortcutsPlugin.swift; sourceTree = "<group>"; };
 		D60000112FE00000000000B1 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		D60000132FE00000000000B3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D60000142FE00000000000B4 /* ShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -126,6 +128,7 @@
 				D60000052FE00000000000A5 /* DgProgressPlugin.swift */,
 				D60000072FE00000000000A7 /* DgTtsPlugin.swift */,
 				D60000092FE00000000000A9 /* DgDownloadPlugin.swift */,
+				D60000212FE00000000000C1 /* DgShortcutsPlugin.swift */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
@@ -265,6 +268,7 @@
 				D60000062FE00000000000A6 /* DgProgressPlugin.swift in Sources */,
 				D60000082FE00000000000A8 /* DgTtsPlugin.swift in Sources */,
 				D600000A2FE00000000000AA /* DgDownloadPlugin.swift in Sources */,
+				D60000222FE00000000000C2 /* DgShortcutsPlugin.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

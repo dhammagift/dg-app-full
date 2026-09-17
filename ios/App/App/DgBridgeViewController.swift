@@ -13,6 +13,7 @@ import Capacitor
 //   DgProgressPlugin  the idle timer that keeps the screen awake while the library downloads
 //   DgTtsPlugin       the reader's voice (WKWebView's own speechSynthesis has no voices)
 //   DgDownloadPlugin  the library download, on a background URLSession
+//   DgShortcutsPlugin quick actions: the dynamic "recently read" list, and what a tap does
 //   DgSelfTestPlugin  debug builds only: the CI simulator run's way of getting results out
 //
 // Note for the next plugin: Capacitor 8's iOS CAPPlugin has no handleOnDestroy (Android's has), so a
@@ -31,6 +32,9 @@ class DgBridgeViewController: CAPBridgeViewController {
         // the WebView's own fetch dies when the app leaves the foreground, and this is the iOS
         // answer to Android's foreground service.
         bridge?.registerPluginInstance(DgDownloadPlugin())
+        // The Home Screen's long-press menu: the dynamic "recently read" items the page hands over,
+        // and the handler that makes a tap open its route (DgShortcutsPlugin.swift).
+        bridge?.registerPluginInstance(DgShortcutsPlugin())
 
         #if DEBUG
         // Debug builds only, and deliberately so: this plugin lets the page write a file into the

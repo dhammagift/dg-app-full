@@ -496,6 +496,32 @@
         return { ok: ok, url: url, why: ok ? null : 'unexpected sign-in URL shape' };
     }
 
+    // Dynamic quick actions. Two things are checkable without the Home Screen, which no simulator can
+    // show: that the list the page hands over comes back from the system unchanged (set/get round
+    // trip through UIApplication.shared.shortcutItems — that is the whole native API), and that a tap
+    // opens its route (the plugin posts the app's own deep link, so the app ends up on that page; the
+    // isDone branch below fires it once and the next load reports where it landed).
+    function checkShortcuts() {
+        var p = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.DgShortcuts;
+        if (!p || typeof p.set !== 'function' || typeof p.get !== 'function') {
+            return Promise.resolve({ present: false, capacitor: !!window.Capacitor });
+        }
+        var want = { id: 'selftest', label: 'Selftest text', route: '/dn22:2.2' };
+        return Promise.resolve(p.set({ items: [want] }))
+            .then(function () { return p.get(); })
+            .then(function (r) {
+                var items = (r && r.items) || [];
+                var first = items[0] || {};
+                return {
+                    present: true,
+                    count: items.length,
+                    ok: items.length === 1 && first.route === want.route && first.title === want.label,
+                    item: first
+                };
+            })
+            .catch(function (e) { return { present: true, error: e.message }; });
+    }
+
     function report$write() {
         // Serialised and remembered before anything else: the plugin branch below returns early in a
         // plain browser, and a later load of this page (the deep-link watcher) merges whatever is
@@ -549,6 +575,18 @@
     // a mapping that answered it with nothing look identical from here otherwise.
     // ---------------------------------------------------------------------------------------
     function reportCurrentPath() {
+        // A quick action tap, once: the plugin posts dhammagift://route/4as and the page cannot stay
+        // where it is. Guarded in sessionStorage so the load it causes does not fire it again — the
+        // deep link's own loop guard would also stop the second navigation, but a test should not lean
+        // on that to terminate.
+        try {
+            var p = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.DgShortcuts;
+            if (p && typeof p.open === 'function' && !sessionStorage.getItem('dg.selftest.shortcutTried')) {
+                sessionStorage.setItem('dg.selftest.shortcutTried', '1');
+                p.open({ route: '/4as' }).catch(function () { /* reported through deepLinksSeen */ });
+            }
+        } catch (e) { /* private mode: the tap path is then only covered in the report below */ }
+
         var received = [];
         try { received = JSON.parse(localStorage.getItem('dg.deeplink.seen') || '[]'); } catch (e) { /* private mode */ }
         rewriteReport({ runs: 2, currentPath: location.pathname + location.search, deepLinksSeen: received });
@@ -610,6 +648,9 @@
         })
         .then(function () {
             return checkPages().then(function (r) { report.pageChecks = r; });
+        })
+        .then(function () {
+            return checkShortcuts().then(function (r) { report.shortcuts = r; });
         })
         .then(function () {
             report.dictionaryModes = checkDictionaryModes();

@@ -31,6 +31,8 @@ function judge(report) {
         console.log(`speechSynthesis   api=${report.speech.api} voices=${report.speech.voices} speaks=${report.speech.speaks}`);
         const pp = report.progressPlugin || {};
         console.log(`DgProgress        present=${pp.present} awake=${pp.awake}${pp.error ? ' error=' + pp.error : ''}`);
+        const sc = report.shortcuts;
+        if (sc) console.log(`DgShortcuts       present=${sc.present} count=${sc.count} round-trip=${sc.ok}${sc.error ? ' error=' + sc.error : ''}${sc.item ? ' [' + sc.item.route + ']' : ''}`);
         const dp = report.downloadPlugin;
         if (dp) console.log(`DgDownload        present=${dp.present} archive=${dp.found ? dp.path : 'none yet'}${dp.error ? ' error=' + dp.error : ''}`);
         const tp = report.ttsPlugin;
@@ -94,6 +96,12 @@ function judge(report) {
     }
     // Speech is informational (it decides whether a TTS plugin is ever needed). The progress plugin
     // is not: it ships in the app and is what keeps the screen awake during the download.
+    if (report.shortcuts && report.shortcuts.present && report.shortcuts.ok === false) {
+        problems.push('the dynamic quick actions did not come back from the system as they were set: ' + JSON.stringify(report.shortcuts.item));
+    }
+    if (report.shortcuts && report.shortcuts.present === false && report.shortcuts.capacitor) {
+        problems.push('the DgShortcuts plugin is not registered (no "recently read" quick actions)');
+    }
     if (report.progressPlugin && report.progressPlugin.present === false && report.progressPlugin.capacitor) {
         problems.push('the native DgProgress plugin is not registered (screen will lock mid-download)');
     }
