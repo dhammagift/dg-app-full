@@ -345,6 +345,21 @@ jobs:
           # gets as -PdgVersionCode below (see build-assets.js's writeAppVersion).
           DG_VERSION_CODE: ${{ github.run_number }}
 
+      # The iOS job (bottom of this file) builds and tests the SAME bundle on a macOS runner. It
+      # must not re-run this whole pipeline — the expensive part is dg-node's dg.db and the
+      # dg-fastify boot, neither of which iOS needs (the app downloads dg.db at runtime, and the
+      # simulator test uses the small fixture). So the bundle is passed across as an artifact, the
+      # same bytes the Android APK is built from and the browser checks just ran against.
+      # Uploaded here, immediately after the build, so a later failing check still leaves the
+      # artifact for an ios-build run that is deliberately allowed to run on its result.
+      - name: Upload the built web bundle (for the iOS job)
+        uses: actions/upload-artifact@v4
+        with:
+          name: www-${{ github.run_number }}
+          path: www/
+          retention-days: 1
+          if-no-files-found: error
+
 
 
       # The checks that run against the BUILT page in a real browser. They belong here and not
@@ -605,3 +620,102 @@ jobs:
 
             Signing certificate SHA-256: `${{ steps.sig.outputs.cert }}`
           token: ${{ secrets.GITHUB_TOKEN }}
+
+  # ---------------------------------------------------------------------------------------------
+  # iOS: build the Capacitor project for the simulator on a macOS runner.
+  #
+  # A simulator build is the entire point of this job: it needs no Apple Developer account, no
+  # signing certificate and no device — exactly what is available right now. It is also the only
+  # check that the Swift side (plugins, Info.plist, storyboard, asset catalog) compiles at all:
+  # the Android job cannot see any of it, and a broken pbxproj or Info.plist stays invisible until
+  # somebody opens Xcode on a Mac.
+  #
+  # Why this runner and not macos-latest: Capacitor 8 requires Xcode 26.0+, and macos-15's DEFAULT
+  # Xcode is 16.4, which cannot build this project at all. macos-26 ships Xcode 26.x and the
+  # simulator runtimes iOS 26.x. Xcode is selected by glob (newest first) rather than by an exact
+  # path: the image's set changes between runner releases, and a hardcoded
+  # /Applications/Xcode_26.6.app would break the day the image moves on.
+  #
+  # The SPM template (Capacitor 8's default for `cap add ios`) means no CocoaPods and no Ruby step.
+  #
+  # Note the upload of the bundle in the `build` job above: this job re-uses the exact www/ the
+  # Android APK and the browser checks were built from, instead of re-running dg-node's dg.db
+  # pipeline, which iOS does not need (the app downloads dg.db itself at runtime).
+  ios-build:
+    name: iOS simulator build
+    needs: build
+    runs-on: macos-26
+    steps:
+      - name: Checkout this repo (the app)
+        uses: actions/checkout@v4
+
+      - name: Download the built web bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: www-${{ github.run_number }}
+          path: www
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.20.0'
+
+      - name: Install app dependencies
+        run: npm install --legacy-peer-deps --no-audit
+
+      - name: Select the newest Xcode 26
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)
+          echo "Using $XCODE"
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+
+      # SwiftPM fetches capacitor-swift-pm and each plugin package from GitHub on the first build,
+      # and Xcode compiles them all into DerivedData — several minutes on a cold runner. Keyed on
+      # the three files that decide which packages and versions are involved, so a plugin bump
+      # invalidates it and an ordinary source edit does not.
+      - name: Cache SwiftPM packages and build products
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/org.swift.swiftpm
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-ios-${{ hashFiles('ios/App/CapApp-SPM/Package.swift', 'ios/App/App.xcodeproj/project.pbxproj', 'package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-ios-
+
+      - name: Sync Capacitor into ios/
+        run: npx cap sync ios
+
+      - name: Build for the iOS Simulator
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath ios/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            build 2>&1 | tee ios-build.log | tail -30
+
+      # Job log downloads need admin rights on this repo, so an artifact is the only way to read a
+      # failed xcodebuild's output (same reason the e2e job does this).
+      - name: Upload the xcodebuild log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-log-${{ github.run_number }}
+          path: ios-build.log
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Upload the simulator .app
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dg-app-ios-simulator-${{ github.run_number }}
+          path: ios/DerivedData/Build/Products/Debug-iphonesimulator/App.app
+          retention-days: 14
+          if-no-files-found: error

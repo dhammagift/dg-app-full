@@ -1,5 +1,8 @@
 {
   "appId": "gift.dhamma.mobile",
   "appName": "Dhamma.gift",
-  "webDir": "www"
+  "webDir": "www",
+  "ios": {
+    "backgroundColor": "#2E3E50"
+  }
 }

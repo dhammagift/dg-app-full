@@ -64,3 +64,43 @@ for density, px in FOREGROUND_DENSITIES.items():
     canvas.save(os.path.join(OUT, f'mipmap-{density}', 'ic_launcher_foreground.png'))
 
 print(f'Generated {len(LEGACY_DENSITIES)} legacy + {len(FOREGROUND_DENSITIES)} adaptive-foreground icon(s) from {SRC}.')
+
+
+# ---------------------------------------------------------------------------------------------
+# iOS (Capacitor's ios/App/App/Assets.xcassets)
+# ---------------------------------------------------------------------------------------------
+# Two assets, both from the same glyph and the same brand colour:
+#   AppIcon.appiconset/AppIcon-512@2x.png  1024x1024, the single "universal" icon Xcode 14+ wants.
+#     Opaque RGB, no alpha channel: App Store validation rejects an app icon that has one
+#     (ITMS-90717), so the glyph is composited onto the background instead of left transparent.
+#   Splash.imageset/splash-2732x2732*.png  2732x2732 launch image, glyph centred. The template's
+#     Contents.json points all three scales at separate files, so all three get the same pixels
+#     (as Capacitor's own placeholder does) rather than inventing three different images.
+IOS_APP = os.path.join(os.path.dirname(__file__), 'ios', 'App', 'App')
+IOS_ASSETS = os.path.join(IOS_APP, 'Assets.xcassets')
+# The glyph covers about a third of the splash: this is a launch image behind a phone-status-bar
+# area, not a home-screen icon, and the Android splash uses the same restrained proportion.
+IOS_SPLASH_GLYPH_SCALE = 0.32
+
+
+def _centered_glyph(canvas_px, scale, background):
+    canvas = Image.new('RGBA', (canvas_px, canvas_px), background)
+    w = round(canvas_px * scale)
+    h = round(w * glyph.height / glyph.width)
+    resized = glyph.resize((w, h), Image.LANCZOS)
+    canvas.paste(resized, ((canvas_px - w) // 2, (canvas_px - h) // 2), resized)
+    return canvas
+
+
+if os.path.isdir(IOS_ASSETS):
+    # App Store icon: 1024x1024, flattened to RGB (see above).
+    appicon = _centered_glyph(1024, LEGACY_LOGO_SCALE, BG_COLOR).convert('RGB')
+    appicon.save(os.path.join(IOS_ASSETS, 'AppIcon.appiconset', 'AppIcon-512@2x.png'))
+
+    splash = _centered_glyph(2732, IOS_SPLASH_GLYPH_SCALE, BG_COLOR).convert('RGB')
+    for name in ('splash-2732x2732.png', 'splash-2732x2732-1.png', 'splash-2732x2732-2.png'):
+        splash.save(os.path.join(IOS_ASSETS, 'Splash.imageset', name))
+
+    print('Generated iOS AppIcon (1024x1024) and 3 splash image(s).')
+else:
+    print(f'iOS asset catalog not found at {IOS_ASSETS} - skipped the iOS icons.')

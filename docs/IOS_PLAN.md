@@ -1,0 +1,122 @@
+# iOS-приложение: оценка, план и сроки
+
+Оценка на 2026-09-17 по факту кода. Состояние: `ios/` не существует, `npx cap add ios` не запускался.
+Связанные issue: #19 (iOS), #1 (автотесты приложения).
+Фактология с источниками: `docs/ios-appstore-research-2026-09.md`.
+
+## Коротко
+
+| Что | Срок |
+|---|---|
+| Офлайн-поиск работает в симуляторе iOS (ключевой риск снят) | 4-6 дней |
+| **Первая сборка в TestFlight, ставится на iPhone** | **~2 недели** |
+| Паритет с Android (шорткаты, TTS, share, deep links, логин) | ~4 недели |
+| **Публикация в App Store** (ревью + один круг правок) | **5-7 недель** |
+
+Трудозатрат: ≈ 28-34 дня одного разработчика-агента; при двух параллельных — 4-5 недель.
+«5-8 дней» из `dg-node/docs/OFFLINE_PWA_PLAN.md` (Этап 5) считали только обёртку и не учитывали
+фоновую загрузку, Share Extension, Universal Links, логин и CI-подпись.
+
+## 1. Что переиспользуется как есть
+
+| Слой | Готовность |
+|---|---|
+| `www/` — страница, ассеты, офлайн-слой, core-bundle из dg-node | 100%, платформо-независим |
+| Поиск/ридер/база: `sqlite-wasm` + **opfs-sahpool** в воркере | Архитектурно совместимо с iOS (см. §3) |
+| Плагины Capacitor (`browser`, `dialog`, `filesystem`, `network`, `share`, `status-bar`, `app`) | iOS-реализации есть, кода не требуют |
+| `test/e2e-browser.js`, `links.js`, `core-parity.mjs`, `test/app-ui/*` (dg-node) | Готовы; для iOS нужен прогон в WebKit/WKWebView |
+| Android-натив: 703 строки Java, 5 классов | **Не переиспользуется**, нужны аналоги на Swift |
+
+## 2. Три факта, которые определяют план
+
+1. **`opfs-sahpool` — правильный VFS, и он уже выбран.** Обычный `"opfs"`-VFS в WKWebView невозможен:
+   требует SharedArrayBuffer → COOP/COEP → cross-origin isolation, а `WKURLSchemeHandler` её не даёт
+   ([WebKit bug 314080](https://bugs.webkit.org/show_bug.cgi?id=314080), Capacitor
+   [#7813](https://github.com/ionic-team/capacitor/issues/7813) закрыт без решения). Наш
+   `db-worker.js:585` ставит `installOpfsSAHPoolVfs` — именно то, что не требует заголовков и
+   работает с iOS 16.4 ([SQLite docs](https://sqlite.org/wasm/doc/trunk/persistence.md)).
+2. **`capacitor://localhost` — secure context.** WebKit считает custom-схемы, зарегистрированные
+   через WKWebView, «potentially trustworthy», и это видно по `window.isSecureContext`
+   ([WebKit bug 297536](https://bugs.webkit.org/show_bug.cgi?id=297536)). Значит OPFS доступен.
+   `server.iosScheme: "https"` при этом не сработает — Capacitor сбрасывает схему, которую
+   обрабатывает сам WKWebView. Следствие: на iOS origin — `capacitor://localhost`, на Android —
+   `https://localhost`; в `src/native-bridge.js` и `src/platform.js` origin захардкожен и должен
+   стать платформо-зависимым.
+3. **JS-загрузка 216 МБ не выживает сворачивание.** В WKWebView исполнение JS останавливается при
+   уходе в фон ([CB-10657](https://issues.apache.org/jira/browse/CB-10657)). Значит загрузку надо
+   уводить в нативный background `URLSession`, а воркер должен импортировать уже скачанный файл.
+   Бонус: `.gz`, лежащий в Application Support, переживает вытеснение WebKit-хранилища — при потере
+   OPFS-базы импорт повторяется локально, без повторных 216 МБ.
+
+## 3. Работы
+
+| # | Блок | Дней |
+|---|---|---|
+| A | iOS-проект Capacitor (SPM), иконки/сплэш из `make-icons.py`, safe area, тема статус-бара, платформо-зависимый origin | 2 |
+| B | Данные: спайк OPFS/SAH в WKWebView; нативная фоновая загрузка (`URLSessionConfiguration.background`, докачка, resume-data); импорт `.gz` в OPFS; проверка целостности и самовосстановление после вытеснения | 6 |
+| C | Прогресс загрузки: на iOS нет определённого прогресса в шторке — in-app карточка + `isIdleTimerDisabled`, поверх — Live Activity (отдельный таргет) либо уведомление о завершении | 2 |
+| D | Шорткаты: 4 статических (`UIApplicationShortcutItems`) + динамические «недавно прочитанное» (лимит iOS — 4) | 1 |
+| E | TTS: `AVSpeechSynthesizer` + `AVAudioSession` с тем же API, что у `DgTtsPlugin` | 1,5 |
+| F | Share: внутрь — Share Extension + App Group; наружу — `@capacitor/share` | 2 |
+| G | Deep links: Universal Links (`apple-app-site-association` в dg-fastify.js + Associated Domains) и возврат Google-логина: `intent://` работает только на Android, нужен `dhammagift://auth` + `ASWebAuthenticationSession` | 2 |
+| H | Навигация назад: жест/история SPA, поведение при выходе | 1 |
+| I | CI на GitHub (см. §4) | 6 |
+| J | Проверка на живом iPhone по чек-листу `docs/APP_TEST_CHECKLIST.md` (TestFlight) | 3 |
+| K | Магазин: скриншоты, описание, приватность, export compliance, review notes, отправка и правки после ревью | 2-3 |
+
+Ограничения по версии: `opfs-sahpool` требует **iOS 16.4+** (Capacitor 8 разрешает 15.0) → deployment
+target ставим 16.4.
+
+## 4. Тесты на мощностях GitHub
+
+Публичный репозиторий → стандартные раннеры бесплатны, включая macOS; берём `macos-26` = arm64,
+Xcode 26.6 по умолчанию (Capacitor 8 требует Xcode 26+, а на `macos-15` дефолтный Xcode 16.4 сборку
+не соберёт). Ограничения: 6 ч на job, 5 параллельных macOS-job, лимит 5 ГБ места.
+
+| Job | Раннер | Что доказывает | Дней |
+|---|---|---|---|
+| `web` (есть, ~14 мин) | ubuntu | паритет 24 ответов + все ссылки в Chromium | 0 |
+| `web-webkit` (новый) | ubuntu | те же проверки в WebKit (`playwright install --with-deps webkit`) — Safari-only поломки ловятся без Mac. WebKitGTK ≠ WKWebView: сначала прогоняем то, что не зависит от OPFS (загрузка страницы, ошибки JS, ссылки), затем — матрицу на фикстурной базе | 1 |
+| `ios-sim-build` | macos-26 | `cap sync ios` + `xcodebuild build -sdk iphonesimulator` + unit-тесты Swift-плагинов (resume-data, парсинг маршрутов, чанкование текста для TTS, детект потери библиотеки) | 1,5 |
+| `ios-ui` (главный) | macos-26 | **XCUITest в симуляторе iPhone 17**: приложение поднимается с `-DG_E2E_BASE` на локальный сервер с фикстурной базой, `?selftest=1` прогоняет ту же матрицу, что `test/e2e-browser.js`, внутри настоящего WKWebView и пишет JSON в контейнер; XCUITest диффит его со снимками сайта. Плюс сценарии «база потеряна → переимпорт» и «нет сети → честная ошибка», плюс **скриншоты светлая/тёмная × ru/en как артефакт** (ответ на issue #1 и на требование «UI без скринов не принимается») | 2 |
+| `ios-release` | macos-26 | по тегу/вручную: `fastlane match(readonly)` + `build_app` + `upload_to_testflight` с App Store Connect **Team** API key (individual-ключи не умеют provisioning). На тегах — только реальные релизы (issue #17) | 1,5 |
+
+Итого CI: 6 дней. Полная база 216 МБ — отдельным nightly-прогоном, не на каждый PR.
+Симуляторы на раннере только iOS 26.x, поэтому минимальная iOS 16.4 автотестами не покрыта.
+Осторожно: у macos-arm64 раннеров бывает [незапуск симулятора](https://github.com/actions/runner-images/issues/12777) —
+пиним Xcode через `xcode-select` и делаем `simctl boot` заранее.
+
+## 5. Риски
+
+| # | Риск | Оценка | Что делаем |
+|---|---|---|---|
+| R1 | OPFS/SAH в WKWebView не заведётся на практике | низкая-средняя | спайк в первые дни (M1). Запасной путь — поднять локальный HTTP-сервер в приложении и `server.url=http://localhost:PORT` (секуре-контекст гарантирован): +2-3 дня |
+| R2 | Загрузка не доживает до конца (фон/блокировка экрана) | высокая | нативный background `URLSession` + докачка, `.gz` в Application Support как источник переимпорта |
+| R3 | Apple Developer Program ещё не оформлен ($99/год; для организации — D-U-N-S, 1-2 недели) | высокая | действие владельца в день 1, блокирует TestFlight/устройство/релиз |
+| R4 | Вытеснение 612 МБ распакованной базы системой | средняя | best-effort хранилище + `persist()` + переимпорт из `.gz`; проверка свободного места перед распаковкой |
+| R5 | Отказ ревью по 4.2 («обёртка сайта») | средняя | офлайн-данные, локальная база, Share Extension, шорткаты, TTS + точный review note |
+| R6 | Отказ из-за донатов | низкая | приложение бесплатное, ссылка на донат — только через Safari/SFSafariViewController; **никакого** донатного UI и Apple Pay внутри (3.2.1(vi)/3.2.2(iv)) |
+| R7 | Нет физического iPhone | средняя | TestFlight владельцу; часть багов (фон, блокировка) иначе не поймать |
+
+Требование Apple, которое уже почти выполнено: **4.2.3(ii)** — до первой загрузки обязателен экран с
+размером и явным согласием. Это уже есть в `src/platform.js` (`askConsent` + размер из манифеста);
+на iOS надо проверить текст, что приложение остаётся работоспособным до загрузки и в офлайне.
+
+## 6. Вехи
+
+Старт 18.09.2026:
+
+| Веха | День | Дата |
+|---|---|---|
+| M0. Apple Developer, bundle id, запись в App Store Connect, ASC Team key (владелец) | 0-3 | 18-22.09 |
+| M1. Офлайн-поиск работает в симуляторе iOS — решение по R1 | 4-6 | 24-25.09 |
+| M2. **Первая сборка в TestFlight на iPhone**; `ios-sim-build` и `ios-ui` зелёные | 13-15 | 07-09.10 |
+| M3. Паритет с Android: шорткаты, TTS, share, deep links, логин, прогресс | 24-28 | 21-24.10 |
+| M4. **App Store** (ревью, один круг правок) | 33-40 | 04-12.11 |
+
+## 7. Что нужно от владельца
+
+1. Apple Developer Program (Individual или Organization) — без него дальше M1 некуда.
+2. Решение по bundle id: `gift.dhamma.mobile` или отдельный.
+3. Живой iPhone для чек-листа.
+4. Решение по донатам: ссылка через Safari (рекомендуется) или без ссылки вообще.

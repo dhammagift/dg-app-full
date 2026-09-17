@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CAPACITOR_DEBUG</key>
+	<string>$(CAPACITOR_DEBUG)</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleDisplayName</key>
+        <string>Dhamma.gift</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<!-- Custom scheme the Google sign-in handoff comes back on. On Android the site returns
+	     through an intent:// URL naming the package (see login/app-google.html and
+	     MainActivity.handleIntent); iOS has no such mechanism, so the same page must answer
+	     dhammagift://auth?id_token=...&state=... and the app catches it here (AppDelegate). -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>gift.dhamma.mobile</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>dhammagift</string>
+			</array>
+		</dict>
+	</array>
+	<!-- The app fetches everything over HTTPS and stores no encrypted user data of its own, so
+	     this is the "no non-exempt encryption" declaration App Store Connect asks for on every
+	     upload. Without it every TestFlight build waits for the export-compliance questionnaire. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+    <false/>
+    <key>UISceneConfigurations</key>
+    <dict>
+      <key>UIWindowSceneSessionRoleApplication</key>
+      <array>
+        <dict>
+            <key>UISceneConfigurationName</key>
+            <string>Default Configuration</string>
+            <key>UISceneDelegateClassName</key>
+            <string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
+            <key>UISceneStoryboardFile</key>
+            <string>Main</string>
+        </dict>
+      </array>
+    </dict>
+	</dict>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<!-- arm64, not the template's armv7 (32-bit, dropped by iOS 11). -->
+		<string>arm64</string>
+	</array>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<true/>
+	<!-- The reader's voice player (AVSpeechSynthesizer, DgTtsPlugin.swift) must keep speaking
+	     with the screen locked, exactly like the Android side keeps it alive. No other use:
+	     the database download uses a background URLSession, which needs no background mode. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
+	<!-- Static Home Screen quick actions, long-press the icon. Same four, same order as
+	     android/app/src/main/res/xml/shortcuts.xml (owner's order: dg-twa's). Each one carries
+	     the SPA route the app must open; AppDelegate turns it into ?_nativeRoute=..., which the
+	     page rewrites into the visible URL before its own bootstrap reads window.location —
+	     the same mechanism the Android MainActivity.handleIntent uses for its "route" extra.
+	     iOS shows at most four, so dynamic "recently read" actions (DgShortcutsPlugin.swift)
+	     compete for the same slots; the static ones win because they are declared here.
+	     Titles are English-only for now: localizing them needs InfoPlist.strings variant
+	     groups inside the Xcode project, which is a separate change. -->
+	<key>UIApplicationShortcutItems</key>
+	<array>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>route</string>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeBookmark</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Table of Contents</string>
+			<key>UIApplicationShortcutItemUserInfo</key>
+			<dict>
+				<key>route</key>
+				<string>/toc</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>route</string>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeFavorite</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Favorites &amp; History</string>
+			<key>UIApplicationShortcutItemUserInfo</key>
+			<dict>
+				<key>route</key>
+				<string>/4as</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>route</string>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeCompose</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Memo</string>
+			<key>UIApplicationShortcutItemUserInfo</key>
+			<dict>
+				<key>route</key>
+				<string>/memo</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>route</string>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeSearch</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Dictionary</string>
+			<key>UIApplicationShortcutItemUserInfo</key>
+			<dict>
+				<key>route</key>
+				<string>/dict</string>
+			</dict>
+		</dict>
+	</array>
+</dict>
+</plist>
