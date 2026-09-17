@@ -34,6 +34,11 @@ function judge(report) {
         console.log(`deep links seen   ${report.deepLinksSeen.length ? report.deepLinksSeen.join(', ') : '(none)'}`);
     }
 
+    if (report.viewport) {
+        const v = report.viewport;
+        console.log(`viewport          inner ${v.innerWidth}x${v.innerHeight} of screen ${v.screenWidth}x${v.screenHeight}, visual offsetTop ${v.visualOffsetTop}`);
+    }
+
     console.log('--- answers, asked from inside the app ---');
     let failed = 0;
     for (const c of report.cases || []) {

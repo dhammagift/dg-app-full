@@ -3,6 +3,7 @@
   "appName": "Dhamma.gift",
   "webDir": "www",
   "ios": {
-    "backgroundColor": "#2E3E50"
+    "backgroundColor": "#2E3E50",
+    "contentInset": "always"
   }
 }

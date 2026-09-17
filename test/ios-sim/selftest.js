@@ -180,6 +180,22 @@
             .catch(function (e) { return { present: true, error: e.message }; });
     }
 
+    // Where the safe area actually landed. The screenshot shows the truth, but a number says WHICH
+    // case it is: with the WebView inset (ios.contentInset = "always") the visual viewport starts
+    // below the status bar and these differ from the raw screen; with no inset they are equal and
+    // the page's own header is under the clock (the bug the first screenshots showed).
+    function probeViewport() {
+        var vv = window.visualViewport;
+        return {
+            innerHeight: window.innerHeight,
+            innerWidth: window.innerWidth,
+            screenHeight: window.screen ? window.screen.height : null,
+            screenWidth: window.screen ? window.screen.width : null,
+            visualOffsetTop: vv ? vv.offsetTop : null,
+            visualHeight: vv ? vv.height : null
+        };
+    }
+
     // The native voice, mirrored from Android's DgTtsPlugin. The WebView's own speechSynthesis is
     // what the probe above is for; this one asks the plugin the player will actually use, so a
     // missing or mute engine is a CI result rather than a silent reader.
@@ -305,6 +321,9 @@
         })
         .then(function () {
             return probeTtsPlugin().then(function (r) { report.ttsPlugin = r; });
+        })
+        .then(function () {
+            report.viewport = probeViewport();
         })
         .then(function () {
             // Before answering, so a reload cannot make this page run the cases a second time.
