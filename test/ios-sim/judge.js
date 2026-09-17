@@ -27,6 +27,8 @@ function judge(report) {
         console.log(`speechSynthesis   api=${report.speech.api} voices=${report.speech.voices} speaks=${report.speech.speaks}`);
         const pp = report.progressPlugin || {};
         console.log(`DgProgress        present=${pp.present} awake=${pp.awake}${pp.error ? ' error=' + pp.error : ''}`);
+        const dp = report.downloadPlugin;
+        if (dp) console.log(`DgDownload        present=${dp.present} archive=${dp.bytes ? dp.bytes + ' bytes at ' + dp.path : 'none yet'}${dp.error ? ' error=' + dp.error : ''}`);
         const tp = report.ttsPlugin;
         if (tp) console.log(`DgTts             present=${tp.present} voices=${tp.voices} speak=${tp.speak}${tp.error ? ' error=' + tp.error : ''}${tp.sample ? ' [' + tp.sample.join(', ') + ']' : ''}`);
     }
@@ -62,6 +64,9 @@ function judge(report) {
     }
     if (report.ttsPlugin && report.ttsPlugin.present === false && report.ttsPlugin.capacitor) {
         problems.push('the native DgTts plugin is not registered (the reader cannot speak)');
+    }
+    if (report.downloadPlugin && report.downloadPlugin.present === false && report.downloadPlugin.capacitor) {
+        problems.push('the native DgDownload plugin is not registered (the 216 MB download dies in the background)');
     }
     // In the app the plugin-backed shim is the only engine that speaks: the WebView's own throws.
     if (report.speech && report.speech.engine === 'native' && report.progressPlugin && report.progressPlugin.capacitor) {

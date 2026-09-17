@@ -223,6 +223,20 @@
         }).catch(function (e) { return { present: true, error: e.message }; });
     }
 
+    // The background-download plugin, asked the one harmless question it answers without a network:
+    // does it exist and can it create its background URLSession (load() would have thrown otherwise)?
+    // It also tells CI whether a previous run left an archive on disk — which is how the local-import
+    // path will be exercised without downloading 216 MB in a runner.
+    function probeDownloadPlugin() {
+        var p = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.DgDownload;
+        if (!p || typeof p.existing !== 'function') {
+            return Promise.resolve({ present: false, capacitor: !!window.Capacitor });
+        }
+        return Promise.resolve(p.existing())
+            .then(function (r) { return { present: true, path: r && r.path, bytes: (r && r.bytes) || 0 }; })
+            .catch(function (e) { return { present: true, error: e.message }; });
+    }
+
     function report$write() {
         // Serialised and remembered before anything else: the plugin branch below returns early in a
         // plain browser, and a later load of this page (the deep-link watcher) merges whatever is
@@ -326,6 +340,9 @@
         })
         .then(function () {
             return probeTtsPlugin().then(function (r) { report.ttsPlugin = r; });
+        })
+        .then(function () {
+            return probeDownloadPlugin().then(function (r) { report.downloadPlugin = r; });
         })
         .then(function () {
             report.viewport = probeViewport();
