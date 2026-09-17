@@ -15,6 +15,10 @@ import Capacitor
 class DgBridgeViewController: CAPBridgeViewController {
 
     override func capacitorDidLoad() {
+        // Ships in the app: it keeps the screen awake while the offline library downloads
+        // (DgProgressPlugin.swift), which is what stops iOS suspending the transfer mid-way.
+        bridge?.registerPluginInstance(DgProgressPlugin())
+
         #if DEBUG
         // Debug builds only, and deliberately so: this plugin lets the page write a file into the
         // app's Documents directory, which no shipped build may be able to do on a web page's

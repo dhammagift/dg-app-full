@@ -18,6 +18,7 @@
 		9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9582B6822FE993A50072D4E8 /* SceneDelegate.swift */; };
 		D60000022FE00000000000A2 /* DgBridgeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D60000012FE00000000000A1 /* DgBridgeViewController.swift */; };
 		D60000042FE00000000000A4 /* DgSelfTestPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = D60000032FE00000000000A3 /* DgSelfTestPlugin.swift */; };
+		D60000062FE00000000000A6 /* DgProgressPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = D60000052FE00000000000A5 /* DgProgressPlugin.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +34,7 @@
 		9582B6822FE993A50072D4E8 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		D60000012FE00000000000A1 /* DgBridgeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DgBridgeViewController.swift; sourceTree = "<group>"; };
 		D60000032FE00000000000A3 /* DgSelfTestPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DgSelfTestPlugin.swift; sourceTree = "<group>"; };
+		D60000052FE00000000000A5 /* DgProgressPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DgProgressPlugin.swift; sourceTree = "<group>"; };
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -71,6 +73,7 @@
 				9582B6822FE993A50072D4E8 /* SceneDelegate.swift */,
 				D60000012FE00000000000A1 /* DgBridgeViewController.swift */,
 				D60000032FE00000000000A3 /* DgSelfTestPlugin.swift */,
+				D60000052FE00000000000A5 /* DgProgressPlugin.swift */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
@@ -168,6 +171,7 @@
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
 				D60000022FE00000000000A2 /* DgBridgeViewController.swift in Sources */,
 				D60000042FE00000000000A4 /* DgSelfTestPlugin.swift in Sources */,
+				D60000062FE00000000000A6 /* DgProgressPlugin.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

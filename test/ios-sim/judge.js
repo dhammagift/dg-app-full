@@ -21,6 +21,17 @@ function judge(report) {
         console.log(`progress events   ${report.progress.length}, last ${JSON.stringify(last)}`);
     }
 
+    if (report.speech) {
+        console.log('--- speech and the native progress plugin ---');
+        console.log(`speechSynthesis   api=${report.speech.api} voices=${report.speech.voices} speaks=${report.speech.speaks}`);
+        const pp = report.progressPlugin || {};
+        console.log(`DgProgress        present=${pp.present} awake=${pp.awake}${pp.error ? ' error=' + pp.error : ''}`);
+    }
+
+    if (report.deepLinksSeen) {
+        console.log(`deep links seen   ${report.deepLinksSeen.length ? report.deepLinksSeen.join(', ') : '(none)'}`);
+    }
+
     console.log('--- answers, asked from inside the app ---');
     let failed = 0;
     for (const c of report.cases || []) {
@@ -36,6 +47,11 @@ function judge(report) {
     if (!report.libraryPresent) problems.push(`the library never opened${report.error ? ': ' + report.error : ''}`);
     if (!report.cases || report.cases.length === 0) problems.push('no case ran');
     if (failed) problems.push(`${failed} case(s) answered wrongly`);
+    // Speech is informational (it decides whether a TTS plugin is ever needed). The progress plugin
+    // is not: it ships in the app and is what keeps the screen awake during the download.
+    if (report.progressPlugin && report.progressPlugin.present === false && report.progressPlugin.capacitor) {
+        problems.push('the native DgProgress plugin is not registered (screen will lock mid-download)');
+    }
 
     if (problems.length) {
         console.error('\nRESULT: FAILED');

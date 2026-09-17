@@ -296,12 +296,30 @@
         if (target) location.replace(target);
     })();
 
+    var HANDLED_KEY = 'dg.deeplink.handled';
+
     (function followLiveDeepLinks() {
         var CapApp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
         if (!CapApp || typeof CapApp.addListener !== 'function' || !window.dgDeepLinkToLocalUrl) return;
         CapApp.addListener('appUrlOpen', function (event) {
+            // Remembered before anything else: the page the mapping opens is a NEW load, so this is
+            // the only place that sees the raw URL, and a test that cannot tell "never arrived" from
+            // "arrived and mapped to nothing" is a test nobody can act on.
+            try {
+                var seen = JSON.parse(localStorage.getItem('dg.deeplink.seen') || '[]');
+                seen.push((event && event.url) || '');
+                localStorage.setItem('dg.deeplink.seen', JSON.stringify(seen.slice(-10)));
+            } catch (e) { /* private mode */ }
             var target = window.dgDeepLinkToLocalUrl(event && event.url);
-            if (target) location.replace(target);
+            if (!target) return;
+            // Capacitor retains the event until a listener consumes it, so the page the mapping just
+            // opened is handed the SAME url again — navigating again would be a reload loop.
+            var stamp = ((event && event.url) || '') + '|' + target;
+            try {
+                if (sessionStorage.getItem(HANDLED_KEY) === stamp) return;
+                sessionStorage.setItem(HANDLED_KEY, stamp);
+            } catch (e) { /* private mode: worst case one extra navigation */ }
+            location.replace(target);
         });
     })();
 

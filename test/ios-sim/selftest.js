@@ -134,6 +134,49 @@
         });
     }
 
+    // Two questions the simulator can answer and a phone test would otherwise answer late:
+    //
+    //  * does this WebView speak on its own? Android's does not (no window.speechSynthesis in System
+    //    WebView), which is why the app carries DgTtsPlugin there. If WKWebView has working voices,
+    //    iOS needs no speech plugin at all — and this probe is what decides that, from CI, instead of
+    //    shipping a synthesizer nobody needed.
+    //  * does the native progress plugin answer? It is the idle-timer mirror that keeps the screen
+    //    awake during the download (DgProgressPlugin.swift); if it is not registered, that is worth
+    //    knowing before a 216 MB transfer dies on a locked phone.
+    function probeSpeech() {
+        var s = window.speechSynthesis;
+        var out = { api: !!s, voices: null, speaks: null };
+        if (!s) return Promise.resolve(out);
+        try { out.voices = (s.getVoices() || []).length; } catch (e) { out.voices = 'threw'; }
+        if (typeof SpeechSynthesisUtterance !== 'function') return Promise.resolve(out);
+        return new Promise(function (resolve) {
+            var done = false;
+            var u = new SpeechSynthesisUtterance('test');
+            function finish(value) { if (done) return; done = true; out.speaks = value; resolve(out); }
+            u.onstart = function () { finish('started'); };
+            u.onend = function () { finish('ended'); };
+            u.onerror = function (e) { finish('error:' + (e && e.error)); };
+            try { s.speak(u); } catch (e) { finish('threw:' + e.message); }
+            // No speaker in a simulator, and no user gesture to unlock audio: whether it starts is
+            // the question, not whether sound came out.
+            setTimeout(function () { finish('timeout'); }, 4000);
+        });
+    }
+
+    function probeProgressPlugin() {
+        var p = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.DgProgress;
+        // capacitor:false means a plain browser (the local Chromium pre-flight), where the plugin
+        // cannot exist and its absence says nothing. In the app, absence is a real failure.
+        if (!p || typeof p.update !== 'function') return Promise.resolve({ present: false, capacitor: !!window.Capacitor });
+        return Promise.resolve(p.update({ title: 'probe', text: 'probe', percent: 42 }))
+            .then(function (r) {
+                var result = { present: true, awake: !!(r && r.awake) };
+                return Promise.resolve(typeof p.clear === 'function' ? p.clear() : null)
+                    .then(function () { return result; }, function () { return result; });
+            })
+            .catch(function (e) { return { present: true, error: e.message }; });
+    }
+
     function report$write() {
         // Serialised and remembered before anything else: the plugin branch below returns early in a
         // plain browser, and a later load of this page (the deep-link watcher) merges whatever is
@@ -169,20 +212,16 @@
 
     // ---------------------------------------------------------------------------------------
     // Second and later loads: the run is done (see DONE_KEY), so this page exists only to report
-    // where the app ends up. That is how the deep-link check works — CI opens dhammagift://... with
-    // `simctl openurl`, and the only way to see the result from outside the WebView is for the page
-    // to write down its own path.
+    // where the app ended up, immediately and unconditionally. That is how the deep-link check
+    // works: CI opens dhammagift://... with `simctl openurl`, the app navigates (a real page load,
+    // which destroys any polling watcher before it could report), and the fresh load writes its own
+    // path out. Which URLs actually arrived is reported too — an app that never received the URL and
+    // a mapping that answered it with nothing look identical from here otherwise.
     // ---------------------------------------------------------------------------------------
-    function watchRoute() {
-        var last = location.pathname + location.search;
-        var seen = [];
-        setInterval(function () {
-            var now = location.pathname + location.search;
-            if (now === last) return;
-            last = now;
-            seen.push(now);
-            rewriteReport({ runs: 2, currentPath: now, routeHistory: seen });
-        }, 500);
+    function reportCurrentPath() {
+        var received = [];
+        try { received = JSON.parse(localStorage.getItem('dg.deeplink.seen') || '[]'); } catch (e) { /* private mode */ }
+        rewriteReport({ runs: 2, currentPath: location.pathname + location.search, deepLinksSeen: received });
     }
 
     function rewriteReport(extra) {
@@ -211,7 +250,7 @@
     // self-test ran again, navigated again, and the app spent the whole run reloading — which is
     // exactly how the first simulator screenshots came back showing a half-loaded home page.
     if (isDone()) {
-        watchRoute();
+        reportCurrentPath();
         return;
     }
 
@@ -221,6 +260,12 @@
             return CASES.reduce(function (chain, c) {
                 return chain.then(function () { return runCase(c); }).then(function (r) { report.cases.push(r); });
             }, Promise.resolve());
+        })
+        .then(function () {
+            return probeSpeech().then(function (r) { report.speech = r; });
+        })
+        .then(function () {
+            return probeProgressPlugin().then(function (r) { report.progressPlugin = r; });
         })
         .then(function () {
             // Before answering, so a reload cannot make this page run the cases a second time.
