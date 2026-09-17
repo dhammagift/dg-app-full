@@ -11,14 +11,10 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <!-- Issue #15: the strip behind the status bar is the site's dark navbar band, in both
-             themes; the strip behind the gesture bar is the page background and follows the theme
-             (see colors.xml / values-night / drawable/dg_window_background.xml). Light icons on
-             the dark band, never the system's light-mode default. -->
-        <item name="android:windowBackground">@drawable/dg_window_background</item>
+             themes (see colors.xml). Light icons on it, never the system's light-mode default. -->
+        <item name="android:windowBackground">@color/dg_navbar</item>
         <item name="android:statusBarColor">@color/dg_navbar</item>
         <item name="android:windowLightStatusBar">false</item>
-        <item name="android:navigationBarColor">@color/dg_page</item>
-        <item name="android:windowLightNavigationBar">@bool/dg_light_navigation_bar</item>
     </style>
 
     <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
@@ -26,14 +22,10 @@
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
         <!-- Issue #15: the strip behind the status bar is the site's dark navbar band, in both
-             themes; the strip behind the gesture bar is the page background and follows the theme
-             (see colors.xml / values-night / drawable/dg_window_background.xml). Light icons on
-             the dark band, never the system's light-mode default. -->
-        <item name="android:windowBackground">@drawable/dg_window_background</item>
+             themes (see colors.xml). Light icons on it, never the system's light-mode default. -->
+        <item name="android:windowBackground">@color/dg_navbar</item>
         <item name="android:statusBarColor">@color/dg_navbar</item>
         <item name="android:windowLightStatusBar">false</item>
-        <item name="android:navigationBarColor">@color/dg_page</item>
-        <item name="android:windowLightNavigationBar">@bool/dg_light_navigation_bar</item>
     </style>
 
     <!-- The launch screen. It used to be @drawable/splash — a PNG rendered on WHITE for every

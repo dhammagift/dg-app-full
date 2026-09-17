@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- Gesture pill / 3-button icons sit on the page background, not on the navbar band, so on a
-         light background they must be dark. values-night flips this. -->
-    <bool name="dg_light_navigation_bar">true</bool>
-</resources>
