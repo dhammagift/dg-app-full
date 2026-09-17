@@ -69,6 +69,14 @@ function judge(report) {
     if (report.ttsPlugin && report.ttsPlugin.present === false && report.ttsPlugin.capacitor) {
         problems.push('the native DgTts plugin is not registered (the reader cannot speak)');
     }
+    // The layer must ask for a screen wake lock while a transfer runs (dg-node's
+    // offline-status.js). Asserted only where the API exists: the code is written to do nothing at
+    // all without it, and a WebView that does not expose navigator.wakeLock is not a failure of ours
+    // — but where it does exist and nothing was requested, the transfer would stall on a sleeping
+    // screen, which is exactly the iPhone behaviour this was added for.
+    if (report.wakeLock && report.wakeLock.api && report.libraryPresent && !report.wakeLock.requests) {
+        problems.push('a download ran but the screen wake lock was never requested');
+    }
     if (report.downloadPlugin && report.downloadPlugin.present === false && report.downloadPlugin.capacitor) {
         problems.push('the native DgDownload plugin is not registered (the 216 MB download dies in the background)');
     }
