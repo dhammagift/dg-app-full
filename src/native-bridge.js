@@ -584,33 +584,6 @@
     // nothing for this file to switch — the old per-theme StatusBar calls repainted it white in
     // the light theme and set dark icons on it, both wrong for a band that never changes.
 
-    // ---------------------------------------------------------------------------------------
-    // Status-bar icon colour follows the page theme
-    // ---------------------------------------------------------------------------------------
-
-    // The strip itself is painted by the PAGE now (viewport-fit=cover + the safe-area padding in
-    // home.css), so there is no bar colour to set here — only the icons' contrast: light on the
-    // home screen's dark navbar band, dark on the reader's light band in the light theme. The
-    // page's theme is data-bs-theme on <html> (themeswitch.js), so nothing is duplicated.
-    (function followPageTheme() {
-        var StatusBar = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar;
-        if (!StatusBar) return;
-
-        function apply() {
-            var dark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
-            // Capacitor's Style.DARK means light content on a dark bar — the naming is inverted
-            // relative to the theme, which is why this reads backwards and is correct.
-            try { StatusBar.setStyle({ style: dark ? 'DARK' : 'LIGHT' }).catch(function () {}); } catch (e) { /* older plugin */ }
-        }
-
-        apply();
-        new MutationObserver(apply).observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['data-bs-theme'],
-        });
-        document.addEventListener('DOMContentLoaded', apply);
-    })();
-
     function openExternal(url) {
         var Browser = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
         // A Custom Tab only shows web pages. An app link (the lookup popup's dttp://, goldendict://,
