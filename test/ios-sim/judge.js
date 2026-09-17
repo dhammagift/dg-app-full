@@ -12,6 +12,10 @@ function judge(report) {
     console.log(`library origin    ${report.distBase}`);
     console.log(`online origin     ${report.onlineOrigin}  (deliberately dead: an answer below can only be local)`);
 
+    if (report.wakeLock) {
+        console.log(`screen wake lock  api=${report.wakeLock.api} requested=${report.wakeLock.requests} released=${report.wakeLock.releases}`);
+    }
+
     console.log('--- the offline library ---');
     console.log(`present           ${report.libraryPresent}`);
     console.log(`waited            ${report.waitedMs} ms`);

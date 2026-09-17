@@ -237,6 +237,27 @@
             .catch(function (e) { return { present: true, error: e.message }; });
     }
 
+    // The Screen Wake Lock the offline layer takes while a download runs (dg-node's
+    // offline-status.js). This spy has to be installed before the transfer starts — the self-test
+    // script loads at the end of the page and the download is asynchronous, so parse time is in
+    // time. What it can prove on a runner is that the code ASKS; that the screen then stays on is a
+    // device question (and the reason the owner's iPhone measurement matters).
+    function spyWakeLock() {
+        var wl = navigator.wakeLock;
+        var out = { api: !!(wl && typeof wl.request === 'function'), requests: 0, releases: 0 };
+        if (!out.api) return out;
+        var request = wl.request.bind(wl);
+        wl.request = function (type) {
+            out.requests++;
+            return request(type).then(function (lock) {
+                var release = lock.release.bind(lock);
+                lock.release = function () { out.releases++; return release(); };
+                return lock;
+            });
+        };
+        return out;
+    }
+
     function report$write() {
         // Serialised and remembered before anything else: the plugin branch below returns early in a
         // plain browser, and a later load of this page (the deep-link watcher) merges whatever is
@@ -325,6 +346,8 @@
         return;
     }
 
+    var wakeLockSpy = spyWakeLock();
+
     waitForLibrary()
         .then(function () {
             if (!report.libraryPresent) return;
@@ -352,6 +375,7 @@
             // from. Run 130's report showed the dead origin next to a library that could only have
             // been imported from the app's own storage — the numbers were right, the label was not.
             report.distBase = (window.dgPlatform && window.dgPlatform.distBase) || report.distBase;
+            report.wakeLock = wakeLockSpy;
         })
         .then(function () {
             // Before answering, so a reload cannot make this page run the cases a second time.
