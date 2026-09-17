@@ -115,7 +115,6 @@ public class DgTtsPlugin: CAPPlugin, CAPBridgedPlugin, AVSpeechSynthesizerDelega
         currentId = nil
     }
 
-    override public func handleOnDestroy() {
-        synth.stopSpeaking(at: .immediate)
-    }
+    // No teardown hook: Capacitor 8's iOS CAPPlugin has no handleOnDestroy (Android's has one), and
+    // the synthesizer dies with the plugin instance. A cancel is the only stop that matters.
 }

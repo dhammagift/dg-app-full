@@ -9,9 +9,14 @@ import Capacitor
 // happen before the page loads. capacitorDidLoad() is Capacitor's own hook for exactly that: the
 // bridge exists, the first navigation has not started.
 //
-// Today there is one such plugin — DgSelfTest, which the CI simulator run uses to get results out of
-// the WebView (see test/ios-sim/). The downloader, TTS, quick-action and progress plugins will
-// register here too, so this stays the single list of what native code this app adds.
+// What is registered here, and why:
+//   DgProgressPlugin  the idle timer that keeps the screen awake while the library downloads
+//   DgTtsPlugin       the reader's voice (WKWebView's own speechSynthesis has no voices)
+//   DgSelfTestPlugin  debug builds only: the CI simulator run's way of getting results out
+//
+// Note for the next plugin: Capacitor 8's iOS CAPPlugin has no handleOnDestroy (Android's has), so a
+// cleanup hook has to be a deinit — an @objc override of it fails the build with "does not override
+// any method from its superclass".
 class DgBridgeViewController: CAPBridgeViewController {
 
     override func capacitorDidLoad() {
