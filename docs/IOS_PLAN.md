@@ -205,6 +205,29 @@ Xcode 26.6 по умолчанию (Capacitor 8 требует Xcode 26+, а н�
 размером и явным согласием. Это уже есть в `src/platform.js` (`askConsent` + размер из манифеста);
 на iOS надо проверить текст, что приложение остаётся работоспособным до загрузки и в офлайне.
 
+## 6.5. Бесплатный Apple ID (личная команда Xcode) — что он даёт
+
+Бесплатный аккаунт позволяет собрать и поставить приложение **на свой iPhone**, профиль живёт **7
+дней**, и нужен **Mac с Xcode**. Он не даёт Associated Domains, App Groups, Push, iCloud, TestFlight и
+App Store.
+
+| Проверяется с бесплатным аккаунтом (Mac + iPhone) | Не проверяется |
+|---|---|
+| **фоновая докачка**: начать загрузку, заблокировать экран, разблокировать | **Universal Links** — нужна capability, её личная команда не подписывает |
+| лок экрана во время загрузки (`DgProgress`) | TestFlight и App Store — только платный аккаунт |
+| звук озвучки (`AVSpeechSynthesizer`) | подписанные сборки из CI — нужны ключи платного аккаунта |
+| попап словаря по тапу на слово (то, что не воспроизводится headless) | |
+| шторка «Поделиться» (расширение не использует App Group: payload идёт через схему) | |
+| шорткаты статические и динамические, схема `dhammagift://`, возврат Google-логина | |
+| офлайн-база в настоящем WKWebView, safe area, темы, языки | |
+
+Важная ловушка: личная команда **не может** подписать Associated Domains, поэтому текущий
+`App.entitlements` уронит сборку с «Personal development teams do not support the Associated Domains
+capability». Для такой сборки есть `ios/App/App/App-personal-team.entitlements` (тот же app без
+capability), переключается одним build setting:
+`CODE_SIGN_ENTITLEMENTS=App/App-personal-team.entitlements`. Теряется только перехват https-ссылок;
+схема, шара и возврат логина работают.
+
 ## 6. Вехи
 
 Старт 18.09.2026:
