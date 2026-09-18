@@ -322,6 +322,12 @@
         var CapApp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
         if (!CapApp || typeof CapApp.addListener !== 'function' || !window.dgDeepLinkToLocalUrl) return;
         CapApp.addListener('appUrlOpen', function (event) {
+            // An https link is a Universal Link (iOS) or a verified App Link (Android). Android's
+            // MainActivity has already turned that intent into a load of its own (its VIEW filter,
+            // MainActivity.handleIntent); acting on the same event here too would navigate twice to
+            // the same route. On iOS nothing else handles it, so this is where it must be acted on.
+            if (/^https?:/i.test((event && event.url) || '') &&
+                window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'android') return;
             // Remembered before anything else: the page the mapping opens is a NEW load, so this is
             // the only place that sees the raw URL, and a test that cannot tell "never arrived" from
             // "arrived and mapped to nothing" is a test nobody can act on.

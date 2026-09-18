@@ -18,6 +18,8 @@
 //   dhammagift://search?q=kacchapa&langs=ru explicit search; unknown query keys are ignored
 //   dhammagift://kacchapa                   anything else is a search for that text
 //   dhammagift://auth?id_token=&state=      Google sign-in return (the login page finishes it)
+//   https://dhamma.gift/mn1                 a Universal Link (iOS) or a verified App Link (Android):
+//                                           the path is the route, exactly as in the scheme form
 //
 // A canon id is "letters (and dashes) followed by a digit": dn22, mn1, sn56.11, thag1.1,
 // pli-tv-bu-vb-pj1. Anything without that shape is a search term — which is why the short SPA
@@ -34,6 +36,10 @@
     // rather than forwarded, so a shared link cannot smuggle arbitrary state into the SPA.
     var SEARCH_KEYS = ['q', 'langs', 'fast', 'exact', 'scope', 'lb', 'la'];
 
+    // The hosts whose links this app claims — the same six Android's autoVerify filter lists in
+    // AndroidManifest.xml, so a link cannot behave differently on the two platforms.
+    var SITE_HOSTS = /^(www\.|f\.|www\.f\.|find\.|www\.find\.)?dhamma\.gift$/i;
+
     function canonId(host) {
         return /^[a-z][a-z-]*\d/i.test(host);
     }
@@ -47,6 +53,19 @@
         } catch (e) {
             return null;
         }
+        // Universal Links arrive as ordinary site URLs — on iOS this event is the ONLY way one
+        // arrives, on Android MainActivity has already turned it into the same load (native-bridge
+        // ignores the event there so it cannot navigate twice). One mapping either way: the path IS
+        // the route, which is also what Android's intent filter pairs with.
+        if (url.protocol === 'https:' || url.protocol === 'http:') {
+            if (!SITE_HOSTS.test(url.hostname)) return null;
+            var sitePath = url.pathname + url.search + url.hash;
+            // The home page is not a route: nothing to rewrite, and an empty _nativeRoute would be
+            // refused by the page's own handoff anyway.
+            if (sitePath === '/' || sitePath === '') return null;
+            return '/?_nativeRoute=' + encodeURIComponent(sitePath);
+        }
+
         if (url.protocol !== 'dhammagift:') return null;
 
         var host = url.hostname.toLowerCase();

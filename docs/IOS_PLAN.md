@@ -51,6 +51,21 @@ GitHub Actions (последний — run 126, все три джобы):
    Потолок назван: iOS показывает максимум 4 быстрых действия, и четыре статических их занимают —
    сокращать статический набор или нет, это решение владельца, а не молчаливая правка плагина.
 
+5. **Universal Links подготовлены** (2026-09-17): `https://dhamma.gift/mn1` открывает приложение вместо
+   Safari — серверная половина сделана и проверяется в CI, активируется с аккаунтом.
+   * dg-node отдаёт `/.well-known/apple-app-site-association` (и корневой путь) как `application/json`
+     без редиректа — Apple иначе файл отвергает; содержимое в `configs/apple-app-site-association`, где
+     **осталось подставить Team ID** (сейчас плейсхолдер `TEAMID.`), как у `assetlinks.json` с
+     отпечатками;
+   * приложение объявляет `com.apple.developer.associated-domains` на те же шесть хостов, что Android
+     в `autoVerify`-фильтре, — чтобы ссылка вела себя одинаково на обеих платформах;
+   * маппинг: https-ссылка на наш хост превращается в тот же маршрут, что и `dhammagift://`
+     (`/?_nativeRoute=<путь>`), 7 новых случаев в контракте (31 всего). На Android событие
+     `appUrlOpen` для https игнорируется намеренно: MainActivity уже обработал intent, иначе была бы
+     двойная навигация.
+   Проверки: `curl` по роуту с проверкой Content-Type и структуры JSON — в job `build`; для подписанной
+   сборки нужно включить Associated Domains у App ID в аккаунте (плейсхолдер Team ID заменить).
+
 Про privacy manifest: **не нужен и не добавляется.** Apple требует `PrivacyInfo.xcprivacy`, если код
 приложения трогает required-reason API — а категория FileTimestamp покрывает не только отметки
 времени, но и **размер и метаданные** файлов ([коды причин](https://developer.apple.com/documentation/bundleresources/app-privacy-configuration/nsprivacyaccessedapitypes/nsprivacyaccessedapityperisons),

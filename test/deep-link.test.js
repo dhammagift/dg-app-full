@@ -30,7 +30,14 @@ const CASES = [
     ['auth: the sign-in return', 'dhammagift://auth?id_token=tok&state=abc123', '/login/index.html#dg_google=tok&state=abc123'],
     ['auth: the Russian login page', 'dhammagift://auth?id_token=tok&state=abc123&lang=ru', '/ru/login/index.html#dg_google=tok&state=abc123'],
     // Refusals. Each one would otherwise put the reader somewhere meaningless.
-    ['refuse: another app\'s scheme', 'https://dhamma.gift/mn1', null],
+    // Universal Links / verified App Links: the same mapping through an ordinary site URL.
+    ['universal link: a text path', 'https://dhamma.gift/mn1', '/?_nativeRoute=%2Fmn1'],
+    ['universal link: with a segment', 'https://dhamma.gift/dn22:2.2', '/?_nativeRoute=%2Fdn22%3A2.2'],
+    ['universal link: a subdomain', 'https://www.dhamma.gift/toc', '/?_nativeRoute=%2Ftoc'],
+    ['universal link: a search query', 'https://dhamma.gift/?q=kacchapa', '/?_nativeRoute=%2F%3Fq%3Dkacchapa'],
+    ['universal link: the home page is not a route', 'https://dhamma.gift/', null],
+    ['refuse: an https host we do not claim', 'https://example.com/mn1', null],
+    ['refuse: a lookalike host', 'https://dhamma.gift.example.com/mn1', null],
     ['refuse: no scheme at all', 'mn1', null],
     ['refuse: empty', '', null],
     ['refuse: auth without a token', 'dhammagift://auth?state=abc123', null],

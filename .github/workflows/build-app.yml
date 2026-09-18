@@ -417,6 +417,27 @@ jobs:
       - name: Capture the site's answers (parity reference)
         run: node test/capture.js --base=http://localhost:${{ env.DG_SERVER_PORT }} --out=test/snapshots/site
 
+      # Universal Links need this file served from the domain root, with no redirect and as
+      # application/json — Apple rejects a redirect or a wrong Content-Type, which is exactly what a
+      # generic static mount would produce. The Android counterpart (assetlinks.json) has its own
+      # route; this checks the iOS one while the server is still up.
+      - name: Check the Apple association file is served
+        run: |
+          set -o pipefail
+          CT=$(curl -sS -o /tmp/aasa.json -w '%{content_type}' "http://localhost:${{ env.DG_SERVER_PORT }}/.well-known/apple-app-site-association")
+          echo "content-type: $CT"
+          case "$CT" in application/json*) ;; *) echo "::error::iOS rejects a wrong Content-Type for the association file ($CT)"; exit 1;; esac
+          python3 - <<'EOF'
+          import json, sys
+          d = json.load(open('/tmp/aasa.json'))
+          ids = d['applinks']['details'][0]['appIDs']
+          if not ids or not ids[0].endswith('.gift.dhamma.mobile'):
+              sys.exit(f"::error::unexpected appIDs: {ids}")
+          print('appIDs:', ids)
+          if ids[0].startswith('TEAMID.'):
+              print('::warning::the team id is still the placeholder — fill configs/apple-app-site-association before the first signed build')
+          EOF
+
       # Only now: the page checks above compare the app against this server, and the TOC snapshot
       # came from it. Stopping it earlier left the checks with nothing to compare against.
       - name: Stop dg-fastify.js
@@ -922,6 +943,17 @@ jobs:
       - name: Judge the report
         run: node test/ios-sim/assert.js .tmp/ios-ui/selftest.json
 
+      # App Store screenshots have to come from a 6.9" display, and the run above is a 6.3" iPhone 17.
+      # The same flow on an iPhone 17 Pro Max produces the size Apple asks for — and, incidentally, a
+      # second device class proving the app behaves the same on a bigger screen. No Mac, no phone.
+      - name: Screenshots on a 6.9" display (App Store size)
+        run: |
+          test/ios-sim/drive.sh --app ios/DerivedData/Build/Products/Debug-iphonesimulator/App.app \
+            --out .tmp/ios-ui-max --library .tmp/ios-library --device "iPhone 17 Pro Max"
+
+      - name: Judge the report from the 6.9" run
+        run: node test/ios-sim/assert.js .tmp/ios-ui-max/selftest.json
+
       # No gate on the deep link here on purpose: iOS shows its own "Open in Dhamma.gift?" prompt for
       # a custom scheme opened from OUTSIDE the app (SpringBoard, and `simctl openurl` behaves like
       # that), and a headless simulator cannot tap it — the app never receives the URL. The self-test
@@ -940,6 +972,9 @@ jobs:
             .tmp/ios-ui/selftest.json
             .tmp/ios-ui/*.png
             .tmp/ios-ui/app-console.log
+            .tmp/ios-ui-max/selftest.json
+            .tmp/ios-ui-max/*.png
+            .tmp/ios-ui-max/app-console.log
             ios-ui-build.log
           retention-days: 30
           if-no-files-found: warn

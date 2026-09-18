@@ -16,6 +16,7 @@
 | `dhammagift://kacchapa` | всё, что не похоже на id канона — поиск по этому тексту |
 | `dhammagift://auth?id_token=…&state=…` | возврат Google-логина (страница логина внутри приложения) |
 | `dhammagift://search?q=…` | **Share Extension**: сюда приходит текст, которым с тобой поделились из другого приложения |
+| `https://dhamma.gift/<путь>` | Universal Link (iOS) / App Link (Android): тот же маршрут, что у схемы. Хосты: `dhamma.gift`, `www.`, `f.`, `www.f.`, `find.`, `www.find.` |
 
 Правило «похоже на id канона»: буквы (и дефисы), затем цифра — `dn22`, `mn1`, `sn56.11`,
 `thag1.1`, `pli-tv-bu-vb-pj1`. Всё остальное — поисковый запрос. Поэтому короткие маршруты
@@ -69,6 +70,11 @@ openurl`), система сначала показывает диалогом �
 | Контракт целиком (25 случаев, включая отказы) | `node test/deep-link.test.js` — без браузера и устройства, гоняется в CI на ubuntu |
 | Живой диплинк в приложении | `test/ios-sim/drive.sh`: `simctl openurl` → страница пишет свой путь в отчёт → `node test/ios-sim/assert-deeplink.js` |
 | Сборка Android с новым фильтром | CI, job `build` (assembleDebug/assembleRelease) |
+
+Серверная половина Universal Links: `dg-fastify.js` отдаёт `/.well-known/apple-app-site-association`
+(и корневой путь) как `application/json` без редиректа; сам файл —
+`configs/apple-app-site-association`, где **нужно подставить Team ID** вместо `TEAMID.`. Пока он там,
+iOS ссылки не перехватывает (это и есть та часть, что ждёт аккаунта).
 
 Ещё не проверено на устройстве вручную: поведение ссылки из чужого приложения и из браузера
 (Android — диалог «открыть в приложении», iOS — без диалога, схема зарегистрирована).
