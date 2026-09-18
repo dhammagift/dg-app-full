@@ -1104,13 +1104,19 @@ jobs:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          if [ -n "$ASC_KEY_ID" ] && [ -n "$ASC_ISSUER_ID" ] && [ -n "$ASC_KEY_P8" ]; then
+          missing=""
+          [ -n "$ASC_KEY_ID" ] || missing="$missing ASC_KEY_ID"
+          [ -n "$ASC_ISSUER_ID" ] || missing="$missing ASC_ISSUER_ID"
+          [ -n "$ASC_KEY_P8" ] || missing="$missing ASC_KEY_P8"
+          [ -n "$APPLE_TEAM_ID" ] || missing="$missing APPLE_TEAM_ID"
+          if [ -z "$missing" ]; then
             echo "have=yes" >> "$GITHUB_OUTPUT"
             echo "signing secrets present"
           else
             echo "have=no" >> "$GITHUB_OUTPUT"
-            echo "::notice::ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_P8 are not set — skipping the archive and the upload. See docs/IOS_ACCOUNT_DAY.md."
+            echo "::notice::missing secrets:$missing — skipping the archive and the upload. See docs/IOS_ACCOUNT_DAY.md."
           fi
 
       - name: Set up Node.js
@@ -1181,6 +1187,7 @@ jobs:
             -authenticationKeyID "$ASC_KEY_ID" \
             -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
             CURRENT_PROJECT_VERSION=${{ github.run_number }} \
+            DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }} \
             archive 2>&1 | tee ios-archive.log | tail -30
 
       # app-store-connect is Xcode 15+'s name for what used to be `app-store`; the older spelling still
@@ -1208,6 +1215,7 @@ jobs:
             -archivePath ios/build/App.xcarchive \
             -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
             -exportPath ios/build/export \
+            DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }} \
             -allowProvisioningUpdates \
             -authenticationKeyPath "$RUNNER_TEMP/asc/AuthKey.p8" \
             -authenticationKeyID "$ASC_KEY_ID" \
