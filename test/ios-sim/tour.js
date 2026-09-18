@@ -91,11 +91,17 @@
         return !!pane && pane.children.length > 0;
     }
 
-    // The dictionary is the quick modal's DPD tab (quickModal.js's own tab list: fav, 4as, memo,
-    // dpd). Activating it is a click on its tab button — the same click a reader makes — and the wait
-    // is for the PANEL to become the active one, not for the article: the article comes from the DPD
-    // data, which the app downloads on demand and a screenshot run should not have to fetch. The
-    // picture is then honest either way: the dictionary tab as it looks when opened.
+    // The dictionary, as the app's own quick modal shows it (quickModal.js's tab list: fav, 4as,
+    // memo, dpd). Activating it is a click on its tab button — the same click a reader makes — and the
+    // wait is for the PANEL to become active, not for the article: the article comes from the DPD data,
+    // which the app downloads on demand.
+    //
+    // What this deliberately is NOT: the word-tap popup in the reader. That lookup is POINTER-based
+    // (paliLookup.js: getClickedWordWithHTML(event.target, event.clientX, event.clientY), which
+    // hit-tests the coordinates), and synthetic clicks — element.click(), or a MouseEvent carrying the
+    // word's own coordinates — did not open it in a headless browser on this build. Rather than ship a
+    // picture that pretends, that one stays a device check: one tap on a phone. The reader screenshot
+    // next to this file is what a reader sees before tapping.
     function dictionaryShown() {
         var active = document.querySelector('.quick-tab-content.active');
         return !!active && active.id === 'tab-dpd';
