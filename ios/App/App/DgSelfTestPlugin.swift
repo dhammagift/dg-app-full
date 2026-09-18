@@ -18,8 +18,23 @@ public class DgSelfTestPlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "DgSelfTestPlugin"
     public let jsName = "DgSelfTest"
     public let pluginMethods: [CAPPluginMethod] = [
-        CAPPluginMethod(name: "write", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "write", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "stage", returnType: CAPPluginReturnPromise)
     ]
+
+    // Where the screenshot tour has got to. The driver cannot see inside the WebView, so the page
+    // says "this view is ready" by writing a name here and the driver takes the picture on that
+    // signal — one file, overwritten per stage, instead of guessing at timings.
+    @objc func stage(_ call: CAPPluginCall) {
+        let name = call.getString("name") ?? ""
+        do {
+            let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            try name.write(to: dir.appendingPathComponent("stage.txt"), atomically: true, encoding: .utf8)
+            call.resolve(["stage": name])
+        } catch {
+            call.reject("could not record the stage: \(error.localizedDescription)")
+        }
+    }
 
     @objc func write(_ call: CAPPluginCall) {
         guard let json = call.getString("json") else {

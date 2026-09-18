@@ -22,6 +22,7 @@ while [ $# -gt 0 ]; do
         --out) OUT="$2"; shift 2 ;;
         --device) DEVICE="$2"; shift 2 ;;
         --library) LIBRARY="$2"; shift 2 ;;
+        --tour) TOUR=1; shift ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;
     esac
 done
@@ -95,6 +96,43 @@ for i in $(seq 1 20); do
 done
 cp "$REPORT" "$OUT/selftest.json"
 
+# One pass of the screenshot tour: relaunch (so the tour runs again), then take a picture every time
+# the page announces it has reached a view. The announcement is a file (DgSelfTest.stage →
+# Documents/stage.txt) overwritten per stage; a screenshot taken at a guessed moment is worse than
+# none, because it looks like a bug.
+tour_pass() {
+    TAG="$1"; LANG_ARGS="${2:-}"
+    xcrun simctl terminate "$UDID" "$BUNDLE" 2>/dev/null || true
+    [ -n "$DATA_DIR" ] && rm -f "$DATA_DIR/Documents/stage.txt"
+    if [ -n "$LANG_ARGS" ]; then
+        # shellcheck disable=SC2086
+        xcrun simctl launch "$UDID" "$BUNDLE" $LANG_ARGS >/dev/null 2>&1 || true
+    else
+        xcrun simctl launch --console-pty "$UDID" "$BUNDLE" >> "$OUT/app-console.log" 2>&1 &
+    fi
+    LAST=""
+    for i in $(seq 1 180); do
+        S=$(cat "$DATA_DIR/Documents/stage.txt" 2>/dev/null || true)
+        if [ -n "$S" ] && [ "$S" != "$LAST" ]; then
+            LAST="$S"
+            echo "drive: stage $S ($TAG)"
+            if [ "$S" = "done" ]; then return 0; fi
+            sleep 1
+            xcrun simctl io "$UDID" screenshot "$OUT/ios-$S-$TAG.png" >/dev/null
+        fi
+        sleep 1
+    done
+    return 0
+}
+
+if [ -n "$TOUR" ]; then
+    tour_pass light-en
+    xcrun simctl ui "$UDID" appearance dark
+    tour_pass dark-en
+    # Russian, dark: the second language the reader is built for, and the one whose layout differs
+    # most (longer words, its own strings). AppleLanguages is what a real Russian phone reports.
+    tour_pass dark-ru "-AppleLanguages (ru) -AppleLocale ru_RU"
+else
 # The self-test navigates the app to search results served from the local database on its way out
 # (see selftest.js), so these screenshots show the app with real local data, not its home screen.
 # Light/dark is the simulator's own appearance switch, which is exactly what the site's theme
@@ -111,6 +149,7 @@ xcrun simctl terminate "$UDID" "$BUNDLE" 2>/dev/null || true
 xcrun simctl launch "$UDID" "$BUNDLE" -AppleLanguages '(ru)' -AppleLocale ru_RU >/dev/null 2>&1 || true
 sleep 12
 xcrun simctl io "$UDID" screenshot "$OUT/ios-dark-ru.png" >/dev/null
+fi
 
 echo "drive: screenshots in $OUT"
 # Stop the app so the backgrounded `simctl launch --console-pty` returns instead of holding the step

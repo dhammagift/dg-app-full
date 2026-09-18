@@ -943,17 +943,6 @@ jobs:
       - name: Judge the report
         run: node test/ios-sim/assert.js .tmp/ios-ui/selftest.json
 
-      # App Store screenshots have to come from a 6.9" display, and the run above is a 6.3" iPhone 17.
-      # The same flow on an iPhone 17 Pro Max produces the size Apple asks for — and, incidentally, a
-      # second device class proving the app behaves the same on a bigger screen. No Mac, no phone.
-      - name: Screenshots on a 6.9" display (App Store size)
-        run: |
-          test/ios-sim/drive.sh --app ios/DerivedData/Build/Products/Debug-iphonesimulator/App.app \
-            --out .tmp/ios-ui-max --library .tmp/ios-library --device "iPhone 17 Pro Max"
-
-      - name: Judge the report from the 6.9" run
-        run: node test/ios-sim/assert.js .tmp/ios-ui-max/selftest.json
-
       # No gate on the deep link here on purpose: iOS shows its own "Open in Dhamma.gift?" prompt for
       # a custom scheme opened from OUTSIDE the app (SpringBoard, and `simctl openurl` behaves like
       # that), and a headless simulator cannot tap it — the app never receives the URL. The self-test
@@ -972,9 +961,102 @@ jobs:
             .tmp/ios-ui/selftest.json
             .tmp/ios-ui/*.png
             .tmp/ios-ui/app-console.log
-            .tmp/ios-ui-max/selftest.json
-            .tmp/ios-ui-max/*.png
-            .tmp/ios-ui-max/app-console.log
             ios-ui-build.log
+          retention-days: 30
+          if-no-files-found: warn
+
+  # ---------------------------------------------------------------------------------------------
+  # Screenshots of the app doing things — the owner's question was "why only the table of contents",
+  # and the answer is that a store listing needs to show search results, a text in the reader, the
+  # dictionary popup, settings, history.
+  #
+  # Which is why this job runs against the LIVE site instead of the fixture: three suttas and no
+  # dictionary data make honest but useless pictures. The bundle declines the offline library so the
+  # run does not spend its time downloading 216 MB, and every screenshot is taken on an iPhone 17
+  # Pro Max because the App Store wants a 6.9" display.
+  #
+  # The page drives itself (test/ios-sim/tour.js): from outside the WebView nothing can press a
+  # button, so the tour renders each view through the SPA's own router, taps a Pali word for the
+  # dictionary, opens the settings sheet the way the app does, and writes the stage name to a file
+  # the driver waits on — a screenshot at a guessed moment looks like a bug, not a gap.
+  ios-screenshots:
+    name: iOS screenshots (6.9", online)
+    needs: build
+    runs-on: macos-26
+    steps:
+      - name: Checkout this repo (the app)
+        uses: actions/checkout@v4
+
+      - name: Download the built web bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: www-${{ github.run_number }}
+          path: www
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.20.0'
+
+      - name: Restore npm and SwiftPM caches
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            ~/Library/Caches/org.swift.swiftpm
+            ~/Library/Developer/Xcode/DerivedData
+            ios/DerivedData/SourcePackages
+          key: ${{ runner.os }}-ios-${{ hashFiles('ios/App/CapApp-SPM/Package.swift', 'ios/App/App.xcodeproj/project.pbxproj', 'ios/**/Package.resolved', 'package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-ios-
+
+      - name: Install app dependencies
+        run: npm install --legacy-peer-deps --no-audit
+
+      - name: Select the newest Xcode 26
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)
+          echo "Using $XCODE"
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+
+      # --online --tour: the real site, no fixture, no dead origin, download declined, and the tour
+      # script instead of the self-test (see test/ios-sim/prepare-www.js).
+      - name: Turn www/ into the screenshot-tour bundle
+        run: node test/ios-sim/prepare-www.js --online --tour
+
+      - name: Sync Capacitor into ios/
+        run: npx cap sync ios
+
+      - name: Build for the iOS Simulator
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max' \
+            -derivedDataPath ios/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            build 2>&1 | tee ios-tour-build.log | tail -30
+
+      - name: Walk the app and take pictures
+        run: |
+          mkdir -p .tmp/ios-tour
+          # The online tour needs the runner's network; a failure here must not be silent.
+          curl -sf -o /dev/null --max-time 20 https://dhamma.gift/ || echo "::warning::dhamma.gift did not answer — the tour will show the app's offline states"
+          test/ios-sim/drive.sh --tour --out .tmp/ios-tour --device "iPhone 17 Pro Max" \
+            --app ios/DerivedData/Build/Products/Debug-iphonesimulator/App.app
+
+      - name: Upload the screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dg-app-ios-screenshots-${{ github.run_number }}
+          path: |
+            .tmp/ios-tour/*.png
+            .tmp/ios-tour/app-console.log
+            ios-tour-build.log
           retention-days: 30
           if-no-files-found: warn
