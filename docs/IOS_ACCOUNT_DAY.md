@@ -24,9 +24,25 @@ Team ID (роут уже есть и проверяется в CI, ждёт то
 
 ## 3. Ключ для CI и TestFlight (10 минут)
 
-App Store Connect → Users and Access → **Integrations** → App Store Connect API → **Team Keys** →
-создать ключ с ролью **App Manager**. Скачать `.p8` (даётся один раз) и положить три значения в
-GitHub → Settings → Secrets and variables → Actions:
+App Store Connect → Users and Access → **Integrations** → App Store Connect API → вкладка **Team
+Keys** → создать ключ с ролью **App Manager**, скачать `.p8` (даётся один раз).
+
+**Individual-аккаунт — это не то же самое, что Individual-ключ.** Тип аккаунта (Individual или
+Organization) и тип ключа (Team или Individual) — разные вещи:
+
+* **Аккаунт Individual** — обычное платное членство на ваше имя. Даёт всё, что нам нужно: TestFlight,
+  App Store, Universal Links, подпись из CI. У личного аккаунта тоже есть команда (вы —
+  Account Holder), и раздел **Team Keys** доступен именно вам.
+* **Ключ Individual** — другой вид ключа: он привязан к конкретному пользователю и **не имеет доступа
+  к provisioning-эндпоинтам**, поэтому подпись из CI с ним не соберётся. Его не выбирать.
+
+Единственное следствие личного аккаунта, которое стоит решить **до** релиза: в App Store **имя
+продавца** будет вашим личным именем (название приложения при этом остаётся «Dhamma.gift»). Если
+продавцом должно значиться юрлицо/проект, нужен **Organization-аккаунт** — он требует юридического
+лица и номера D-U-N-S. Перейти с Individual на Organization позже можно через поддержку Apple, но это
+отдельный процесс, поэтому лучше определиться сразу.
+
+Положить в GitHub → Settings → Secrets and variables → Actions:
 
 | Секрет | Что это | Откуда |
 |---|---|---|
