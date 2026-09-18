@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- For a build signed with a FREE Apple ID (Xcode's "Personal Team"): that team cannot sign the
+	     Associated Domains capability, and Xcode refuses the build with "Personal development teams do
+	     not support the Associated Domains capability". This file is the same app without it, so a
+	     free-account device test does not need anyone to edit the real one.
+
+	     Switch with a build setting, e.g. for one local build:
+	       xcodebuild -project ios/App/App.xcodeproj -scheme App \
+	         CODE_SIGN_ENTITLEMENTS=App/App-personal-team.entitlements ...
+
+	     Consequence: Universal Links (https://dhamma.gift/... opening the app) do NOT work in such a
+	     build — the dhammagift:// scheme still does, so deep links, the share extension and the login
+	     return all work; only the https interception is missing. js. -->
+</dict>
+</plist>
