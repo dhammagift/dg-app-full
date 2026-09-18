@@ -145,3 +145,24 @@ There is **no** `macos-26-arm64` label: arm64 is the plain `macos-26`. Standard 
 
 **Confidence**: High on the disclosure/completeness obligations; Medium on the exact current in-app cellular guidance (no single Apple primary source found that regulates in-app download size over cellular).
 **Plan implication**: keep the current self-hosted 216 MB download, add a mandatory size-disclosure consent screen with progress/resume/retry, keep a usable offline shell before the download completes, and put the size in the review notes.
+
+---
+
+## Проверено вживую 2026-09-19 (постранично с developer.apple.com)
+
+`docs/ios-appstore-research-2026-09.md` собран исследовательским агентом; эти три правила — те, на
+которых держится наша отправка, и они перепроверены прямо на странице гайдлайнов:
+
+* **4.2 Minimum Functionality**: «Your app should include features, content, and UI that elevate it
+  beyond a repackaged website. If your app is not particularly useful, unique, or "app-like," it
+  doesn't belong on the App Store.» → против этого у нас офлайн-библиотека, Share Extension,
+  шорткаты, озвучка и фоновая загрузка; в review notes это перечислить.
+* **4.2.3(ii)**: «If your app needs to download additional resources in order to function on initial
+  launch, disclose the size of the download and prompt users before doing so.» → экран согласия с
+  размером (216 МБ сжатый / 612 МБ на устройстве) у нас уже есть в `src/platform.js`.
+* **3.2.2(iv)**: «…collecting funds within the app for charities and fundraisers. Apps that seek to
+  raise money for such causes must be **free** on the App Store and may only collect funds **outside
+  of the app, such as via Safari or SMS**.» → донат только ссылкой в Safari/SFSafariViewController,
+  приложение бесплатное; **никакого** донатного UI и Apple Pay внутри. Для «approved nonprofit» есть
+  3.2.1(vi) (сбор внутри приложения с Apple Pay и раскрытием назначения средств), но это отдельный
+  статус, которого у проекта нет.
