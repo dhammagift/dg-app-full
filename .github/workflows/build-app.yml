@@ -1049,6 +1049,15 @@ jobs:
           test/ios-sim/drive.sh --tour --out .tmp/ios-tour --device "iPhone 17 Pro Max" \
             --app ios/DerivedData/Build/Products/Debug-iphonesimulator/App.app
 
+      # The app declares TARGETED_DEVICE_FAMILY = "1,2", so App Store Connect wants a 13" iPad set as
+      # well — and a submission without it is refused at the upload, not at the review. The same tour,
+      # one more device.
+      - name: The same tour on a 13" iPad (the other required screenshot size)
+        run: |
+          mkdir -p .tmp/ios-tour-ipad
+          test/ios-sim/drive.sh --tour --out .tmp/ios-tour-ipad --device "iPad Pro 13-inch (M5)" \
+            --app ios/DerivedData/Build/Products/Debug-iphonesimulator/App.app
+
       - name: Upload the screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -1057,6 +1066,187 @@ jobs:
           path: |
             .tmp/ios-tour/*.png
             .tmp/ios-tour/app-console.log
+            .tmp/ios-tour-ipad/*.png
+            .tmp/ios-tour-ipad/app-console.log
             ios-tour-build.log
           retention-days: 30
           if-no-files-found: warn
+
+  # ---------------------------------------------------------------------------------------------
+  # The release path: archive, export and upload to TestFlight.
+  #
+  # It stays dormant until the account exists — every step that needs a secret checks for it first and
+  # says what is missing, rather than failing a push that has nothing to do with releases. That is the
+  # point of writing it now: the day the account lands, the only work left is pasting four values into
+  # repo secrets (docs/IOS_ACCOUNT_DAY.md) and pressing Run workflow.
+  #
+  # Why TestFlight rather than an ad-hoc IPA: TestFlight installs on a phone with no Mac, no cable and
+  # no registered UDID, which is exactly the situation the device checks are waiting on (background
+  # download, audible TTS, the dictionary tap, the share sheet).
+  ios-release:
+    name: iOS release (TestFlight)
+    needs: build
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
+    runs-on: macos-26
+    steps:
+      - name: Checkout this repo (the app)
+        uses: actions/checkout@v4
+
+      - name: Download the built web bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: www-${{ github.run_number }}
+          path: www
+
+      - name: Are the signing secrets there?
+        id: asc
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          if [ -n "$ASC_KEY_ID" ] && [ -n "$ASC_ISSUER_ID" ] && [ -n "$ASC_KEY_P8" ]; then
+            echo "have=yes" >> "$GITHUB_OUTPUT"
+            echo "signing secrets present"
+          else
+            echo "have=no" >> "$GITHUB_OUTPUT"
+            echo "::notice::ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_P8 are not set — skipping the archive and the upload. See docs/IOS_ACCOUNT_DAY.md."
+          fi
+
+      - name: Set up Node.js
+        if: steps.asc.outputs.have == 'yes'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.20.0'
+
+      - name: Restore npm and SwiftPM caches
+        if: steps.asc.outputs.have == 'yes'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            ~/Library/Caches/org.swift.swiftpm
+            ~/Library/Developer/Xcode/DerivedData
+            ios/DerivedData/SourcePackages
+          key: ${{ runner.os }}-ios-${{ hashFiles('ios/App/CapApp-SPM/Package.swift', 'ios/App/App.xcodeproj/project.pbxproj', 'ios/**/Package.resolved', 'package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-ios-
+
+      - name: Install app dependencies
+        if: steps.asc.outputs.have == 'yes'
+        run: npm install --legacy-peer-deps --no-audit
+
+      - name: Select the newest Xcode 26
+        if: steps.asc.outputs.have == 'yes'
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)
+          echo "Using $XCODE"
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+
+      # The key is written where xcodebuild expects it and removed at the end of the job by the
+      # runner's own cleanup (RUNNER_TEMP is not cached, not uploaded, and not the workspace).
+      - name: Write the App Store Connect key
+        if: steps.asc.outputs.have == 'yes'
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/asc"
+          printf '%s' "$ASC_KEY_P8" > "$RUNNER_TEMP/asc/AuthKey.p8"
+          chmod 600 "$RUNNER_TEMP/asc/AuthKey.p8"
+
+      - name: Sync Capacitor into ios/
+        if: steps.asc.outputs.have == 'yes'
+        run: npx cap sync ios
+
+      # The bundle id, the team and the marketing version come from the project; only the build number
+      # is injected (Play/App Store both refuse a number they have seen, and the run number is the one
+      # value this repository already treats as one).
+      - name: Archive
+        if: steps.asc.outputs.have == 'yes'
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath ios/build/App.xcarchive \
+            -derivedDataPath ios/DerivedData \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/asc/AuthKey.p8" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            CURRENT_PROJECT_VERSION=${{ github.run_number }} \
+            archive 2>&1 | tee ios-archive.log | tail -30
+
+      # app-store-connect is Xcode 15+'s name for what used to be `app-store`; the older spelling still
+      # works, so a rename here is not a silent breakage.
+      - name: Export the IPA
+        if: steps.asc.outputs.have == 'yes'
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+          </dict>
+          </plist>
+          PLIST
+          set -o pipefail
+          xcodebuild -exportArchive \
+            -archivePath ios/build/App.xcarchive \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath ios/build/export \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/asc/AuthKey.p8" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            2>&1 | tee ios-export.log | tail -30
+
+      # `destination: upload` in the export options is what performs the TestFlight upload; altool is
+      # kept as an explicit fallback for the case where that path is unavailable (Apple's own tool is
+      # deprecated but still accepts --apiKey/--apiIssuer).
+      - name: Upload to TestFlight (fallback if the export did not)
+        if: steps.asc.outputs.have == 'yes'
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          IPA=$(ls ios/build/export/*.ipa 2>/dev/null | head -1 || true)
+          if [ -z "$IPA" ]; then echo "::error::no IPA was produced"; exit 1; fi
+          if xcrun altool --upload-app -f "$IPA" -t ios --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID" 2>&1 | tail -20; then
+            echo "uploaded $IPA"
+          else
+            echo "::warning::altool could not upload — check TestFlight in App Store Connect; the IPA is uploaded as an artifact below"
+          fi
+
+      - name: Upload the archive log on failure
+        if: failure() && steps.asc.outputs.have == 'yes'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-release-logs-${{ github.run_number }}
+          path: |
+            ios-archive.log
+            ios-export.log
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Upload the IPA
+        if: success() && steps.asc.outputs.have == 'yes'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dg-app-ios-ipa-${{ github.run_number }}
+          path: ios/build/export/*.ipa
+          retention-days: 30
+          if-no-files-found: error
