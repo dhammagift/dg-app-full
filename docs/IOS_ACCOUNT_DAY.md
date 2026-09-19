@@ -15,14 +15,14 @@
 
 ## 2. Universal Links — сделано, осталось задеплоить сайт
 
-Team ID **7MXRJU7C3** уже вписан в dg-node, `configs/apple-app-site-association`
-(`7MXRJU7C3.gift.dhamma.mobile`). Ничего менять не нужно — только убедиться, что прод отдаёт файл:
+Team ID **7MXRJUJ7C3** уже вписан в dg-node, `configs/apple-app-site-association`
+(`7MXRJUJ7C3.gift.dhamma.mobile`). Ничего менять не нужно — только убедиться, что прод отдаёт файл:
 
 ```bash
 curl -s https://dhamma.gift/.well-known/apple-app-site-association
 ```
 
-Ожидаемый ответ — JSON с `7MXRJU7C3.gift.dhamma.mobile`. Если там ещё плейсхолдер или 404, значит прод
+Ожидаемый ответ — JSON с `7MXRJUJ7C3.gift.dhamma.mobile`. Если там ещё плейсхолдер или 404, значит прод
 не подтянул коммит (обычный деплой сайта). После этого ссылка `https://dhamma.gift/mn1`, отправленная
 себе в «Заметки», открывает приложение — но только на сборке, подписанной этой же командой.
 
@@ -53,7 +53,7 @@ Organization) и тип ключа (Team или Individual) — разные в�
 | `ASC_KEY_ID` | Key ID, 10 символов | страница Team Keys, колонка Key ID |
 | `ASC_ISSUER_ID` | Issuer ID, UUID | та же страница, вверху |
 | `ASC_KEY_P8` | **содержимое** файла `.p8` целиком, включая строки BEGIN/END | скачивается один раз при создании ключа |
-| `APPLE_TEAM_ID` | `7MXRJU7C3` | Membership / App ID Prefix (уже вписан в AASA) |
+| `APPLE_TEAM_ID` | `7MXRJUJ7C3` | Membership / App ID Prefix (уже вписан в AASA) |
 
 **Почему для iOS не нужен «ключ», как для Android.** В Android подпись — это keystore: файл,
 который вы создаёте и храните сами, и **его нельзя потерять** (по сертификату Play узнаёт приложение;

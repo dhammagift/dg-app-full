@@ -37,10 +37,12 @@ Support, `DgShortcuts` отдал динамический шорткат на `
 |---|---|---|---|
 | 156 | «Your team has no devices from which to generate a provisioning profile» + «No profiles … iOS App Development» | в конфигурации Release стоял `CODE_SIGN_IDENTITY = "iPhone Developer"` → просили development-профиль, а он перечисляет UDID устройств, которых у нового аккаунта нет | `docs/ios-review/logs/ios-archive-run156.log` |
 | 160 | «has conflicting provisioning settings … automatically signed for development, but a conflicting code signing identity Apple Distribution has been manually specified» | попытка №1: подменить identity флагом командной строки при automatic signing | `logs/ios-archive-run160.log` |
-| 161 (идёт) | — | identity перенесён **в конфигурацию** Release (`Apple Distribution`), как это сделал бы редактор Signing & Capabilities; флаги из команды убраны | — |
+| 164 (идёт) | — | `CODE_SIGN_IDENTITY` убран из проекта совсем: так Xcode пишет при включённом автоматическом управлении подписью, и тогда Debug берёт Apple Development, а archive — Apple Distribution | — |
 
-В прогоне 160 уже видно, что `DEVELOPMENT_TEAM=7MXRJU7C3` — то есть Team ID в секрете исправлен,
-и до этой ошибки дело доходит после авторизации в Apple, а не раньше.
+Team ID команды — `7MXRJUJ7C3` (две J подряд). В первой редакции этих документов и в AASA на сайте
+стояло `7MXRJU7C3`: я неверно прочитал скриншот страницы App ID, владелец поправил секрет дважды, и
+увеличенный фрагмент того же скриншота подтвердил `…JUJ7C3`. AASA в dg-node исправлена на
+`7MXRJUJ7C3.gift.dhamma.mobile` и ждёт деплоя сайта.
 
 ## Что ещё изменилось из-за этих прогонов
 
@@ -56,7 +58,7 @@ Support, `DgShortcuts` отдал динамический шорткат на `
 
 1. Прогон с фиксом подписи → IPA в TestFlight, затем 6 проверок на устройстве
    (список в `docs/IOS_ACCOUNT_DAY.md`).
-2. Задеплоить dg-node, чтобы прод отдавал AASA с `7MXRJU7C3`
+2. Задеплоить dg-node, чтобы прод отдавал AASA с `7MXRJUJ7C3`
    (`curl -s https://dhamma.gift/.well-known/apple-app-site-association`).
 3. Выбрать из `tour-156/6.7-inch/` три картинки для страницы App Store (порядок в
    `docs/APP_STORE_LISTING.md`).
