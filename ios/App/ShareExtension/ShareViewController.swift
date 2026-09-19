@@ -1,47 +1,84 @@
 import UIKit
+import WebKit
 import UniformTypeIdentifiers
 
-// The Share Extension: text (or a link) shared from another app opens Dhamma.gift with it as a
-// search. This is what Android's ACTION_SEND filter does for the APK, and the iOS app had no way to
-// receive a share at all until this target existed.
+// The Share Extension: text or a link shared from another app is looked up, and the answer is shown
+// right here in the sheet.
 //
-// What it deliberately does NOT do: clean or interpret the shared text. Android learned this the hard
-// way — the wrapper used to strip the source URL and the wrapping quotes, and had to be fixed every
-// time a host app changed its share format. The site does it once, for every platform, in
-// search/index.html's `?q=` handling (the same path the web share_target and a plain link take), so
-// the raw payload is passed through untouched.
+// It used to hand the text to the app instead, the way Android's ACTION_SEND filter does, and that
+// is not a thing iOS allows. A share extension is a separate process living inside someone else's
+// sheet, and opening its own app is reserved for Today and iMessage extensions — the documentation
+// for NSExtensionContext.open names those two and no others. Four builds each found a different
+// wall: 170 called that method (false), 190 the openURL: selector through the responder chain (iOS
+// 18 forces it to NO), 193 UIApplication.open directly (Xcode 26 will not build an extension that
+// is allowed to see it), 195 the same method through its IMP — which iOS accepted, ignored, and
+// never called back, leaving the sheet open on the owner's phone.
 //
-// How it reaches the app: the app's own URL scheme. `dhammagift://search?q=…` is already the mapping
-// the app answers (docs/DEEP_LINKS.md, src/deep-link.js), and it turns into `/?q=…` — the same URL
-// Android's MainActivity builds for a share. Nothing new to receive, nothing to keep in step.
-//
-// Nothing here fails silently: a share that cannot be handed over says why in the sheet, because
-// "the sheet flashed and the home screen came back" (owner, twice) is not something a phone can be
-// debugged from.
+// So the extension does the work instead of delegating it, which is what iOS extensions are for:
+// share a Pali word from any app and read what it means without leaving that app. The site answers
+// the same `?q=` that the app, the web share target and a plain link all use, so there is nothing
+// here to keep in step with it — and nothing is interpreted or cleaned on the way, for the reason
+// Android learned the hard way (stripping quotes and source URLs breaks whenever a host app changes
+// its format).
 class ShareViewController: UIViewController {
+
+    private let webView = WKWebView(frame: .zero)
+    private let status = UILabel()
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .systemBackground
+
+        let done = UIButton(type: .system)
+        done.setTitle("Done", for: .normal)
+        done.addTarget(self, action: #selector(finish), for: .touchUpInside)
+
+        status.text = "Looking up…"
+        status.textAlignment = .center
+        status.textColor = .secondaryLabel
+
+        for child in [done, webView, status] {
+            child.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview(child)
+        }
+
+        NSLayoutConstraint.activate([
+            done.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
+            done.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            webView.topAnchor.constraint(equalTo: done.bottomAnchor, constant: 8),
+            webView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            webView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            webView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            status.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            status.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            status.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+            status.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+        ])
+        status.numberOfLines = 0
+        webView.navigationDelegate = self
+        webView.isHidden = true
+    }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        sharedText { [weak self] text, seen in
+        sharedText { [weak self] text in
             guard let self = self else { return }
             let trimmed = text?.trimmingCharacters(in: .whitespacesAndNewlines)
             guard let payload = trimmed, !payload.isEmpty else {
-                self.fail("Nothing to search for: the share carried no text or link (" + seen + ").")
+                self.status.text = "Nothing to look up: the share carried no text or link."
                 return
             }
-            self.handToApp(payload)
+            self.look(up: payload)
         }
     }
 
     // The first usable attachment: plain text, or a URL (which the site's own `?q=` handling also
-    // understands — it strips a trailing source URL, and a shared link IS one). `seen` lists the
-    // type identifiers that were offered, for the message when none of them worked.
-    private func sharedText(completion: @escaping (String?, String) -> Void) {
+    // understands — it strips a trailing source URL, and a shared link IS one).
+    private func sharedText(completion: @escaping (String?) -> Void) {
         let attachments = (extensionContext?.inputItems as? [NSExtensionItem])?
             .flatMap { $0.attachments ?? [] } ?? []
-        let seen = attachments.flatMap { $0.registeredTypeIdentifiers }.joined(separator: ", ")
         guard !attachments.isEmpty else {
-            completion(nil, "no attachments")
+            completion(nil)
             return
         }
 
@@ -52,87 +89,60 @@ class ShareViewController: UIViewController {
             }
             let rest = Array(providers.dropFirst())
 
-            if provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) {
-                provider.loadItem(forTypeIdentifier: UTType.plainText.identifier, options: nil) { item, _ in
-                    var text = (item as? String) ?? (item as? NSAttributedString)?.string
+            func handle(_ identifier: String) -> Bool {
+                guard provider.hasItemConformingToTypeIdentifier(identifier) else { return false }
+                provider.loadItem(forTypeIdentifier: identifier, options: nil) { item, _ in
+                    var text = item as? String
+                    if text == nil, let url = item as? URL { text = url.absoluteString }
+                    if text == nil, let attributed = item as? NSAttributedString { text = attributed.string }
                     if text == nil, let data = item as? Data { text = String(data: data, encoding: .utf8) }
                     DispatchQueue.main.async {
                         if let text = text, !text.isEmpty { completion(text) } else { firstString(from: rest, completion: completion) }
                     }
                 }
-                return
+                return true
             }
-            if provider.hasItemConformingToTypeIdentifier(UTType.url.identifier) {
-                provider.loadItem(forTypeIdentifier: UTType.url.identifier, options: nil) { item, _ in
-                    var text: String?
-                    if let url = item as? URL { text = url.absoluteString }
-                    else if let url = item as? NSURL { text = url.absoluteString }
-                    else if let string = item as? String { text = string }
-                    else if let data = item as? Data { text = String(data: data, encoding: .utf8) }
-                    DispatchQueue.main.async {
-                        if let text = text, !text.isEmpty { completion(text) } else { firstString(from: rest, completion: completion) }
-                    }
-                }
-                return
-            }
+
+            if handle(UTType.plainText.identifier) { return }
+            if handle(UTType.url.identifier) { return }
             firstString(from: rest, completion: completion)
         }
 
-        firstString(from: attachments) { completion($0, seen) }
+        firstString(from: attachments, completion: completion)
     }
 
-    private func handToApp(_ payload: String) {
-        // ponytail: the payload rides in the URL, which has a practical ceiling of a few kilobytes.
-        // A whole sutta pasted into a share is beyond it; the upgrade path is an App Group container
-        // the app reads on `dhammagift://share` (an entitlement, so it waits until there is a Team
-        // ID). For the lengths people actually share — a word, a phrase, a link — this is enough, and
-        // the ceiling is named rather than silently dropping the tail.
+    private func look(up payload: String) {
+        // ponytail: the query rides in the URL, which has a practical ceiling of a few kilobytes. A
+        // whole sutta pasted into a share is beyond it; the upgrade path is an App Group container
+        // the sheet reads from. For a word, a phrase or a link — what people actually share — this
+        // is enough, and the ceiling is named rather than silently dropping the tail.
         let capped = payload.count > 4000 ? String(payload.prefix(4000)) : payload
         guard let encoded = capped.addingPercentEncoding(withAllowedCharacters: .alphanumerics),
-              let url = URL(string: "dhammagift://search?q=" + encoded) else {
-            fail("The shared text could not be put into a link.")
+              let url = URL(string: "https://dhamma.gift/?q=" + encoded) else {
+            status.text = "That text could not be turned into a search."
             return
         }
-        openHostApp(url) { [weak self] opened in
-            guard let self = self else { return }
-            if opened {
-                self.finish()
-            } else {
-                self.fail("iOS refused to open dhammagift:// from the share sheet (open returned false).")
-            }
-        }
+        webView.load(URLRequest(url: url))
     }
 
-    // NSExtensionContext.open(_:) is honoured only by Today and iMessage extensions; in a share
-    // extension it returns false without opening anything (build 170). UIApplication sits at the end
-    // of the responder chain, but iOS 18 forces the old openURL: selector to return NO (build 190:
-    // "BUG IN CLIENT OF UIKIT … migrate to open(_:options:completionHandler:)"), and Xcode 26
-    // refuses to build an extension without APPLICATION_EXTENSION_API_ONLY, which hides the new
-    // method from the compiler (build 193). So the new method is called through its IMP with the
-    // real C signature — the one form that both compiles and is not the deprecated entry point —
-    // and its completion says whether the open happened.
-    private func openHostApp(_ url: URL, completion: @escaping (Bool) -> Void) {
-        typealias OpenURL = @convention(c) (AnyObject, Selector, NSURL, NSDictionary, (@convention(block) (Bool) -> Void)?) -> Void
-        let selector = NSSelectorFromString("openURL:options:completionHandler:")
-        var responder: UIResponder? = self
-        while let current = responder {
-            if current !== self, current.responds(to: selector), let imp = current.method(for: selector) {
-                let open = unsafeBitCast(imp, to: OpenURL.self)
-                open(current, selector, url as NSURL, NSDictionary(), { ok in DispatchQueue.main.async { completion(ok) } })
-                return
-            }
-            responder = current.next
-        }
-        completion(false)
-    }
-
-    private func fail(_ reason: String) {
-        let alert = UIAlertController(title: "Dhamma.gift could not open", message: reason, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] _ in self?.finish() })
-        present(alert, animated: true)
-    }
-
-    private func finish() {
+    @objc private func finish() {
         extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
+    }
+}
+
+extension ShareViewController: WKNavigationDelegate {
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        status.isHidden = true
+        webView.isHidden = false
+    }
+
+    // The lookup needs the site: the offline library lives in the app's own container, which this
+    // process cannot read. Say so plainly instead of showing an empty white sheet.
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        status.text = "Dhamma.gift could not be reached. Open the app to search the offline library."
+    }
+
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        status.text = "Dhamma.gift could not be reached. Open the app to search the offline library."
     }
 }
