@@ -105,8 +105,9 @@ NATIVE APP FEATURES (not available in the browser version)
   on the device after the first use and works offline.
 - Text-to-speech via AVSpeechSynthesizer: tap any Pali or English paragraph — it gets highlighted
   and a play button appears in the lower right corner.
-- Share Extension: select text or a link in any other app → Share → Dhamma.gift, and the app opens
-  a search for it — instant lookup of a passage from any site or app.
+- Share Extension: select text or a link in any other app → Share → Dhamma.gift, and the search
+  results appear in the share sheet itself — a passage from any site or app looked up without
+  leaving it. A shared dhamma.gift link opens that text instead.
 - Home-screen quick actions: four fixed items (table of contents, favorites & history, memo,
   dictionary) plus the texts read most recently.
 - Universal Links: https://dhamma.gift/mn1 tapped in Notes or Messages opens the text in the app.
