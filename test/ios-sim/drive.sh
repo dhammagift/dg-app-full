@@ -16,6 +16,10 @@ LIBRARY=
 # script runs under `set -u` and referencing an unset TOUR aborted a whole run (line 128) after the app
 # had already done its work — the report was written, the screenshots never taken.
 TOUR=""
+# --record <path>: capture the light-en tour pass as a video (App Store previews come from this,
+# not from a second scripted run — the stages.log timestamps let make-previews.js cut it into clips
+# after the fact, so the recording is the one thing that must exist, not the cutting).
+RECORD=""
 DEVICE="${DG_SIM_DEVICE:-iPhone 17}"
 BUNDLE="gift.dhamma.mobile"
 WAIT_SECONDS="${DG_SELFTEST_TIMEOUT:-300}"
@@ -27,6 +31,7 @@ while [ $# -gt 0 ]; do
         --device) DEVICE="$2"; shift 2 ;;
         --library) LIBRARY="$2"; shift 2 ;;
         --tour) TOUR=1; shift ;;
+        --record) RECORD="$2"; shift 2 ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;
     esac
 done
@@ -85,6 +90,10 @@ tour_pass() {
         if [ -n "$S" ] && [ "$S" != "$LAST" ]; then
             LAST="$S"
             echo "drive: stage $S ($TAG)"
+            # Wall-clock, not a step counter: make-previews.js turns this into ffmpeg -ss/-t offsets
+            # against the recording's own start time (record-start.txt), so a clip boundary lands on
+            # the moment the view actually changed, not a guessed number of seconds into the video.
+            echo "$(date +%s) $S" >> "$OUT/stages-$TAG.log"
             if [ "$S" = "done" ]; then return 0; fi
             sleep 1
             xcrun simctl io "$UDID" screenshot "$OUT/ios-$S-$TAG.png" >/dev/null \
@@ -104,7 +113,24 @@ tour_pass() {
 # ---------------------------------------------------------------------------------------------
 if [ -n "$TOUR" ]; then
     xcrun simctl ui "$UDID" appearance light
+    RECORD_PID=""
+    if [ -n "$RECORD" ]; then
+        mkdir -p "$(dirname "$RECORD")"
+        rm -f "$RECORD"
+        # recordVideo needs a moment to attach to the simulator's display before anything worth
+        # keeping happens on screen; record-start.txt is the reference instant make-previews.js
+        # subtracts every stage timestamp from, so it is written right after that settle, not before.
+        xcrun simctl io "$UDID" recordVideo --codec=h264 --force "$RECORD" &
+        RECORD_PID=$!
+        sleep 2
+        date +%s > "$OUT/record-start.txt"
+    fi
     tour_pass light-en
+    if [ -n "$RECORD_PID" ]; then
+        sleep 1
+        kill -INT "$RECORD_PID" 2>/dev/null || true
+        wait "$RECORD_PID" 2>/dev/null || true
+    fi
     xcrun simctl ui "$UDID" appearance dark
     tour_pass dark-en
     # Russian, dark: the second language the reader is built for, and the one whose layout differs

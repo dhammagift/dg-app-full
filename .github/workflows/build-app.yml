@@ -983,6 +983,12 @@ jobs:
     name: iOS screenshots (6.9", online)
     needs: build
     runs-on: macos-26
+    # contents: write — the last step here pushes the screenshots and App Previews straight to the
+    # branch that triggered this run, instead of leaving them only in the workflow's artifact zip.
+    # That zip lives behind Actions' own storage host, which some reviewers' network policy blocks
+    # outright (unlike github.com itself); a commit is fetched the same way as any other change.
+    permissions:
+      contents: write
     steps:
       - name: Checkout this repo (the app)
         uses: actions/checkout@v4
@@ -1065,8 +1071,20 @@ jobs:
           mkdir -p .tmp/ios-tour
           # The online tour needs the runner's network; a failure here must not be silent.
           curl -sf -o /dev/null --max-time 20 https://dhamma.gift/ || echo "::warning::dhamma.gift did not answer — the tour will show the app's offline states"
+          # --record: the light-en pass, and only that pass, is also captured as video — the source
+          # the App Preview clips below are cut from (see make-previews.js for why one recording is
+          # enough for all 3).
           test/ios-sim/drive.sh --tour --out .tmp/ios-tour --device "${{ steps.sixseven.outputs.device }}" \
-            --app ios/DerivedData/Build/Products/Debug-iphonesimulator/App.app
+            --app ios/DerivedData/Build/Products/Debug-iphonesimulator/App.app \
+            --record .tmp/ios-tour/tour-light-en.mov
+
+      - name: Cut the 3 App Preview clips from the recording
+        run: |
+          node test/ios-sim/make-previews.js \
+            --video .tmp/ios-tour/tour-light-en.mov \
+            --stages .tmp/ios-tour/stages-light-en.log \
+            --start .tmp/ios-tour/record-start.txt \
+            --out .tmp/ios-previews
 
       # Kept as well: a 6.9" set costs two minutes and covers the case where the store page shows the
       # newer slot instead (Apple has been moving new apps to 6.9").
@@ -1096,9 +1114,50 @@ jobs:
             .tmp/ios-tour-69/*.png
             .tmp/ios-tour-ipad/*.png
             .tmp/ios-tour-ipad/app-console.log
+            .tmp/ios-previews/*.mov
             ios-tour-build.log
           retention-days: 30
           if-no-files-found: warn
+
+      # The zip above sits behind Actions' artifact storage host, which is not github.com and which
+      # some reviewers cannot reach at all (organization egress policy, not a bug here). A commit on
+      # this branch is the one copy that is guaranteed reachable the same way the rest of the repo
+      # is: `git pull`. [skip ci] on the commit message, because `on: push` with no branch filter
+      # would otherwise re-trigger this whole workflow on its own screenshot commit.
+      - name: Publish the iPhone/iPad screenshots and the App Previews to this branch
+        if: always()
+        run: |
+          set -e
+          # latest-tour/: the CI job's own raw dump, refreshed on every run. The hand-picked,
+          # renumbered set a reviewer drags into App Store Connect lives one level up and is never
+          # touched here, so this step cannot silently replace a set someone already reviewed.
+          mkdir -p store-assets/ios/screenshots/iphone-6.7in-1284x2778/latest-tour \
+                   store-assets/ios/screenshots/iphone-6.9in-1320x2868 \
+                   store-assets/ios/screenshots/ipad-13in \
+                   store-assets/ios/previews/iphone-6.7in-1284x2778
+
+          for f in .tmp/ios-tour/ios-*-light-en.png; do
+            [ -f "$f" ] && cp "$f" "store-assets/ios/screenshots/iphone-6.7in-1284x2778/latest-tour/$(basename "$f")"
+          done
+          for f in .tmp/ios-tour-69/ios-*.png; do
+            [ -f "$f" ] && cp "$f" "store-assets/ios/screenshots/iphone-6.9in-1320x2868/$(basename "$f")"
+          done
+          for f in .tmp/ios-tour-ipad/ios-*.png; do
+            [ -f "$f" ] && cp "$f" "store-assets/ios/screenshots/ipad-13in/$(basename "$f")"
+          done
+          for f in .tmp/ios-previews/*.mov; do
+            [ -f "$f" ] && cp "$f" "store-assets/ios/previews/iphone-6.7in-1284x2778/$(basename "$f")"
+          done
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add store-assets
+          if git diff --cached --quiet; then
+            echo "publish: nothing new (tour produced no files, or they match what's already committed)"
+          else
+            git commit -m "CI: publish iOS screenshots + App Previews (run ${{ github.run_number }}) [skip ci]"
+            git push origin "HEAD:${{ github.ref_name }}"
+          fi
 
   # ---------------------------------------------------------------------------------------------
   # The release path: archive, export and upload to TestFlight.
