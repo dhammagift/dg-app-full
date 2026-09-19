@@ -10,17 +10,32 @@
 # Maestro drives the system UI because the share sheet belongs to SpringBoard. Nothing is asserted
 # here about what the app renders: the step that runs this flow reads the simulator's process list,
 # which no webview can fake.
+#
+# The page is already open — the step navigates with simctl, so a mistake here costs no navigation.
 appId: com.apple.mobilesafari
 ---
-- takeScreenshot: .tmp/ios-share/1-safari
-# Run 202: no element with id ShareButton. Safari's toolbar button carries the accessibility
-# label instead, and Maestro matches labels by regex — anchored so it cannot catch the page.
+- takeScreenshot: 1-safari
+# A fresh simulator's Safari greets iOS 26 users with a tip about the new "..." menu, and the tip
+# covers the toolbar underneath it (run 203: the whole hierarchy was the popover).
 - tapOn:
-    text: "^(Share|Поделиться)$"
+    id: "xmark.circle.fill"
+    optional: true
 - waitForAnimationToEnd:
-    timeout: 10000
-- takeScreenshot: .tmp/ios-share/2-sheet
+    timeout: 5000
+- takeScreenshot: 2-toolbar
+# In iOS 26 Safari, Share lives in the "..." menu at the end of the address pill, and that button
+# carries no label to match on — so it is tapped where it sits on this fixed 402x874 simulator.
+- tapOn:
+    point: "86%,93%"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: 3-menu
+- tapOn:
+    text: "^(Share…|Share|Поделиться…|Поделиться)$"
+- waitForAnimationToEnd:
+    timeout: 8000
+- takeScreenshot: 4-sheet
 - tapOn: Dhamma.gift
 - waitForAnimationToEnd:
     timeout: 15000
-- takeScreenshot: .tmp/ios-share/3-after
+- takeScreenshot: 5-after

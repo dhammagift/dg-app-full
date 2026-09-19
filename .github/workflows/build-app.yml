@@ -965,8 +965,10 @@ jobs:
           # What the screen actually offers, by name. Run 202 guessed at "ShareButton" and found
           # nothing, and the hierarchy it would have needed stayed on the runner.
           maestro hierarchy > .tmp/ios-share/hierarchy.json 2>&1 || true
-          head -c 6000 .tmp/ios-share/hierarchy.json
-          maestro test test/ios-sim/share-sheet.yaml || echo "::warning::the maestro flow did not finish cleanly — see hierarchy.json and the screenshots"
+          maestro test test/ios-sim/share-sheet.yaml || echo "::warning::the maestro flow did not finish cleanly — see the screenshots and hierarchies in the artifact"
+          # Maestro writes takeScreenshot next to the working directory, and keeps a hierarchy per
+          # step of its own: together they say which tap missed and what the screen offered instead.
+          mv ./*.png .tmp/ios-share/ 2>/dev/null || true
           cp -R "$HOME/.maestro/tests" .tmp/ios-share/maestro-debug 2>/dev/null || true
           if xcrun simctl spawn booted launchctl list | grep -q "UIKitApplication:gift.dhamma.mobile"; then
             echo "the share opened the app"
