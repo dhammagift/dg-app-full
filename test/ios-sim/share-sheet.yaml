@@ -32,8 +32,14 @@ appId: com.apple.mobilesafari
 - waitForAnimationToEnd:
     timeout: 5000
 - takeScreenshot: 2-toolbar
+# With the tip gone the toolbar answers to its own name, which a tap on coordinates does not
+# reliably reach: the same 86%,93% opened this menu in run 207 and missed it in run 208.
+- extendedWaitUntil:
+    visible:
+      id: "MoreMenuButton"
+    timeout: 15000
 - tapOn:
-    point: "86%,93%"
+    id: "MoreMenuButton"
 - extendedWaitUntil:
     visible:
       text: "Share"
