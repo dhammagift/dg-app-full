@@ -938,7 +938,7 @@
         // App Review 4.8: a third-party sign-in has to come with Sign in with Apple, so the iOS build
         // offers only the site's own passphrase login. The row-level style keeps settings.js untouched.
         if (window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'ios') {
-            document.head.insertAdjacentHTML('beforeend', '<style>#btn-google-login,#btn-google-login+div{display:none}</style>');
+            document.head.insertAdjacentHTML('beforeend', '<style>#btn-google-login,#btn-google-login+div{display:none!important}</style>');
             return;
         }
         var KEY = 'dg.app.googleSignIn';
