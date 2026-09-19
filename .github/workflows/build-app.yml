@@ -943,6 +943,29 @@ jobs:
       - name: Judge the report
         run: node test/ios-sim/assert.js .tmp/ios-ui/selftest.json
 
+      # The share sheet, from the outside (test/ios-sim/sharetest): Safari is sent to a page, and
+      # an XCUITest bundle — its own small xcodegen project, no host app — taps Safari's share
+      # button, picks Dhamma.gift in the system sheet and checks that our sheet opens and stays.
+      # Runs on the same booted simulator, with the app drive.sh installed.
+      - name: Share sheet check (XCUITest)
+        run: |
+          set -o pipefail
+          brew install xcodegen >/dev/null 2>&1 || brew install xcodegen
+          UDID=$(xcrun simctl list devices booted | grep -o '[0-9A-F-]\{36\}' | head -1)
+          test -n "$UDID" || { echo "::error::no booted simulator after drive.sh"; exit 1; }
+          xcrun simctl openurl "$UDID" "https://example.com/"
+          sleep 5
+          (cd test/ios-sim/sharetest && xcodegen generate)
+          xcodebuild test \
+            -project test/ios-sim/sharetest/ShareSheetTests.xcodeproj \
+            -scheme ShareSheetTests \
+            -destination "id=$UDID" \
+            -derivedDataPath ios/DerivedData \
+            -resultBundlePath .tmp/ios-ui/sharesheet.xcresult \
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee .tmp/ios-ui/sharesheet-test.log | grep -E "Test Case|error:|failed|passed|\*\* TEST" || true
+          xcrun simctl io "$UDID" screenshot .tmp/ios-ui/ios-share-sheet.png >/dev/null || true
+          grep -q "\*\* TEST SUCCEEDED \*\*" .tmp/ios-ui/sharesheet-test.log || { echo "::error::the share sheet check failed — see sharesheet-test.log and sharesheet.xcresult"; exit 1; }
+
       - name: Upload the report, the screenshots and the logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -952,6 +975,8 @@ jobs:
             .tmp/ios-ui/selftest.json
             .tmp/ios-ui/*.png
             .tmp/ios-ui/app-console.log
+            .tmp/ios-ui/sharesheet-test.log
+            .tmp/ios-ui/sharesheet.xcresult
             ios-ui-build.log
           retention-days: 30
           if-no-files-found: warn
