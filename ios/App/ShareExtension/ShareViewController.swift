@@ -105,14 +105,20 @@ class ShareViewController: UIViewController {
 
     // NSExtensionContext.open(_:) is honoured only by Today and iMessage extensions; in a share
     // extension it returns false without opening anything (build 170). UIApplication sits at the end
-    // of the responder chain, and this target does not restrict itself to extension-safe API
-    // (APPLICATION_EXTENSION_API_ONLY = NO), so its open(_:options:completionHandler:) is callable
-    // and, unlike the openURL: selector of build 190, reports whether the open happened.
+    // of the responder chain, but iOS 18 forces the old openURL: selector to return NO (build 190:
+    // "BUG IN CLIENT OF UIKIT … migrate to open(_:options:completionHandler:)"), and Xcode 26
+    // refuses to build an extension without APPLICATION_EXTENSION_API_ONLY, which hides the new
+    // method from the compiler (build 193). So the new method is called through its IMP with the
+    // real C signature — the one form that both compiles and is not the deprecated entry point —
+    // and its completion says whether the open happened.
     private func openHostApp(_ url: URL, completion: @escaping (Bool) -> Void) {
+        typealias OpenURL = @convention(c) (AnyObject, Selector, NSURL, NSDictionary, (@convention(block) (Bool) -> Void)?) -> Void
+        let selector = NSSelectorFromString("openURL:options:completionHandler:")
         var responder: UIResponder? = self
         while let current = responder {
-            if let application = current as? UIApplication {
-                application.open(url, options: [:]) { ok in DispatchQueue.main.async { completion(ok) } }
+            if current !== self, current.responds(to: selector), let imp = current.method(for: selector) {
+                let open = unsafeBitCast(imp, to: OpenURL.self)
+                open(current, selector, url as NSURL, NSDictionary(), { ok in DispatchQueue.main.async { completion(ok) } })
                 return
             }
             responder = current.next
