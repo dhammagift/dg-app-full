@@ -10,6 +10,9 @@
 2. Certificates, Identifiers & Profiles → Identifiers → **+** → App IDs → App:
    - Bundle ID (explicit): `gift.dhamma.mobile`
    - Capabilities: включить **Associated Domains** (остальное не нужно).
+   - **Вторым App ID — `gift.dhamma.mobile.share`**: это Share Extension, у неё в проекте свой
+     bundle id (`project.pbxproj`, target `ShareExtension`), и без своего App ID подпись сборки
+     упадёт именно на расширении. Capabilities ей не нужны.
 3. Там же — Devices: добавить iPhone (UDID), если захочется ставить сборки напрямую, а не через
    TestFlight. Для TestFlight это не требуется.
 
@@ -68,9 +71,22 @@ Team), продлеваются сами, и хранить их в секрет
 Как только есть: Actions → **Build App** → *Run workflow* → джоба `ios-release` соберёт Release,
 подпишет с `-allowProvisioningUpdates`, загрузит в TestFlight и положит `.ipa` в артефакты.
 
-Ещё понадобится запись приложения в App Store Connect (My Apps → **+** → New App): bundle id
-`gift.dhamma.mobile`, имя `Dhamma.gift`, основной язык, SKU — любая строка. Без записи TestFlight
-не примет сборку.
+Ещё понадобится запись приложения в App Store Connect (My Apps → **+** → New App). Без записи
+TestFlight не примет сборку. Заполняется так:
+
+| Поле | Значение |
+|---|---|
+| Platforms | iOS |
+| Name | `Dhamma.gift` |
+| Primary Language | основной язык магазина (English (U.S.)) |
+| Bundle ID | `gift.dhamma.mobile` |
+| SKU | любая строка, пользователям не видна — например `dhammagift-ios` |
+| User Access | Full Access |
+
+Если список **Bundle ID** пуст — значит App ID из п. 1 ещё не зарегистрирован: этот выпадающий
+список показывает только то, что уже заведено в Certificates, Identifiers & Profiles. Расширение
+(`gift.dhamma.mobile.share`) здесь выбирать не нужно — запись в App Store Connect одна, на основной
+bundle id.
 
 ## 4. Проверки на телефоне — то, чего не может симулятор
 
