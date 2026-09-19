@@ -3,7 +3,7 @@ import WebKit
 import UniformTypeIdentifiers
 
 // The Share Extension: text or a link shared from another app is searched for, and the results are
-// shown right here in the sheet.
+// shown right here in the sheet — from the offline library when it is downloaded, without a network.
 //
 // It used to hand the text to the app instead, the way Android's ACTION_SEND filter does, and that
 // is not a thing iOS allows. A share extension is a separate process living inside someone else's
@@ -14,20 +14,35 @@ import UniformTypeIdentifiers
 // is allowed to see it), 195 the same method through its IMP — which iOS accepted, ignored, and
 // never called back, leaving the sheet open on the owner's phone.
 //
-// So the extension does the work instead of delegating it, which is what iOS extensions are for:
-// share a phrase from any app and see where it occurs in the suttas without leaving that app. The
-// site answers the same `?q=` that the app, the web share target and a plain link all use, so there
-// is nothing here to keep in step with it — and nothing is interpreted or cleaned on the way, for the reason
-// Android learned the hard way (stripping quotes and source URLs breaks whenever a host app changes
-// its format).
+// So the extension does the work itself, with the app's own pages: the WebView loads the bundled
+// www/ (the containing app's public/ directory, through DgBundleSchemeHandler) at the same
+// capacitor://localhost origin the app uses, and the offline layer inside it reads dg.db from the
+// App Group container through /dg-sql (DgSharedLibrary.swift) — the same file the app downloaded.
+// Nothing is interpreted or cleaned on the way, for the reason Android learned the hard way
+// (stripping quotes and source URLs breaks whenever a host app changes its format).
+//
+// Without a downloaded library the page still loads (it is in the bundle) and its search goes to
+// the site, as it does in the app. A link to dhamma.gift is opened as the page it names: whoever
+// shares a link is online.
 class ShareViewController: UIViewController {
 
-    private let webView = WKWebView(frame: .zero)
+    private var webView: WKWebView!
     private let status = UILabel()
+
+    // App.app/PlugIns/ShareExtension.appex → App.app/public, where `cap sync` puts www/.
+    private static var appPublicDir: URL {
+        return Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("public", isDirectory: true)
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
+
+        let configuration = WKWebViewConfiguration()
+        configuration.setURLSchemeHandler(DgBundleSchemeHandler(root: Self.appPublicDir), forURLScheme: "capacitor")
+        configuration.userContentController.addUserScript(DgLibrary.userScript(shareSheet: true))
+        webView = WKWebView(frame: .zero, configuration: configuration)
 
         let done = UIButton(type: .system)
         done.setTitle("Done", for: .normal)
@@ -37,7 +52,7 @@ class ShareViewController: UIViewController {
         status.textAlignment = .center
         status.textColor = .secondaryLabel
 
-        for child in [done, webView, status] {
+        for child in [done, webView!, status] {
             child.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview(child)
         }
@@ -113,19 +128,17 @@ class ShareViewController: UIViewController {
 
     private func search(for payload: String) {
         // ponytail: the query rides in the URL, which has a practical ceiling of a few kilobytes. A
-        // whole sutta pasted into a share is beyond it; the upgrade path is an App Group container
-        // the sheet reads from. For a word, a phrase or a link — what people actually share — this
-        // is enough, and the ceiling is named rather than silently dropping the tail.
+        // whole sutta pasted into a share is beyond it; for a word, a phrase or a link — what
+        // people actually share — this is enough, and the ceiling is named rather than silently
+        // dropping the tail.
         let capped = payload.count > 4000 ? String(payload.prefix(4000)) : payload
-        // A link to the site is already the page someone means: open it, and a sutta reference lands
-        // in the reader instead of becoming a search for its own address.
         if let shared = URL(string: capped), let host = shared.host,
            host == "dhamma.gift" || host.hasSuffix(".dhamma.gift") {
             webView.load(URLRequest(url: shared))
             return
         }
         guard let encoded = capped.addingPercentEncoding(withAllowedCharacters: .alphanumerics),
-              let url = URL(string: "https://dhamma.gift/?q=" + encoded) else {
+              let url = URL(string: "capacitor://localhost/?q=" + encoded) else {
             status.text = "That text could not be turned into a search."
             return
         }
@@ -143,13 +156,63 @@ extension ShareViewController: WKNavigationDelegate {
         webView.isHidden = false
     }
 
-    // The search needs the site: the offline library lives in the app's own container, which this
-    // process cannot read. Say so plainly instead of showing an empty white sheet.
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-        status.text = "Dhamma.gift could not be reached. Open the app to search the offline library."
+        status.text = "The page could not be loaded: \(error.localizedDescription)"
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-        status.text = "Dhamma.gift could not be reached. Open the app to search the offline library."
+        status.text = "The page could not be loaded: \(error.localizedDescription)"
+    }
+}
+
+// capacitor://localhost inside the extension: the app's www/ from the containing app's bundle, and
+// /dg-sql from DgSqlSchemeHandler — the same two things Capacitor's asset handler plus
+// DgSchemeRouter give the app, so the page cannot tell which process it runs in.
+final class DgBundleSchemeHandler: NSObject, WKURLSchemeHandler {
+    private let root: URL
+    private let sql = DgSqlSchemeHandler()
+
+    init(root: URL) {
+        self.root = root
+    }
+
+    func webView(_ webView: WKWebView, start task: WKURLSchemeTask) {
+        guard let url = task.request.url else { return }
+        if url.path.hasPrefix(DgLibrary.endpointPath + "/") {
+            sql.webView(webView, start: task)
+            return
+        }
+        // Capacitor's router: a path without an extension is a SPA route and gets index.html.
+        let path = (url.path as NSString).pathExtension.isEmpty ? "/index.html" : url.path
+        let file = root.appendingPathComponent(path)
+        guard let data = FileManager.default.contents(atPath: file.path) else {
+            task.didFailWithError(URLError(.fileDoesNotExist))
+            return
+        }
+        let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: [
+            "Content-Type": Self.mimeType(for: (path as NSString).pathExtension),
+            "Content-Length": String(data.count),
+            "Cache-Control": "no-cache"
+        ])!
+        task.didReceive(response)
+        task.didReceive(data)
+        task.didFinish()
+    }
+
+    func webView(_ webView: WKWebView, stop task: WKURLSchemeTask) {
+        sql.webView(webView, stop: task)
+    }
+
+    // The module worker and sqlite-wasm's loader are strict about these two; the rest is UTType.
+    private static func mimeType(for ext: String) -> String {
+        switch ext {
+        case "js", "mjs": return "text/javascript"
+        case "wasm": return "application/wasm"
+        case "json": return "application/json"
+        case "html": return "text/html"
+        case "css": return "text/css"
+        case "svg": return "image/svg+xml"
+        default: return UTType(filenameExtension: ext)?.preferredMIMEType ?? "application/octet-stream"
+        }
     }
 }

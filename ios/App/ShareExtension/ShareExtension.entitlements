@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- The same group as the app (App.entitlements): dg.db lives in its container, and this is
+	     how the sheet reads the library the app downloaded. -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.gift.dhamma.mobile</string>
+	</array>
+</dict>
+</plist>
