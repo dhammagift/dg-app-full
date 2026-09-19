@@ -1292,23 +1292,9 @@ jobs:
             -authenticationKeyID "$ASC_KEY_ID" \
             -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
             2>&1 | tee ios-export.log | tail -30
-
-      # `destination: upload` in the export options is what performs the TestFlight upload; altool is
-      # kept as an explicit fallback for the case where that path is unavailable (Apple's own tool is
-      # deprecated but still accepts --apiKey/--apiIssuer).
-      - name: Upload to TestFlight (fallback if the export did not)
-        if: steps.asc.outputs.have == 'yes'
-        env:
-          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-        run: |
-          IPA=$(ls ios/build/export/*.ipa 2>/dev/null | head -1 || true)
-          if [ -z "$IPA" ]; then echo "::error::no IPA was produced"; exit 1; fi
-          if xcrun altool --upload-app -f "$IPA" -t ios --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID" 2>&1 | tail -20; then
-            echo "uploaded $IPA"
-          else
-            echo "::warning::altool could not upload — check TestFlight in App Store Connect; the IPA is uploaded as an artifact below"
-          fi
+          # destination=upload sends the build straight from the export and writes no IPA to disk
+          # (run 170), so the log line is the only proof that something reached App Store Connect.
+          grep -q "Upload succeeded" ios-export.log
 
       - name: Upload the archive log on failure
         if: failure() && steps.asc.outputs.have == 'yes'
@@ -1324,19 +1310,8 @@ jobs:
       - name: Say what went to TestFlight
         if: success() && steps.asc.outputs.have == 'yes'
         run: |
-          IPA=$(ls ios/build/export/*.ipa 2>/dev/null | head -1 || echo '(no ipa)')
           {
             echo "### iOS release: uploaded"
             echo ""
-            echo "Build ${{ github.run_number }} was archived and sent to TestFlight."
-            echo "IPA: \`$IPA\`"
+            echo "Build ${{ github.run_number }} was archived and sent to TestFlight (processing takes 5–15 minutes)."
           } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload the IPA
-        if: success() && steps.asc.outputs.have == 'yes'
-        uses: actions/upload-artifact@v4
-        with:
-          name: dg-app-ios-ipa-${{ github.run_number }}
-          path: ios/build/export/*.ipa
-          retention-days: 30
-          if-no-files-found: error
