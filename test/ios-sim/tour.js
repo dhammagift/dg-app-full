@@ -133,7 +133,32 @@
         return waitFor(textShown).then(function () { return wait(SETTLE_MS); });
     }
 
+    // The app's page lives on capacitor://localhost, and the dictionary preload asks the site for
+    // 24MB of DPD data. In the online tour that fetch dies with WebKit's "Request url is not
+    // HTTP/HTTPS", which does not say WHICH url it objected to. This asks the same question about a
+    // small file the tour does not otherwise need, and writes one console line per answer, so the
+    // next run separates "the app cannot fetch from the site at all" from "only the dictionary path
+    // is broken". Never rejects: a probe that stops the tour would hide the screenshots.
+    function networkProbe() {
+        console.log('[dg-net] origin=' + location.origin + ' caches=' + (typeof window.caches) +
+                    ' onLine=' + navigator.onLine + ' dictScript=' + (typeof window.dgDictScript));
+        var urls = ['https://dhamma.gift/manifest.json', 'https://dhamma.gift/config/ai-search.json'];
+        return urls.reduce(function (chain, url) {
+            return chain.then(function () {
+                var started = Date.now();
+                return fetch(url, { cache: 'no-cache' }).then(function (res) {
+                    return res.text().then(function (t) {
+                        console.log('[dg-net] ' + url + ' -> ' + res.status + ' ' + t.length + 'B in ' + (Date.now() - started) + 'ms');
+                    });
+                }, function (e) {
+                    console.log('[dg-net] ' + url + ' FAILED in ' + (Date.now() - started) + 'ms: ' + (e && e.message));
+                });
+            });
+        }, Promise.resolve()).catch(function (e) { console.log('[dg-net] probe itself failed: ' + (e && e.message)); });
+    }
+
     startWhenReady()
+        .then(networkProbe)
         .then(function () { return stage('home'); })
         .then(function (ok) { if (!ok) return Promise.reject(new Error('stopped')); return go('/kacchapa?langs=ru,en', resultsShown); })
         .then(function () { return stage('search'); })

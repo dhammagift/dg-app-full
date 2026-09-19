@@ -232,10 +232,9 @@ App Store.
 capability». Для такой сборки есть `ios/App/App/App-personal-team.entitlements` (тот же app без
 capability), переключается одним build setting:
 `CODE_SIGN_ENTITLEMENTS=App/App-personal-team.entitlements`. Теряется только перехват https-ссылок;
-схема, шара и возврат логина работают. Конфигурация Release теперь подписана `Apple Distribution`
-(иначе archive просит development-профиль, а он требует зарегистрированных устройств), поэтому
-сборке на личную команду нужен ещё и `CODE_SIGN_IDENTITY="Apple Development"` — вместе с той же
-подменой entitlements.
+схема, шара и возврат логина работают. `CODE_SIGN_IDENTITY` в проекте теперь не задан вообще (так
+Xcode пишет при включённом «Automatically manage signing»: Debug берёт Apple Development, archive —
+Apple Distribution), поэтому сборке на личную команду достаточно подменить только entitlements.
 
 ## 6. Вехи
 

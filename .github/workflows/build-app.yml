@@ -1210,16 +1210,17 @@ jobs:
       # is injected (Play/App Store both refuse a number they have seen, and the run number is the one
       # value this repository already treats as one).
       #
-      # The project keeps "iPhone Developer" for Debug (that is what lets a phone build with a
-      # personal team) and "Apple Distribution" for Release. That split is not cosmetic: an archive
-      # with a development identity asks Apple for an iOS App Development profile, and those list
-      # device UDIDs — a fresh account has registered none, so the portal answers "Your team has no
-      # devices from which to generate a provisioning profile" and no distribution profile is ever
-      # requested (run 156). Passing the identity on the command line instead does not work either:
-      # with automatic signing Xcode then reports "has conflicting provisioning settings … is
-      # automatically signed for development, but a conflicting code signing identity Apple
-      # Distribution has been manually specified" (run 160). The identity belongs in the
-      # configuration, where the Signing & Capabilities editor would have put it.
+      # Signing is automatic and the identity is deliberately left unset in the project, the way Xcode
+      # writes it when "Automatically manage signing" is on: unset means Debug gets Apple Development
+      # and an archive gets Apple Distribution. Both explicit values fail, in opposite directions:
+      # "iPhone Developer" (the value the Capacitor template shipped in BOTH configurations) makes an
+      # archive ask Apple for an iOS App Development profile, which lists device UDIDs — a fresh
+      # account has none, so it answered "Your team has no devices from which to generate a
+      # provisioning profile" (run 156); and a distribution identity fails validation against the
+      # automatic style with "has conflicting provisioning settings … automatically signed for
+      # development, but a conflicting code signing identity Apple Distribution has been manually
+      # specified" whether it comes from the command line (run 160) or from the Release configuration
+      # (run 162).
       - name: Archive
         if: steps.asc.outputs.have == 'yes'
         env:
