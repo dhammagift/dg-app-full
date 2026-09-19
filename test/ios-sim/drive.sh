@@ -57,18 +57,67 @@ if [ -n "$LIBRARY" ]; then
     cp "$LIBRARY"/* "$CONTAINER/Library/Application Support/dg-library/"
     ls -la "$CONTAINER/Library/Application Support/dg-library"
 fi
+DATA_DIR=$(xcrun simctl get_app_container "$UDID" "$BUNDLE" data 2>/dev/null || true)
+[ -n "$DATA_DIR" ] || { echo "drive: could not find the app's data container" >&2; exit 1; }
+# One pass of the screenshot tour: relaunch (so the tour runs again), then take a picture every time
+# the page announces it has reached a view. The announcement is a file (DgSelfTest.stage →
+# Documents/stage.txt) overwritten per stage; a screenshot taken at a guessed moment is worse than
+# none, because it looks like a bug.
+tour_pass() {
+    TAG="$1"; LANG_ARGS="${2:-}"
+    xcrun simctl terminate "$UDID" "$BUNDLE" 2>/dev/null || true
+    [ -n "$DATA_DIR" ] && rm -f "$DATA_DIR/Documents/stage.txt"
+    if [ -n "$LANG_ARGS" ]; then
+        # shellcheck disable=SC2086
+        xcrun simctl launch "$UDID" "$BUNDLE" $LANG_ARGS >/dev/null 2>&1 || true
+    else
+        xcrun simctl launch --console-pty "$UDID" "$BUNDLE" >> "$OUT/app-console.log" 2>&1 &
+    fi
+    LAST=""
+    for i in $(seq 1 180); do
+        S=$(cat "$DATA_DIR/Documents/stage.txt" 2>/dev/null || true)
+        if [ -n "$S" ] && [ "$S" != "$LAST" ]; then
+            LAST="$S"
+            echo "drive: stage $S ($TAG)"
+            if [ "$S" = "done" ]; then return 0; fi
+            sleep 1
+            xcrun simctl io "$UDID" screenshot "$OUT/ios-$S-$TAG.png" >/dev/null \
+                || echo "drive: screenshot for stage $S ($TAG) failed" >&2
+        fi
+        sleep 1
+    done
+    return 0
+}
+
+
+# ---------------------------------------------------------------------------------------------
+# --tour: the screenshot tour, and NOTHING of the self-test. The two bundles are alternatives
+# (prepare-www.js injects one script or the other), so waiting for the report here waited for a file
+# that a tour bundle never writes — which is exactly how the first tour run spent five minutes and
+# then photographed a timeout. The tour announces its own progress through Documents/stage.txt.
+# ---------------------------------------------------------------------------------------------
+if [ -n "$TOUR" ]; then
+    xcrun simctl ui "$UDID" appearance light
+    tour_pass light-en
+    xcrun simctl ui "$UDID" appearance dark
+    tour_pass dark-en
+    # Russian, dark: the second language the reader is built for, and the one whose layout differs
+    # most (longer words, its own strings). AppleLanguages is what a real Russian phone reports.
+    tour_pass dark-ru "-AppleLanguages (ru) -AppleLocale ru_RU"
+    echo "drive: screenshots in $OUT"
+    xcrun simctl terminate "$UDID" "$BUNDLE" 2>/dev/null || true
+    ls -la "$OUT"
+    exit 0
+fi
+
 # --console-pty keeps the app's stdout/stderr in the job log, which is where NSString NSLog lines
 # and WebKit's own complaints show up. Backgrounded: the run below waits on a file, not on the
 # process (simctl launch stays in the foreground for as long as the app lives).
 xcrun simctl launch --console-pty "$UDID" "$BUNDLE" > "$OUT/app-console.log" 2>&1 &
 
-DATA_DIR=""
 REPORT=""
 for i in $(seq 1 "$WAIT_SECONDS"); do
-    if [ -z "$DATA_DIR" ]; then
-        DATA_DIR=$(xcrun simctl get_app_container "$UDID" "$BUNDLE" data 2>/dev/null || true)
-    fi
-    if [ -n "$DATA_DIR" ] && [ -f "$DATA_DIR/Documents/selftest.json" ]; then
+    if [ -f "$DATA_DIR/Documents/selftest.json" ]; then
         REPORT="$DATA_DIR/Documents/selftest.json"
         # The write is atomic, so a file that exists is complete.
         break
@@ -100,60 +149,22 @@ for i in $(seq 1 20); do
 done
 cp "$REPORT" "$OUT/selftest.json"
 
-# One pass of the screenshot tour: relaunch (so the tour runs again), then take a picture every time
-# the page announces it has reached a view. The announcement is a file (DgSelfTest.stage →
-# Documents/stage.txt) overwritten per stage; a screenshot taken at a guessed moment is worse than
-# none, because it looks like a bug.
-tour_pass() {
-    TAG="$1"; LANG_ARGS="${2:-}"
-    xcrun simctl terminate "$UDID" "$BUNDLE" 2>/dev/null || true
-    [ -n "$DATA_DIR" ] && rm -f "$DATA_DIR/Documents/stage.txt"
-    if [ -n "$LANG_ARGS" ]; then
-        # shellcheck disable=SC2086
-        xcrun simctl launch "$UDID" "$BUNDLE" $LANG_ARGS >/dev/null 2>&1 || true
-    else
-        xcrun simctl launch --console-pty "$UDID" "$BUNDLE" >> "$OUT/app-console.log" 2>&1 &
-    fi
-    LAST=""
-    for i in $(seq 1 180); do
-        S=$(cat "$DATA_DIR/Documents/stage.txt" 2>/dev/null || true)
-        if [ -n "$S" ] && [ "$S" != "$LAST" ]; then
-            LAST="$S"
-            echo "drive: stage $S ($TAG)"
-            if [ "$S" = "done" ]; then return 0; fi
-            sleep 1
-            xcrun simctl io "$UDID" screenshot "$OUT/ios-$S-$TAG.png" >/dev/null
-        fi
-        sleep 1
-    done
-    return 0
-}
-
-if [ -n "$TOUR" ]; then
-    tour_pass light-en
-    xcrun simctl ui "$UDID" appearance dark
-    tour_pass dark-en
-    # Russian, dark: the second language the reader is built for, and the one whose layout differs
-    # most (longer words, its own strings). AppleLanguages is what a real Russian phone reports.
-    tour_pass dark-ru "-AppleLanguages (ru) -AppleLocale ru_RU"
-else
 # The self-test navigates the app to search results served from the local database on its way out
 # (see selftest.js), so these screenshots show the app with real local data, not its home screen.
 # Light/dark is the simulator's own appearance switch, which is exactly what the site's theme
 # follows (prefers-color-scheme).
 sleep 6
-xcrun simctl io "$UDID" screenshot "$OUT/ios-light-en.png" >/dev/null
+xcrun simctl io "$UDID" screenshot "$OUT/ios-light-en.png" >/dev/null || echo "drive: light screenshot failed" >&2
 xcrun simctl ui "$UDID" appearance dark
 sleep 3
-xcrun simctl io "$UDID" screenshot "$OUT/ios-dark-en.png" >/dev/null
+xcrun simctl io "$UDID" screenshot "$OUT/ios-dark-en.png" >/dev/null || echo "drive: dark screenshot failed" >&2
 
 # Russian, dark: the second language the reader is built for, and the one whose layout differs most
 # (longer words, its own strings). AppleLanguages is what a real Russian phone reports.
 xcrun simctl terminate "$UDID" "$BUNDLE" 2>/dev/null || true
 xcrun simctl launch "$UDID" "$BUNDLE" -AppleLanguages '(ru)' -AppleLocale ru_RU >/dev/null 2>&1 || true
 sleep 12
-xcrun simctl io "$UDID" screenshot "$OUT/ios-dark-ru.png" >/dev/null
-fi
+xcrun simctl io "$UDID" screenshot "$OUT/ios-dark-ru.png" >/dev/null || echo "drive: ru screenshot failed" >&2
 
 echo "drive: screenshots in $OUT"
 # Stop the app so the backgrounded `simctl launch --console-pty` returns instead of holding the step
