@@ -1209,6 +1209,12 @@ jobs:
       # The bundle id, the team and the marketing version come from the project; only the build number
       # is injected (Play/App Store both refuse a number they have seen, and the run number is the one
       # value this repository already treats as one).
+      #
+      # The project keeps "iPhone Developer" for both configurations (that is what lets a phone build
+      # with a personal team), so an archive would ask Apple for an iOS App Development profile — and
+      # those need registered devices, which a fresh account has none of ("Your team has no devices
+      # from which to generate a provisioning profile"). Forcing the distribution identity here makes
+      # -allowProvisioningUpdates create an Apple Distribution profile instead, which needs no device.
       - name: Archive
         if: steps.asc.outputs.have == 'yes'
         env:
@@ -1229,6 +1235,8 @@ jobs:
             -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
             CURRENT_PROJECT_VERSION=${{ github.run_number }} \
             DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }} \
+            CODE_SIGN_STYLE=Automatic \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
             archive 2>&1 | tee ios-archive.log | tail -30
 
       # app-store-connect is Xcode 15+'s name for what used to be `app-store`; the older spelling still
