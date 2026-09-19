@@ -960,7 +960,14 @@ jobs:
           maestro --version
           # Start from "not running", so the process list below answers about THIS share alone.
           xcrun simctl terminate booted gift.dhamma.mobile 2>/dev/null || true
-          maestro test test/ios-sim/share-sheet.yaml || echo "::warning::the maestro flow did not finish cleanly — see the screenshots in the artifact"
+          xcrun simctl openurl booted "https://example.com/kacchapa"
+          sleep 8
+          # What the screen actually offers, by name. Run 202 guessed at "ShareButton" and found
+          # nothing, and the hierarchy it would have needed stayed on the runner.
+          maestro hierarchy > .tmp/ios-share/hierarchy.json 2>&1 || true
+          head -c 6000 .tmp/ios-share/hierarchy.json
+          maestro test test/ios-sim/share-sheet.yaml || echo "::warning::the maestro flow did not finish cleanly — see hierarchy.json and the screenshots"
+          cp -R "$HOME/.maestro/tests" .tmp/ios-share/maestro-debug 2>/dev/null || true
           if xcrun simctl spawn booted launchctl list | grep -q "UIKitApplication:gift.dhamma.mobile"; then
             echo "the share opened the app"
           else
@@ -986,7 +993,7 @@ jobs:
             .tmp/ios-ui/selftest.json
             .tmp/ios-ui/*.png
             .tmp/ios-ui/app-console.log
-            .tmp/ios-share/*.png
+            .tmp/ios-share/**
             ios-ui-build.log
           retention-days: 30
           if-no-files-found: warn

@@ -12,12 +12,11 @@
 # which no webview can fake.
 appId: com.apple.mobilesafari
 ---
-- openLink: https://example.com/kacchapa
-- waitForAnimationToEnd:
-    timeout: 15000
 - takeScreenshot: .tmp/ios-share/1-safari
+# Run 202: no element with id ShareButton. Safari's toolbar button carries the accessibility
+# label instead, and Maestro matches labels by regex — anchored so it cannot catch the page.
 - tapOn:
-    id: ShareButton
+    text: "^(Share|Поделиться)$"
 - waitForAnimationToEnd:
     timeout: 10000
 - takeScreenshot: .tmp/ios-share/2-sheet
