@@ -1,8 +1,29 @@
-# Передача задачи: iOS-приложение (состояние на 19.09.2026, вечер)
+# Передача задачи: iOS-приложение (состояние на 19.09.2026, вечер; дополнено 19.09 утром UTC)
 
-Ветка `claude/ponytail-full-9vo71m`, head `372869d`. Прогон **167** (`35418255474`, dispatch) шёл на
-момент передачи: джоб `build` ещё собирался, `ios-release` не начинался. Запущен фоновый watcher
-(`bash-30`, `.tmp/wait-release.sh 35418255474`), он печатает вердикты и скачивает артефакты.
+Ветка `claude/ponytail-full-9vo71m`, head `45cb037`.
+
+## Итог второй смены (19.09, 03:20–05:00 UTC)
+
+- **TestFlight летит.** Прогон 170 (`35420942792`): archive → export → `Upload succeeded`; в App Store
+  Connect сборка **1.17 (170)**, статус Ready to Submit. Что решило: в команде не было ни одного
+  устройства, а Xcode при Automatic подписывает *архив* development-профилем (distribution
+  накладывается на экспорте) — без устройства Apple такой профиль не выдаёт. Владелец зарегистрировал
+  одно устройство (Devices → +), Release вернули на Automatic (`f62145c`). Manual (167) без имени
+  профиля отвечает «requires a provisioning profile». Fallback-шаг altool удалён (`45cb037`):
+  `destination=upload` не пишет IPA на диск, шаг падал с «no IPA was produced» уже после успешной
+  загрузки; теперь экспорт проверяет строку `Upload succeeded` в своём логе.
+- **Словарь починен.** «Request url is not HTTP/HTTPS» — это Cache API WebKit, не сеть:
+  `cache.put('/assets/…')` резолвился в `capacitor://localhost/...`, а Cache API принимает только
+  http(s)-ключи (Android с `https://localhost` этого не показывал). Ключ теперь `origin + src`
+  (`src/native-bridge.js`). Доказательство — прогон 169, `docs/ios-review/tour-169/app-console.log`:
+  `dpd_i2h.js -> 200 5831804B`, ни одного `[dg-dict] fetch failed`, ридер без красной плашки
+  (`ios-reader-dark-en.png`). Побочно: Android один раз перекачает словарь (ключ сменился).
+- **AASA уже на проде**: `curl -H "Host: dhamma.gift" http://127.0.0.1:3000/.well-known/apple-app-site-association`
+  отдаёт `7MXRJUJ7C3.gift.dhamma.mobile` (снаружи с сервера curl к dhamma.gift не ходит — это
+  особенность сервера, не сайта). `test.dhamma.gift` отдаёт заглушку `TEAMID` — Apple туда не смотрит.
+- **Осталось:** merge в `main` (§5) и шесть проверок на телефоне (§6). Из UI-замечаний по снимкам:
+  в ридере при прокрутке текст уходит под часы/Dynamic Island (статус-бар без подложки); файлы
+  `-ru` тура показывают английский интерфейс (тур меняет только `langs=ru,en` поиска).
 
 Репозитории: `dg-app-full` (это приложение: Capacitor-обёртка + CI), `dg-node` (сайт, отдаёт AASA и
 данные). **Android ломать нельзя** — джобы `build`/APK/AAB в каждом прогоне должны оставаться зелёными.
@@ -11,9 +32,9 @@
 
 | # | Задача | Состояние |
 |---|---|---|
-| 1 | Сборка уходит в TestFlight | 4 попытки, все упираются в подпись; в прогоне 167 — вариант «manual + Apple Distribution» |
-| 2 | Встроенный словарь в ридере (`Couldn't load the dictionary`) | сеть у приложения есть, падает именно запрос за DPD; в 167 зонд сузит причину |
-| 3 | Задеплой `dg-node`, чтобы прод отдал AASA с `7MXRJUJ7C3` | файл поправлен (`dcdb772` в `main`), нужен деплой сайта |
+| 1 | Сборка уходит в TestFlight | **сделано** — 1.17 (170) в TestFlight; см. «Итог второй смены» |
+| 2 | Встроенный словарь в ридере (`Couldn't load the dictionary`) | **сделано** — ключ Cache API, `f62145c`; проверка на телефоне: тап по слову (§6, п. 3) |
+| 3 | Задеплой `dg-node`, чтобы прод отдал AASA с `7MXRJUJ7C3` | **сделано** — прод уже отдаёт |
 | 4 | Merge ветки в `main` | `main` отстаёт; `ios-release`/`ios-screenshots` есть только в ветке |
 
 ## 1. Что уже проверено и работает (доказательства в прогонах)

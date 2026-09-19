@@ -1,0 +1,76 @@
+2026-09-19 04:19:43.126 App[14983:48886] DiskCookieStorage changing policy from 2 to 0, cookie file: file:///Users/runner/Library/Developer/CoreSimulator/Devices/E36DEA31-A7FC-4D86-AEBB-F8557AC0703B/data/Containers/Data/Application/F38824AC-7876-4636-B7A2-641EA1FAB14C/Library/Cookies/gift.dhamma.mobile.binarycookies
+Loading network plugin
+⚡️  Loading app at capacitor://localhost...
+Reachable via WiFi
+⚡️  To Native ->  DgTts addListener 103033299
+⚡️  To Native ->  DgTts getVoices 103033300
+⚡️  To Native ->  DgDownload addListener 103033301
+⚡️  To Native ->  App addListener 103033302
+⚡️  To Native ->  DgShortcuts set 103033303
+⚡️  To Native ->  App addListener 103033304
+⚡️  To Native ->  App addListener 103033305
+⚡️  TO JS {"voices":[{"localService":true,"name":"Samantha","lang":"en-US"},{"name":"Albert","lang":"en-US","localService":true},{"name":"Bad News","lang":"en-US","localService":true},{"name":"Bahh","lang":"en-US","localService":true},{"name":"Bells","lang":"en-US",
+⚡️  TO JS {"count":0}
+⚡️  WebView loaded
+⚡️  [log] - [dg-net] origin=capacitor://localhost caches=object onLine=true dictScript=function
+⚡️  To Native ->  DgShortcuts set 103033306
+⚡️  TO JS {"count":0}
+⚡️  [log] - [dg-net] https://dhamma.gift/manifest.json -> 200 4605B in 1914ms
+⚡️  [log] - [dg-net] https://dhamma.gift/config/ai-search.json -> 404 31881B in 360ms
+⚡️  [log] - [dg-net] https://dhamma.gift/assets/js/standalone-dpd/pali-lookup-standalone.js -> 200 9638B in 193ms
+⚡️  [log] - [dg-net] https://dhamma.gift/assets/js/standalone-dpd/dpd_i2h.js -> 200 5831804B in 1117ms
+⚡️  To Native ->  DgSelfTest stage 103033307
+⚡️  TO JS {"stage":"home"}
+⚡️  To Native ->  DgSelfTest stage 103033308
+⚡️  TO JS {"stage":"search"}
+⚡️  To Native ->  DgSelfTest stage 103033309
+⚡️  TO JS {"stage":"reader"}
+⚡️  To Native ->  DgSelfTest stage 103033310
+⚡️  TO JS {"stage":"settings"}
+⚡️  To Native ->  DgSelfTest stage 103033311
+⚡️  TO JS {"stage":"dictionary"}
+⚡️  To Native ->  DgSelfTest stage 103033312
+⚡️  TO JS {"stage":"favorites-history"}
+⚡️  To Native ->  DgSelfTest stage 103033313
+⚡️  TO JS {"stage":"toc"}
+⚡️  To Native ->  DgSelfTest stage 103033314
+⚡️  TO JS {"stage":"done"}
+gift.dhamma.mobile: 14983
+2026-09-19 04:20:56.843 App[16589:53853] DiskCookieStorage changing policy from 2 to 0, cookie file: file:///Users/runner/Library/Developer/CoreSimulator/Devices/E36DEA31-A7FC-4D86-AEBB-F8557AC0703B/data/Containers/Data/Application/F38824AC-7876-4636-B7A2-641EA1FAB14C/Library/Cookies/gift.dhamma.mobile.binarycookies
+Loading network plugin
+⚡️  Loading app at capacitor://localhost...
+Reachable via WiFi
+⚡️  To Native ->  DgTts addListener 56366399
+⚡️  To Native ->  DgTts getVoices 56366400
+⚡️  To Native ->  DgDownload addListener 56366401
+⚡️  To Native ->  App addListener 56366402
+⚡️  To Native ->  DgShortcuts set 56366403
+⚡️  To Native ->  App addListener 56366404
+⚡️  To Native ->  App addListener 56366405
+⚡️  TO JS {"voices":[{"name":"Samantha","lang":"en-US","localService":true},{"name":"Albert","localService":true,"lang":"en-US"},{"lang":"en-US","localService":true,"name":"Bad News"},{"localService":true,"name":"Bahh","lang":"en-US"},{"name":"Bells","localService":
+⚡️  TO JS {"count":1}
+⚡️  WebView loaded
+⚡️  [log] - [dg-net] origin=capacitor://localhost caches=object onLine=true dictScript=function
+⚡️  [log] - [dg-net] https://dhamma.gift/manifest.json -> 200 4605B in 652ms
+⚡️  [log] - [dg-net] https://dhamma.gift/config/ai-search.json -> 404 31881B in 378ms
+⚡️  [log] - [dg-net] https://dhamma.gift/assets/js/standalone-dpd/pali-lookup-standalone.js -> 200 9638B in 192ms
+⚡️  [log] - [dg-net] https://dhamma.gift/assets/js/standalone-dpd/dpd_i2h.js -> 200 5831804B in 238ms
+⚡️  To Native ->  DgSelfTest stage 56366406
+⚡️  TO JS {"stage":"home"}
+⚡️  To Native ->  DgShortcuts set 56366407
+⚡️  TO JS {"count":1}
+⚡️  To Native ->  DgSelfTest stage 56366408
+⚡️  TO JS {"stage":"search"}
+⚡️  To Native ->  DgSelfTest stage 56366409
+⚡️  TO JS {"stage":"reader"}
+⚡️  To Native ->  DgSelfTest stage 56366410
+⚡️  TO JS {"stage":"settings"}
+⚡️  To Native ->  DgSelfTest stage 56366411
+⚡️  TO JS {"stage":"dictionary"}
+⚡️  To Native ->  DgSelfTest stage 56366412
+⚡️  TO JS {"stage":"favorites-history"}
+⚡️  To Native ->  DgSelfTest stage 56366413
+⚡️  TO JS {"stage":"toc"}
+⚡️  To Native ->  DgSelfTest stage 56366414
+⚡️  TO JS {"stage":"done"}
+gift.dhamma.mobile: 16589
