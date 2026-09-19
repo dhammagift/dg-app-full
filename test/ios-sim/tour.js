@@ -86,6 +86,16 @@
         return tabShown('tab-fav');
     }
 
+    // The real landing view (dg-hero-heading: "Find the Truth" + the tool tiles), not just
+    // "whatever the page happened to be showing when it finished loading". A cold boot should
+    // already land here (dgScreenFromUrl() reads '/index.html' as home), but the tour asserts it
+    // explicitly and navigates there the same way the 'search'/'reader' stages navigate to
+    // theirs, instead of trusting an assumption that turned one run's "home" screenshot into a
+    // second "search" screenshot under a different name.
+    function homeShown() {
+        return document.body.classList.contains('dg-state-home') || !!document.getElementById('home-motto');
+    }
+
     function tocShown() {
         var pane = document.getElementById('toc-pane');
         return !!pane && pane.children.length > 0;
@@ -165,6 +175,7 @@
 
     startWhenReady()
         .then(networkProbe)
+        .then(function () { return go('/', homeShown); })
         .then(function () { return stage('home'); })
         .then(function (ok) { if (!ok) return Promise.reject(new Error('stopped')); return go('/kacchapa?langs=ru,en', resultsShown); })
         .then(function () { return stage('search'); })
