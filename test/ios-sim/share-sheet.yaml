@@ -16,29 +16,18 @@ appId: com.apple.mobilesafari
 ---
 - takeScreenshot: 1-safari
 # A fresh simulator's Safari greets iOS 26 with a tip about its new "..." menu, and that tip owns
-# the whole screen: its dismiss region is 402x874, so anything aimed at the toolbar hits the tip
-# instead (run 204), and a tap on empty page did not close it either (run 205). Wait for the tip's
-# own Close button and press that. Matched by label, not by id: the id in the hierarchy is the SF
-# Symbol name and Maestro did not match it.
-- extendedWaitUntil:
-    visible:
-      text: "Close"
-    timeout: 20000
-    optional: true
+# the whole screen: its dismiss region is 402x874. Its Close button matched neither by id (an SF
+# Symbol name, run 205) nor by label (only accessibilityText is set, run 206) — but a plain tap
+# where the "..." button sits does close it (run 204), and that is all this step needs to do. With
+# no tip up, the same tap opens the menu instead, which the optional tap below then skips.
 - tapOn:
-    text: "Close"
-    optional: true
+    point: "86%,93%"
 - waitForAnimationToEnd:
     timeout: 5000
 - takeScreenshot: 2-toolbar
-# Share lives in that menu now. The name comes from the hierarchy run 204 captured once the tip
-# was gone: More | MoreMenuButton.
-- extendedWaitUntil:
-    visible:
-      id: "MoreMenuButton"
-    timeout: 20000
 - tapOn:
     id: "MoreMenuButton"
+    optional: true
 - waitForAnimationToEnd:
     timeout: 5000
 - takeScreenshot: 3-menu
