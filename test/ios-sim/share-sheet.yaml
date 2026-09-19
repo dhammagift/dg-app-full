@@ -1,0 +1,27 @@
+# Safari shares a page URL with the Share Extension, and the app must come to the front with it.
+#
+# This is the one path the tour cannot drive. The extension runs in its OWN process, and iOS — not
+# our code — decides whether it may open its host app: build 170 used extensionContext.open (only
+# Today and iMessage extensions are served by it), 190 the openURL: selector through the responder
+# chain (iOS 18 forces it to NO), 193 UIApplication.open directly (Xcode 26 refuses to build an
+# extension with APPLICATION_EXTENSION_API_ONLY = NO), 195 the same method through its IMP. Each
+# one failed differently on a phone, a day apart, which is what this flow is for.
+#
+# Maestro drives the system UI because the share sheet belongs to SpringBoard. Nothing is asserted
+# here about what the app renders: the step that runs this flow reads the simulator's process list,
+# which no webview can fake.
+appId: com.apple.mobilesafari
+---
+- openLink: https://example.com/kacchapa
+- waitForAnimationToEnd:
+    timeout: 15000
+- takeScreenshot: .tmp/ios-share/1-safari
+- tapOn:
+    id: ShareButton
+- waitForAnimationToEnd:
+    timeout: 10000
+- takeScreenshot: .tmp/ios-share/2-sheet
+- tapOn: Dhamma.gift
+- waitForAnimationToEnd:
+    timeout: 15000
+- takeScreenshot: .tmp/ios-share/3-after

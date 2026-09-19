@@ -943,6 +943,28 @@ jobs:
       - name: Judge the report
         run: node test/ios-sim/assert.js .tmp/ios-ui/selftest.json
 
+      # The share sheet belongs to SpringBoard, so the tour — which drives the app's own webview —
+      # cannot reach it, and "may an extension open its host app" is exactly where every build since
+      # 170 died. Maestro taps through Safari's sheet (it pilots the device, not one process, and
+      # needs nothing added to the Xcode project); whether the app actually came up is then read off
+      # the simulator's process list, which a webview rendering nothing cannot fake. A red check
+      # here does not hold up TestFlight: ios-release is a sibling job, not a dependent one.
+      - name: Does a share from Safari open the app?
+        run: |
+          mkdir -p .tmp/ios-share
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          export PATH="$HOME/.maestro/bin:$PATH"
+          maestro --version
+          # Start from "not running", so the process list below answers about THIS share alone.
+          xcrun simctl terminate booted gift.dhamma.mobile 2>/dev/null || true
+          maestro test test/ios-sim/share-sheet.yaml || echo "::warning::the maestro flow did not finish cleanly — see the screenshots in the artifact"
+          if xcrun simctl spawn booted launchctl list | grep -q "UIKitApplication:gift.dhamma.mobile"; then
+            echo "the share opened the app"
+          else
+            echo "::error::the share did not open the app — the extension still cannot reach it"
+            exit 1
+          fi
+
       # No gate on the deep link here on purpose: iOS shows its own "Open in Dhamma.gift?" prompt for
       # a custom scheme opened from OUTSIDE the app (SpringBoard, and `simctl openurl` behaves like
       # that), and a headless simulator cannot tap it — the app never receives the URL. The self-test
@@ -961,6 +983,7 @@ jobs:
             .tmp/ios-ui/selftest.json
             .tmp/ios-ui/*.png
             .tmp/ios-ui/app-console.log
+            .tmp/ios-share/*.png
             ios-ui-build.log
           retention-days: 30
           if-no-files-found: warn
