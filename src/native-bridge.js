@@ -935,6 +935,12 @@
     // signed in with it. The merge/overwrite choice made before leaving is kept with the state: the
     // login page reloads on the way back.
     (function googleSignInViaBrowser() {
+        // App Review 4.8: a third-party sign-in has to come with Sign in with Apple, so the iOS build
+        // offers only the site's own passphrase login. The row-level style keeps settings.js untouched.
+        if (window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'ios') {
+            document.head.insertAdjacentHTML('beforeend', '<style>#btn-google-login{display:none}</style>');
+            return;
+        }
         var KEY = 'dg.app.googleSignIn';
         var origin = window.DG_ONLINE_ORIGIN || 'https://dhamma.gift';
         var Plugins = (window.Capacitor && window.Capacitor.Plugins) || {};
