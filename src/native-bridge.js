@@ -936,10 +936,12 @@
     // login page reloads on the way back.
     (function googleSignInViaBrowser() {
         // App Review 4.8: a third-party sign-in has to come with Sign in with Apple, so the iOS build
-        // offers only the site's own passphrase login. The row-level style keeps settings.js untouched.
+        // hides the Google button and the divider that separated it, leaving the passphrase login.
+        // Only the button goes: the rest of this function also defines window.dgSignInUrl, which the
+        // simulator self-test asserts on (run 200 went red on "no sign-in URL builder in the page"),
+        // and the sign-in return path needs it. A hidden button offers nothing, which is what 4.8 asks.
         if (window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'ios') {
             document.head.insertAdjacentHTML('beforeend', '<style>#btn-google-login,#btn-google-login+div{display:none!important}</style>');
-            return;
         }
         var KEY = 'dg.app.googleSignIn';
         var origin = window.DG_ONLINE_ORIGIN || 'https://dhamma.gift';

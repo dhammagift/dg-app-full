@@ -950,6 +950,9 @@ jobs:
       # the simulator's process list, which a webview rendering nothing cannot fake. A red check
       # here does not hold up TestFlight: ios-release is a sibling job, not a dependent one.
       - name: Does a share from Safari open the app?
+        # Also when the self-test above went red: the share sheet is a separate question, and run
+        # 200 never got to ask it.
+        if: always()
         run: |
           mkdir -p .tmp/ios-share
           curl -Ls "https://get.maestro.mobile.dev" | bash
