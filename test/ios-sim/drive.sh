@@ -12,6 +12,10 @@ set -euo pipefail
 APP=""
 OUT=".tmp/ios-ui"
 LIBRARY=
+# --tour switches the screenshot phase to the page-driven tour; a default is not optional here, the
+# script runs under `set -u` and referencing an unset TOUR aborted a whole run (line 128) after the app
+# had already done its work — the report was written, the screenshots never taken.
+TOUR=""
 DEVICE="${DG_SIM_DEVICE:-iPhone 17}"
 BUNDLE="gift.dhamma.mobile"
 WAIT_SECONDS="${DG_SELFTEST_TIMEOUT:-300}"

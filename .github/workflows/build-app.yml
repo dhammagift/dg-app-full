@@ -1142,9 +1142,22 @@ jobs:
           if [ -z "$missing" ]; then
             echo "have=yes" >> "$GITHUB_OUTPUT"
             echo "signing secrets present"
+            {
+              echo "### iOS release"
+              echo "Signing secrets found — archiving and uploading to TestFlight."
+            } >> "$GITHUB_STEP_SUMMARY"
           else
             echo "have=no" >> "$GITHUB_OUTPUT"
             echo "::notice::missing secrets:$missing — skipping the archive and the upload. See docs/IOS_ACCOUNT_DAY.md."
+            # A green job that did nothing reads like a successful release. The summary is where that is
+            # impossible to misread: nothing was built, nothing was uploaded.
+            {
+              echo "### iOS release: nothing happened"
+              echo ""
+              echo "Missing repository secrets: \`$missing\`"
+              echo ""
+              echo "No archive was made and nothing was uploaded to TestFlight. See docs/IOS_ACCOUNT_DAY.md."
+            } >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Set up Node.js
@@ -1277,6 +1290,17 @@ jobs:
             ios-export.log
           retention-days: 7
           if-no-files-found: ignore
+
+      - name: Say what went to TestFlight
+        if: success() && steps.asc.outputs.have == 'yes'
+        run: |
+          IPA=$(ls ios/build/export/*.ipa 2>/dev/null | head -1 || echo '(no ipa)')
+          {
+            echo "### iOS release: uploaded"
+            echo ""
+            echo "Build ${{ github.run_number }} was archived and sent to TestFlight."
+            echo "IPA: \`$IPA\`"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload the IPA
         if: success() && steps.asc.outputs.have == 'yes'
