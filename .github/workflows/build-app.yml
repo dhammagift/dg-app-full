@@ -1222,9 +1222,11 @@ jobs:
       #   * run 164 — with no identity anywhere, automatic signing again resolved to a development
       #     profile, i.e. an unset identity means "Apple Development" and the style does not change
       #     that for an archive.
-      # So the Release configuration now states both halves of the pair the error message points at:
-      # CODE_SIGN_IDENTITY = "Apple Distribution" with CODE_SIGN_STYLE = Manual ("or switch to manual
-      # signing"). Debug keeps Automatic, which is what a phone build with a personal team needs.
+      #   * run 167 — CODE_SIGN_STYLE = Manual with the distribution identity: "requires a provisioning
+      #     profile", because Manual means a named profile and there is none.
+      # Automatic signing is right; the archive step is signed for development by design and the
+      # distribution profile is applied at export. What it needed was one registered device on the
+      # team (Certificates, Identifiers & Profiles → Devices), so both configurations stay Automatic.
       - name: What signing does Xcode resolve?
         if: steps.asc.outputs.have == 'yes'
         run: |

@@ -150,6 +150,9 @@
         var FILES = ['/assets/js/standalone-dpd/dpd_i2h.js', '/assets/js/standalone-dpd/dpd_deconstructor.js',
                      '/assets/js/standalone-dpd/dpd_ebts.js', '/assets/js/standalone-dpd/ru/dpd_ebts.js'];
         var checked = {};
+        // Cache API only accepts http(s) keys: a bare path would resolve against capacitor://localhost on
+        // iOS and every put() would throw "Request url is not HTTP/HTTPS".
+        function key(src) { return origin + src; }
 
         // Resolves to the newest Response available: the site's when it changed, else the cached one.
         function fromSite(cache, src, cached) {
@@ -169,7 +172,7 @@
                 }
                 var etag = res.headers.get('etag');
                 if (cached && etag && cached.headers.get('etag') === etag) return cached;
-                return cache.put(src, res.clone()).then(function () { return res; });
+                return cache.put(key(src), res.clone()).then(function () { return res; });
             }).catch(function (e) {
                 checked[src] = false;
                 console.warn('[dg-dict] fetch failed for ' + origin + src + ': ' + (e && e.message) + ' (onLine=' + navigator.onLine + ')');
@@ -179,7 +182,7 @@
 
         window.dgDictScript = function (src) {
             return caches.open(CACHE).then(function (cache) {
-                return cache.match(src).then(function (hit) {
+                return cache.match(key(src)).then(function (hit) {
                     if (hit) {
                         fromSite(cache, src, hit.clone()); // refresh in the background; this tap uses the cached copy
                         return hit.text();
@@ -203,7 +206,7 @@
             caches.open(CACHE).then(function (cache) {
                 return FILES.reduce(function (chain, src) {
                     return chain.then(function () {
-                        return cache.match(src).then(function (hit) { return fromSite(cache, src, hit || null); });
+                        return cache.match(key(src)).then(function (hit) { return fromSite(cache, src, hit || null); });
                     });
                 }, Promise.resolve());
             }).catch(function (e) { prepared = false; console.warn('[dg-dict] could not cache the dictionary:', e && e.message); });
