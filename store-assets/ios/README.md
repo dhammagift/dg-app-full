@@ -3,40 +3,36 @@
 `screenshots/` и `previews/` — материалы для страницы приложения в App Store Connect. Реальные
 снимки/видео симулятора (`test/ios-sim/drive.sh --tour`), не макеты.
 
-## screenshots/iphone-6.7in-1284x2778/
+## screenshots/iphone-6.7in-1284x2778/ и screenshots/ipad-13in-curated/
 
-Прогон 156, сборка `4d0f2cc`, эталонный набор без повторов — тема light, локаль en.
+Прогон 180 (`5c331c7`), тема light, локаль en. 1284×2778 принимается в слот **iPhone 6.5"
+Display** в App Store Connect (наряду с 1242×2688).
 
-1284×2778 — принимается в слот **iPhone 6.5" Display** в App Store Connect (наряду с
-1242×2688). Порядок и состав — по `docs/APP_STORE_LISTING.md`:
+iPhone (`iphone-6.7in-1284x2778/`): `01-search.png`, `02-reader.png`, `03-dictionary.png`,
+`04-favorites-history.png`, `05-settings.png`.
 
-1. `01-search.png` — поиск с подсветкой
-2. `02-reader.png` — текст с переводом
-3. `03-dictionary.png` — словарь
-4. `04-favorites-history.png` — избранное/история
-5. `05-settings.png` — настройки
-6. `06-home.png` — стартовый экран
+iPad (`ipad-13in-curated/`): `01-search.png`, `02-reader.png`, `03-dictionary.png`,
+`04-settings.png` (для iPad не собрался light-en кадр `favorites-history` — можно добрать из
+дальнейших прогонов при необходимости).
 
-Показываются в листинге первые 3 — их порядок продаёт приложение, менять с осторожностью.
+**Главной страницы (hero "Найдите Истину" + плитки) в наборе НЕТ.** `home`-стадия тура всё ещё
+показывает поиск по kacchapa вместо неё: `go('/', homeShown)` в `test/ios-sim/tour.js`
+технически переключает URL, но фактическое состояние страницы не возвращается на hero — причина
+не найдена (не race по времени: скриншот снимается через 5+ секунд после перехода). Проще и
+надёжнее снять этот один кадр вручную с реального аккаунта/симулятора (открыть приложение, не
+трогая поиск) и положить сюда так же, как остальные.
 
-Другие темы/локали (dark-en, dark-ru) и набор 6.9" (`1320×2868`, неполный: нет search/reader/
-favorites-history/settings в light-en) — в `docs/ios-review/tour-156/`.
-
+Другие темы/локали (dark-en, dark-ru) и сырой вывод каждого прогона —
 `screenshots/iphone-6.7in-1284x2778/latest-tour/`, `screenshots/iphone-6.9in-1320x2868/`,
-`screenshots/ipad-13in/` — сырой вывод
-джобы `ios-screenshots` (`.github/workflows/build-app.yml`), она сама коммитит их сюда после
-каждого прогона (см. ниже почему не через артефакт). iPad раньше не собирался (баг в
-`drive.sh`, чинили в run 158+) — теперь собирается, кадры появятся после первого прогона с этим
-изменением.
+`screenshots/ipad-13in/` (без ручной курации, туда же коммитит джоба `ios-screenshots`).
 
 ## App Previews (видео) — `previews/iphone-6.7in-1284x2778/`
 
-3 клипа (`preview-1-search.mov`, `preview-2-reader.mov`, `preview-3-dictionary.mov`), 1284×2778,
-H.264, без звука, каждый ≤29с. Не отдельная постановочная съёмка — это один и тот же light-en
-прогон тура (`drive.sh --tour --record`), нарезанный по временным меткам стадий
-(`test/ios-sim/make-previews.js`) на 3 куска: home→reader, reader→dictionary,
-dictionary→done (dictionary+favorites-history+toc). Экран каждый раз настоящий: то же самое
-приложение, тот же поиск/ридер/словарь, что и на скриншотах.
+Не готовы. Джоба `ios-screenshots` записывает видео (`drive.sh --record`) и режет его на 3 клипа
+(`test/ios-sim/make-previews.js`), но во всех трёх прогонах, где нарезка запускалась (177, 179,
+180), результат — 0 файлов; шаг «Cut the 3 App Preview clips» завершается без ошибки, но клипы не
+появляются, причина не диагностирована (нужен доступ к логам/файлам самого прогона, которого в
+этой сессии нет — см. ниже).
 
 ## Почему тут появляется CI-коммит, а не только артефакт
 
