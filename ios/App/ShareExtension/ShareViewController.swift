@@ -2,8 +2,8 @@ import UIKit
 import WebKit
 import UniformTypeIdentifiers
 
-// The Share Extension: text or a link shared from another app is looked up, and the answer is shown
-// right here in the sheet.
+// The Share Extension: text or a link shared from another app is searched for, and the results are
+// shown right here in the sheet.
 //
 // It used to hand the text to the app instead, the way Android's ACTION_SEND filter does, and that
 // is not a thing iOS allows. A share extension is a separate process living inside someone else's
@@ -15,9 +15,9 @@ import UniformTypeIdentifiers
 // never called back, leaving the sheet open on the owner's phone.
 //
 // So the extension does the work instead of delegating it, which is what iOS extensions are for:
-// share a Pali word from any app and read what it means without leaving that app. The site answers
-// the same `?q=` that the app, the web share target and a plain link all use, so there is nothing
-// here to keep in step with it — and nothing is interpreted or cleaned on the way, for the reason
+// share a phrase from any app and see where it occurs in the suttas without leaving that app. The
+// site answers the same `?q=` that the app, the web share target and a plain link all use, so there
+// is nothing here to keep in step with it — and nothing is interpreted or cleaned on the way, for the reason
 // Android learned the hard way (stripping quotes and source URLs breaks whenever a host app changes
 // its format).
 class ShareViewController: UIViewController {
@@ -33,7 +33,7 @@ class ShareViewController: UIViewController {
         done.setTitle("Done", for: .normal)
         done.addTarget(self, action: #selector(finish), for: .touchUpInside)
 
-        status.text = "Looking up…"
+        status.text = "Searching…"
         status.textAlignment = .center
         status.textColor = .secondaryLabel
 
@@ -65,10 +65,10 @@ class ShareViewController: UIViewController {
             guard let self = self else { return }
             let trimmed = text?.trimmingCharacters(in: .whitespacesAndNewlines)
             guard let payload = trimmed, !payload.isEmpty else {
-                self.status.text = "Nothing to look up: the share carried no text or link."
+                self.status.text = "Nothing to search for: the share carried no text or link."
                 return
             }
-            self.look(up: payload)
+            self.search(for: payload)
         }
     }
 
@@ -111,12 +111,19 @@ class ShareViewController: UIViewController {
         firstString(from: attachments, completion: completion)
     }
 
-    private func look(up payload: String) {
+    private func search(for payload: String) {
         // ponytail: the query rides in the URL, which has a practical ceiling of a few kilobytes. A
         // whole sutta pasted into a share is beyond it; the upgrade path is an App Group container
         // the sheet reads from. For a word, a phrase or a link — what people actually share — this
         // is enough, and the ceiling is named rather than silently dropping the tail.
         let capped = payload.count > 4000 ? String(payload.prefix(4000)) : payload
+        // A link to the site is already the page someone means: open it, and a sutta reference lands
+        // in the reader instead of becoming a search for its own address.
+        if let shared = URL(string: capped), let host = shared.host,
+           host == "dhamma.gift" || host.hasSuffix(".dhamma.gift") {
+            webView.load(URLRequest(url: shared))
+            return
+        }
         guard let encoded = capped.addingPercentEncoding(withAllowedCharacters: .alphanumerics),
               let url = URL(string: "https://dhamma.gift/?q=" + encoded) else {
             status.text = "That text could not be turned into a search."
@@ -136,7 +143,7 @@ extension ShareViewController: WKNavigationDelegate {
         webView.isHidden = false
     }
 
-    // The lookup needs the site: the offline library lives in the app's own container, which this
+    // The search needs the site: the offline library lives in the app's own container, which this
     // process cannot read. Say so plainly instead of showing an empty white sheet.
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
         status.text = "Dhamma.gift could not be reached. Open the app to search the offline library."
