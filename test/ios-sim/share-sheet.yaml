@@ -32,18 +32,25 @@ appId: com.apple.mobilesafari
 - waitForAnimationToEnd:
     timeout: 5000
 - takeScreenshot: 2-toolbar
-# With the tip gone the toolbar answers to its own name, which a tap on coordinates does not
-# reliably reach: the same 86%,93% opened this menu in run 207 and missed it in run 208.
-- extendedWaitUntil:
-    visible:
-      id: "MoreMenuButton"
-    timeout: 15000
-- tapOn:
-    id: "MoreMenuButton"
+# Toolbar buttons carry their name in accessibilityText only, and Maestro matches neither that nor
+# the resource-id: "Close" (run 206) and MoreMenuButton (run 209) were both invisible to it. So the
+# menu is opened by hitting the middle of where the hierarchy says the button is — [320,792] to
+# [368,840] — and since a single tap there landed in 207 but missed in 208, it is tried until the
+# menu answers. Menu items are ordinary labels, so "Share" below matches by text as usual.
+- repeat:
+    maxRuns: 4
+    while:
+      notVisible:
+        text: "Share"
+    commands:
+      - tapOn:
+          point: "344,816"
+      - waitForAnimationToEnd:
+          timeout: 4000
 - extendedWaitUntil:
     visible:
       text: "Share"
-    timeout: 15000
+    timeout: 10000
 - takeScreenshot: 3-menu
 - tapOn:
     text: "Share"
