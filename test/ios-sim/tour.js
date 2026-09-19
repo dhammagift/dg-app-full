@@ -86,6 +86,18 @@
         return tabShown('tab-fav');
     }
 
+    // The progress card (public/offline/offline-status.js, #dgDlCard) that shows while the ~216MB
+    // library archive comes down. Nothing on a cold boot starts this on its own here — the app
+    // downloads unconditionally on ITS home page in production (dg-node's offline-library-settings.js:
+    // "app.js runs loadData() on every load of its home page"), but the screenshot tour's online
+    // bundle deliberately does not carry a fixture and is not the place to prove that path — so the
+    // tour starts it explicitly, the same way it drives every other view, and cancels it right after
+    // the shot (dgCancelOfflineDownload): a 216MB transfer left running would just eat the runner's
+    // bandwidth for the rest of the tour for no reason.
+    function downloadCardShown() {
+        return !!document.getElementById('dgDlCard');
+    }
+
     // The real landing view (dg-hero-heading: "Find the Truth" + the tool tiles), not just
     // "whatever the page happened to be showing when it finished loading". A cold boot should
     // already land here (dgScreenFromUrl() reads '/index.html' as home), but the tour asserts it
@@ -177,7 +189,20 @@
         .then(networkProbe)
         .then(function () { return go('/', homeShown); })
         .then(function () { return stage('home'); })
-        .then(function (ok) { if (!ok) return Promise.reject(new Error('stopped')); return go('/kacchapa?langs=ru,en', resultsShown); })
+        .then(function (ok) {
+            if (!ok) return Promise.reject(new Error('stopped'));
+            try {
+                if (typeof window.dgStartOfflineDownload === 'function') window.dgStartOfflineDownload();
+            } catch (e) { /* shown as it is */ }
+            return waitFor(downloadCardShown, 8000).then(function () { return wait(SETTLE_MS); });
+        })
+        .then(function () { return stage('download'); })
+        .then(function () {
+            try {
+                if (typeof window.dgCancelOfflineDownload === 'function') window.dgCancelOfflineDownload();
+            } catch (e) { /* the tour continues either way */ }
+            return go('/kacchapa?langs=ru,en', resultsShown);
+        })
         .then(function () { return stage('search'); })
         .then(function () { return go('/dn22:2.2', readerShown); })
         .then(function () { return stage('reader'); })
