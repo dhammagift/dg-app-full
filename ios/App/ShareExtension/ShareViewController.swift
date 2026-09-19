@@ -14,15 +14,19 @@ import UniformTypeIdentifiers
 // How it reaches the app: the app's own URL scheme. `dhammagift://search?q=…` is already the mapping
 // the app answers (docs/DEEP_LINKS.md, src/deep-link.js), and it turns into `/?q=…` — the same URL
 // Android's MainActivity builds for a share. Nothing new to receive, nothing to keep in step.
+//
+// Nothing here fails silently: a share that cannot be handed over says why in the sheet, because
+// "the sheet flashed and the home screen came back" (owner, twice) is not something a phone can be
+// debugged from.
 class ShareViewController: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        sharedText { [weak self] text in
+        sharedText { [weak self] text, seen in
             guard let self = self else { return }
             let trimmed = text?.trimmingCharacters(in: .whitespacesAndNewlines)
             guard let payload = trimmed, !payload.isEmpty else {
-                self.finish()
+                self.fail("Nothing to search for: the share carried no text or link (" + seen + ").")
                 return
             }
             self.handToApp(payload)
@@ -30,12 +34,14 @@ class ShareViewController: UIViewController {
     }
 
     // The first usable attachment: plain text, or a URL (which the site's own `?q=` handling also
-    // understands — it strips a trailing source URL, and a shared link IS one).
-    private func sharedText(completion: @escaping (String?) -> Void) {
+    // understands — it strips a trailing source URL, and a shared link IS one). `seen` lists the
+    // type identifiers that were offered, for the message when none of them worked.
+    private func sharedText(completion: @escaping (String?, String) -> Void) {
         let attachments = (extensionContext?.inputItems as? [NSExtensionItem])?
             .flatMap { $0.attachments ?? [] } ?? []
+        let seen = attachments.flatMap { $0.registeredTypeIdentifiers }.joined(separator: ", ")
         guard !attachments.isEmpty else {
-            completion(nil)
+            completion(nil, "no attachments")
             return
         }
 
@@ -48,7 +54,8 @@ class ShareViewController: UIViewController {
 
             if provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) {
                 provider.loadItem(forTypeIdentifier: UTType.plainText.identifier, options: nil) { item, _ in
-                    let text = (item as? String) ?? (item as? NSAttributedString)?.string
+                    var text = (item as? String) ?? (item as? NSAttributedString)?.string
+                    if text == nil, let data = item as? Data { text = String(data: data, encoding: .utf8) }
                     DispatchQueue.main.async {
                         if let text = text, !text.isEmpty { completion(text) } else { firstString(from: rest, completion: completion) }
                     }
@@ -61,6 +68,7 @@ class ShareViewController: UIViewController {
                     if let url = item as? URL { text = url.absoluteString }
                     else if let url = item as? NSURL { text = url.absoluteString }
                     else if let string = item as? String { text = string }
+                    else if let data = item as? Data { text = String(data: data, encoding: .utf8) }
                     DispatchQueue.main.async {
                         if let text = text, !text.isEmpty { completion(text) } else { firstString(from: rest, completion: completion) }
                     }
@@ -70,7 +78,7 @@ class ShareViewController: UIViewController {
             firstString(from: rest, completion: completion)
         }
 
-        firstString(from: attachments, completion: completion)
+        firstString(from: attachments) { completion($0, seen) }
     }
 
     private func handToApp(_ payload: String) {
@@ -82,31 +90,40 @@ class ShareViewController: UIViewController {
         let capped = payload.count > 4000 ? String(payload.prefix(4000)) : payload
         guard let encoded = capped.addingPercentEncoding(withAllowedCharacters: .alphanumerics),
               let url = URL(string: "dhammagift://search?q=" + encoded) else {
-            finish()
+            fail("The shared text could not be put into a link.")
             return
         }
-        openHostApp(url)
-        // The open is handed to the system asynchronously; completing the request in the same turn
-        // tears the extension down before it is delivered (the sheet flashed and nothing opened).
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in self?.finish() }
+        openHostApp(url) { [weak self] opened in
+            guard let self = self else { return }
+            if opened {
+                self.finish()
+            } else {
+                self.fail("iOS refused to open dhammagift:// from the share sheet (open returned false).")
+            }
+        }
     }
 
     // NSExtensionContext.open(_:) is honoured only by Today and iMessage extensions; in a share
-    // extension it returns false without opening anything. The app is reached the way share
-    // extensions have always done it: UIApplication sits at the end of the responder chain, and its
-    // openURL: selector is callable from there even though UIApplication.shared is not.
-    @objc private func openURL(_ url: URL) -> Bool { return false }
-
-    private func openHostApp(_ url: URL) {
-        let selector = #selector(openURL(_:))
+    // extension it returns false without opening anything (build 170). UIApplication sits at the end
+    // of the responder chain, and this target does not restrict itself to extension-safe API
+    // (APPLICATION_EXTENSION_API_ONLY = NO), so its open(_:options:completionHandler:) is callable
+    // and, unlike the openURL: selector of build 190, reports whether the open happened.
+    private func openHostApp(_ url: URL, completion: @escaping (Bool) -> Void) {
         var responder: UIResponder? = self
         while let current = responder {
-            if current !== self && current.responds(to: selector) {
-                current.perform(selector, with: url)
+            if let application = current as? UIApplication {
+                application.open(url, options: [:]) { ok in DispatchQueue.main.async { completion(ok) } }
                 return
             }
             responder = current.next
         }
+        completion(false)
+    }
+
+    private func fail(_ reason: String) {
+        let alert = UIAlertController(title: "Dhamma.gift could not open", message: reason, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] _ in self?.finish() })
+        present(alert, animated: true)
     }
 
     private func finish() {
