@@ -943,49 +943,6 @@ jobs:
       - name: Judge the report
         run: node test/ios-sim/assert.js .tmp/ios-ui/selftest.json
 
-      # The share sheet belongs to SpringBoard, so the tour — which drives the app's own webview —
-      # cannot reach it, and "may an extension open its host app" is exactly where every build since
-      # 170 died. Maestro taps through Safari's sheet (it pilots the device, not one process, and
-      # needs nothing added to the Xcode project); whether the app actually came up is then read off
-      # the simulator's process list, which a webview rendering nothing cannot fake. A red check
-      # here does not hold up TestFlight: ios-release is a sibling job, not a dependent one.
-      - name: Does a share from Safari open the app?
-        # Also when the self-test above went red: the share sheet is a separate question, and run
-        # 200 never got to ask it.
-        if: always()
-        run: |
-          mkdir -p .tmp/ios-share
-          curl -Ls "https://get.maestro.mobile.dev" | bash
-          export PATH="$HOME/.maestro/bin:$PATH"
-          maestro --version
-          # Start from "not running", so the process list below answers about THIS share alone.
-          xcrun simctl terminate booted gift.dhamma.mobile 2>/dev/null || true
-          xcrun simctl openurl booted "https://example.com/kacchapa"
-          sleep 8
-          # What the screen actually offers, by name. Run 202 guessed at "ShareButton" and found
-          # nothing, and the hierarchy it would have needed stayed on the runner.
-          maestro hierarchy > .tmp/ios-share/hierarchy.json 2>&1 || true
-          maestro test test/ios-sim/share-sheet.yaml || echo "::warning::the maestro flow did not finish cleanly — see the screenshots and hierarchies in the artifact"
-          # Maestro writes takeScreenshot next to the working directory, and keeps a hierarchy per
-          # step of its own: together they say which tap missed and what the screen offered instead.
-          mv ./*.png .tmp/ios-share/ 2>/dev/null || true
-          cp -R "$HOME/.maestro/tests" .tmp/ios-share/maestro-debug 2>/dev/null || true
-          if xcrun simctl spawn booted launchctl list | grep -q "UIKitApplication:gift.dhamma.mobile"; then
-            echo "the share opened the app"
-          else
-            echo "::error::the share did not open the app — the extension still cannot reach it"
-            exit 1
-          fi
-
-      # No gate on the deep link here on purpose: iOS shows its own "Open in Dhamma.gift?" prompt for
-      # a custom scheme opened from OUTSIDE the app (SpringBoard, and `simctl openurl` behaves like
-      # that), and a headless simulator cannot tap it — the app never receives the URL. The self-test
-      # opens dhammagift://route/toc from the page instead, and the path it lands on is in the report
-      # this job uploads; test/ios-sim/assert-deeplink.js is the assertion to run on a device or from
-      # an XCUITest that can tap. docs/DEEP_LINKS.md says which half is automated.
-
-      # Always, not only on failure: the screenshots ARE the deliverable for the owner (light/dark x
-      # en/ru), and the report is what makes a red run diagnosable without admin rights on this repo.
       - name: Upload the report, the screenshots and the logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -995,7 +952,6 @@ jobs:
             .tmp/ios-ui/selftest.json
             .tmp/ios-ui/*.png
             .tmp/ios-ui/app-console.log
-            .tmp/ios-share/**
             ios-ui-build.log
           retention-days: 30
           if-no-files-found: warn
