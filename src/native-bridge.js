@@ -138,7 +138,13 @@
     // Cache API for offline use; with a network the first use per launch revalidates it (ETag — a 304 costs
     // nothing) and a changed file replaces the cached copy. paliLookup.js asks through window.dgDictScript.
     (function dictionaryFromSite() {
-        if (!window.caches) return;
+        if (!window.caches) {
+            // Without CacheStorage window.dgDictScript does not exist, so paliLookup falls back to a
+            // plain <script src> — which in the app resolves inside the bundle, where the 24MB of DPD
+            // data is deliberately absent. One line here says that, instead of guessing later.
+            console.warn('[dg-dict] no CacheStorage in this webview: the dictionary would be loaded as bundle <script> tags');
+            return;
+        }
         var origin = window.DG_ONLINE_ORIGIN || 'https://dhamma.gift';
         var CACHE = 'dg-dict';
         var FILES = ['/assets/js/standalone-dpd/dpd_i2h.js', '/assets/js/standalone-dpd/dpd_deconstructor.js',
@@ -147,14 +153,28 @@
 
         // Resolves to the newest Response available: the site's when it changed, else the cached one.
         function fromSite(cache, src, cached) {
-            if (checked[src] || navigator.onLine === false) return Promise.resolve(cached);
+            if (checked[src] || navigator.onLine === false) {
+                // Two different situations, one silent outcome — the popup says "Couldn't load the
+                // dictionary" for both, so say which one it was in the log the screenshot run keeps.
+                if (navigator.onLine === false && !checked[src]) {
+                    console.warn('[dg-dict] navigator.onLine is false, not fetching ' + src);
+                }
+                return Promise.resolve(cached);
+            }
             checked[src] = true;
             return fetch(origin + src, { cache: 'no-cache' }).then(function (res) {
-                if (!res.ok) return cached;
+                if (!res.ok) {
+                    console.warn('[dg-dict] ' + res.status + ' from ' + origin + src + (cached ? ' — keeping the cached copy' : ' (no cached copy)'));
+                    return cached;
+                }
                 var etag = res.headers.get('etag');
                 if (cached && etag && cached.headers.get('etag') === etag) return cached;
                 return cache.put(src, res.clone()).then(function () { return res; });
-            }).catch(function () { checked[src] = false; return cached; });
+            }).catch(function (e) {
+                checked[src] = false;
+                console.warn('[dg-dict] fetch failed for ' + origin + src + ': ' + (e && e.message) + ' (onLine=' + navigator.onLine + ')');
+                return cached;
+            });
         }
 
         window.dgDictScript = function (src) {

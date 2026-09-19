@@ -36,8 +36,14 @@ mkdir -p "$OUT"
 
 # Pick the newest available runtime for the requested device name, so this keeps working when the
 # runner image replaces iOS 26.x with 26.y — the device list, not a hardcoded UDID, is the contract.
-UDID=$(xcrun simctl list devices available | grep -E "^ *$DEVICE \(" | tail -1 | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/')
-[ -n "$UDID" ] || { echo "drive: no available simulator named '$DEVICE'" >&2; xcrun simctl list devices available >&2; exit 1; }
+#
+# grep -F, not -E: device names contain parentheses ("iPad Pro 13-inch (M5)"), which in a regex are a
+# capture group — the pattern then looked for "iPad Pro 13-inch M5 (", matched nothing, and under
+# `set -o pipefail` the failing pipeline aborted this script on the assignment itself, before the
+# message below could run: the iPad pass died in one second without a single line of output.
+DEVICES=$(xcrun simctl list devices available)
+UDID=$(printf '%s\n' "$DEVICES" | grep -F "$DEVICE (" | tail -1 | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/') || true
+[ -n "$UDID" ] || { echo "drive: no available simulator named '$DEVICE'" >&2; printf '%s\n' "$DEVICES" >&2; exit 1; }
 echo "drive: device $DEVICE = $UDID"
 
 xcrun simctl boot "$UDID" 2>/dev/null || true
