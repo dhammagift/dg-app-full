@@ -15,18 +15,19 @@
 appId: com.apple.mobilesafari
 ---
 - takeScreenshot: 1-safari
-# A fresh simulator's Safari greets iOS 26 users with a tip about the new "..." menu, and the tip
-# covers the toolbar underneath it (run 203: the whole hierarchy was the popover).
+# A fresh simulator's Safari greets iOS 26 users with a tip about the new "..." menu. Its dismiss
+# region covers the WHOLE screen, so run 204's careful tap on the toolbar only closed the tip and
+# the menu never opened. One throwaway tap on empty page first, then the real one: harmless when
+# no tip is up, and the only thing that reaches the toolbar when one is.
 - tapOn:
-    id: "xmark.circle.fill"
-    optional: true
+    point: "50%,30%"
 - waitForAnimationToEnd:
     timeout: 5000
 - takeScreenshot: 2-toolbar
-# In iOS 26 Safari, Share lives in the "..." menu at the end of the address pill, and that button
-# carries no label to match on — so it is tapped where it sits on this fixed 402x874 simulator.
+# Share lives in that menu now. The button has a name after all — run 204 read it off the toolbar
+# once the tip was gone: More | MoreMenuButton.
 - tapOn:
-    point: "86%,93%"
+    id: "MoreMenuButton"
 - waitForAnimationToEnd:
     timeout: 5000
 - takeScreenshot: 3-menu
