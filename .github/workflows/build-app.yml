@@ -1210,17 +1210,33 @@ jobs:
       # is injected (Play/App Store both refuse a number they have seen, and the run number is the one
       # value this repository already treats as one).
       #
-      # Signing is automatic and the identity is deliberately left unset in the project, the way Xcode
-      # writes it when "Automatically manage signing" is on: unset means Debug gets Apple Development
-      # and an archive gets Apple Distribution. Both explicit values fail, in opposite directions:
-      # "iPhone Developer" (the value the Capacitor template shipped in BOTH configurations) makes an
-      # archive ask Apple for an iOS App Development profile, which lists device UDIDs — a fresh
-      # account has none, so it answered "Your team has no devices from which to generate a
-      # provisioning profile" (run 156); and a distribution identity fails validation against the
-      # automatic style with "has conflicting provisioning settings … automatically signed for
-      # development, but a conflicting code signing identity Apple Distribution has been manually
-      # specified" whether it comes from the command line (run 160) or from the Release configuration
-      # (run 162).
+      # Signing, in the order the runs taught it:
+      #   * run 156 — the Capacitor template's "iPhone Developer" in BOTH configurations made the
+      #     archive ask Apple for an iOS App Development profile. Those list device UDIDs, and a fresh
+      #     account has registered none, so Apple answered "Your team has no devices from which to
+      #     generate a provisioning profile" and no distribution profile was ever requested.
+      #   * run 160/162 — naming the distribution identity while CODE_SIGN_STYLE stayed Automatic is
+      #     rejected outright ("has conflicting provisioning settings … automatically signed for
+      #     development, but a conflicting code signing identity Apple Distribution has been manually
+      #     specified"), whether the identity comes from the command line or from the configuration.
+      #   * run 164 — with no identity anywhere, automatic signing again resolved to a development
+      #     profile, i.e. an unset identity means "Apple Development" and the style does not change
+      #     that for an archive.
+      # So the Release configuration now states both halves of the pair the error message points at:
+      # CODE_SIGN_IDENTITY = "Apple Distribution" with CODE_SIGN_STYLE = Manual ("or switch to manual
+      # signing"). Debug keeps Automatic, which is what a phone build with a personal team needs.
+      - name: What signing does Xcode resolve?
+        if: steps.asc.outputs.have == 'yes'
+        run: |
+          security find-identity -v -p codesigning | tail -5
+          for cfg in Release Debug; do
+            echo "--- $cfg ---"
+            xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration "$cfg" \
+              -destination 'generic/platform=iOS' -showBuildSettings 2>/dev/null \
+              | grep -E "^ +(CODE_SIGN_IDENTITY|CODE_SIGN_STYLE|CODE_SIGN_ENTITLEMENTS|PROVISIONING_PROFILE_SPECIFIER|DEVELOPMENT_TEAM|CONFIGURATION) " \
+              | sort -u || true
+          done
+
       - name: Archive
         if: steps.asc.outputs.have == 'yes'
         env:

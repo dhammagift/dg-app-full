@@ -31,18 +31,30 @@ Support, `DgShortcuts` отдал динамический шорткат на `
 `viewport inner 402x812 of screen 402x874` (safe area на месте).
 `ios-light-en.png`, `ios-dark-en.png`, `ios-dark-ru.png` — стартовая страница в этих темах.
 
-## Почему TestFlight ещё не залился: три последовательных отказа
+## Почему TestFlight ещё не залился: четыре последовательных отказа
 
-| Прогон | Что сказал Xcode | Причина | Что сделано |
+| Прогон | Что сказал Xcode | Причина | Лог |
 |---|---|---|---|
-| 156 | «Your team has no devices from which to generate a provisioning profile» + «No profiles … iOS App Development» | в конфигурации Release стоял `CODE_SIGN_IDENTITY = "iPhone Developer"` → просили development-профиль, а он перечисляет UDID устройств, которых у нового аккаунта нет | `docs/ios-review/logs/ios-archive-run156.log` |
+| 156 | «Your team has no devices from which to generate a provisioning profile» + «No profiles … iOS App Development» | в конфигурации Release стоял `CODE_SIGN_IDENTITY = "iPhone Developer"` → просили development-профиль, а он перечисляет UDID устройств, которых у нового аккаунта нет | `logs/ios-archive-run156.log` |
 | 160 | «has conflicting provisioning settings … automatically signed for development, but a conflicting code signing identity Apple Distribution has been manually specified» | попытка №1: подменить identity флагом командной строки при automatic signing | `logs/ios-archive-run160.log` |
-| 164 (идёт) | — | `CODE_SIGN_IDENTITY` убран из проекта совсем: так Xcode пишет при включённом автоматическом управлении подписью, и тогда Debug берёт Apple Development, а archive — Apple Distribution | — |
+| 162 | то же самое | попытка №2: та же identity, но в конфигурации Release — Xcode отвергает явную identity при `CODE_SIGN_STYLE = Automatic` в любом виде | `logs/ios-archive-run162.log` |
+| 164 | снова «no devices … iOS App Development» | попытка №3: identity убрана совсем — и automatic signing снова выбрал development-профиль, то есть без identity это и есть значение по умолчанию | `logs/ios-archive-run164.log` |
+| 165 (идёт) | — | попытка №4, ровно то, что советует сам текст ошибки: `CODE_SIGN_IDENTITY = "Apple Distribution"` **вместе с** `CODE_SIGN_STYLE = Manual` в Release (Debug остался Automatic), `-allowProvisioningUpdates` создаёт профиль | — |
 
 Team ID команды — `7MXRJUJ7C3` (две J подряд). В первой редакции этих документов и в AASA на сайте
 стояло `7MXRJU7C3`: я неверно прочитал скриншот страницы App ID, владелец поправил секрет дважды, и
 увеличенный фрагмент того же скриншота подтвердил `…JUJ7C3`. AASA в dg-node исправлена на
 `7MXRJUJ7C3.gift.dhamma.mobile` и ждёт деплоя сайта.
+
+## Словарь: сеть у приложения есть, ломается именно этот запрос
+
+Прогон 164 добавил в тур зонд, и он ответил: `origin=capacitor://localhost`, `caches=object`,
+`onLine=true`, `dictScript=function`, `https://dhamma.gift/manifest.json -> 200 4605B`, а
+`config/ai-search.json` приходит как 404 вместе с телом на 31 КБ (то есть ответ доезжает целиком).
+При этом запросы за DPD падают с `Request url is not HTTP/HTTPS` — сообщение WebKit, которое не
+называет виновника. В прогоне 165 зонд спрашивает ещё и маленький файл из того же каталога
+(`pali-lookup-standalone.js`, 10 КБ) рядом с большим `dpd_i2h.js` (6 МБ): если маленький придёт, а
+большой упадёт — дело в размере ответа, а не в схеме или пути.
 
 ## Что ещё изменилось из-за этих прогонов
 

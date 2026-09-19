@@ -142,7 +142,13 @@
     function networkProbe() {
         console.log('[dg-net] origin=' + location.origin + ' caches=' + (typeof window.caches) +
                     ' onLine=' + navigator.onLine + ' dictScript=' + (typeof window.dgDictScript));
-        var urls = ['https://dhamma.gift/manifest.json', 'https://dhamma.gift/config/ai-search.json'];
+        var urls = ['https://dhamma.gift/manifest.json',
+                    'https://dhamma.gift/config/ai-search.json',
+                    // The dictionary the app asks for, small file first: if the small one in the same
+                    // directory answers 200 while the big one throws, the problem is the 6MB response,
+                    // not the path or the scheme.
+                    'https://dhamma.gift/assets/js/standalone-dpd/pali-lookup-standalone.js',
+                    'https://dhamma.gift/assets/js/standalone-dpd/dpd_i2h.js'];
         return urls.reduce(function (chain, url) {
             return chain.then(function () {
                 var started = Date.now();
