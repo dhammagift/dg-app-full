@@ -85,9 +85,28 @@ class ShareViewController: UIViewController {
             finish()
             return
         }
-        extensionContext?.open(url, completionHandler: { [weak self] _ in
-            self?.finish()
-        })
+        openHostApp(url)
+        // The open is handed to the system asynchronously; completing the request in the same turn
+        // tears the extension down before it is delivered (the sheet flashed and nothing opened).
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in self?.finish() }
+    }
+
+    // NSExtensionContext.open(_:) is honoured only by Today and iMessage extensions; in a share
+    // extension it returns false without opening anything. The app is reached the way share
+    // extensions have always done it: UIApplication sits at the end of the responder chain, and its
+    // openURL: selector is callable from there even though UIApplication.shared is not.
+    @objc private func openURL(_ url: URL) -> Bool { return false }
+
+    private func openHostApp(_ url: URL) {
+        let selector = #selector(openURL(_:))
+        var responder: UIResponder? = self
+        while let current = responder {
+            if current !== self && current.responds(to: selector) {
+                current.perform(selector, with: url)
+                return
+            }
+            responder = current.next
+        }
     }
 
     private func finish() {
