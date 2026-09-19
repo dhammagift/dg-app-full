@@ -1,0 +1,224 @@
+{
+  "runs": 2,
+  "currentPath": "/4as",
+  "deepLinksSeen": [
+    "dhammagift://route/toc",
+    "dhammagift://route/4as"
+  ],
+  "startedAt": "2026-09-19T01:26:06.113Z",
+  "origin": "capacitor://localhost",
+  "distBase": "capacitor://localhost/_capacitor_file_/Users/runner/Library/Developer/CoreSimulator/Devices/88931AEA-62E6-447F-8697-DCE00A671384/data/Containers/Data/Application/06777F8C-8E58-4D93-909F-3C866659460D/Library/Application Support/dg-library",
+  "onlineOrigin": "http://127.0.0.1:59999",
+  "isSecureContext": true,
+  "hasOpfs": true,
+  "workerOk": null,
+  "libraryPresent": true,
+  "waitedMs": 752,
+  "state": {
+    "present": true,
+    "local": true,
+    "reason": "local",
+    "at": 1789781166838,
+    "build_id": "714f58cdbdebdfe5",
+    "update": null
+  },
+  "progress": [
+    {
+      "event": "dg:dl-progress",
+      "phase": "download",
+      "loaded": 11451,
+      "total": 11451,
+      "percent": null,
+      "done": false
+    },
+    {
+      "event": "dg:dl-progress",
+      "phase": "import",
+      "loaded": null,
+      "total": null,
+      "percent": null,
+      "done": false
+    },
+    {
+      "event": "dg:dl-progress",
+      "phase": "download",
+      "loaded": 86016,
+      "total": 86016,
+      "percent": null,
+      "done": false
+    },
+    {
+      "event": "dg:dl-progress",
+      "phase": "download",
+      "loaded": 1,
+      "total": 1,
+      "percent": null,
+      "done": true
+    }
+  ],
+  "cases": [
+    {
+      "name": "search-kacchapa",
+      "url": "/search?q=kacchapa&langs=ru,en",
+      "status": 200,
+      "bytes": 1950,
+      "expect": "dn22",
+      "ok": true,
+      "sample": "{\"metadata\":{\"query\":\"kacchapa\",\"scope\":\"default\",\"resolvedPrefixes\":[\"dn\",\"mn\",\"sn\",\"an\",\"ud\",\"snp\",\"dhp\",\"thag\",\"thig\",\"iti\"],\"langs\":[\"ru\",\"en\"],\"lb\":0,\"la\":0,\"exactMatch\":false,\"totalFiles\":2,\"totalMatches\":3,\"hasVariantMatch\":true},\"data\":{\"dn22\":{\"sutta_id\":\"dn22\",\"category\":\"dhamma\",\"dir_path"
+    },
+    {
+      "name": "search-kacchapa-fast",
+      "url": "/search?q=kacchapa&langs=ru,en&fast=1",
+      "status": 200,
+      "bytes": 1394,
+      "expect": "dn22",
+      "ok": true,
+      "sample": "{\"metadata\":{\"query\":\"kacchapa\",\"scope\":\"default\",\"resolvedPrefixes\":[\"dn\",\"mn\",\"sn\",\"an\",\"ud\",\"snp\",\"dhp\",\"thag\",\"thig\",\"iti\"],\"langs\":[\"ru\",\"en\"],\"totalFiles\":2,\"totalMatches\":3,\"hasVariantMatch\":true,\"partial\":true},\"data\":{\"dn22\":{\"sutta_id\":\"dn22\",\"category\":\"dhamma\",\"dir_path\":\"pli/ms/sutta/dn"
+    },
+    {
+      "name": "search-russian",
+      "url": "/search?q=%D1%87%D0%B5%D1%80%D0%B5%D0%BF%D0%B0%D1%85%D0%B0&langs=ru,en",
+      "status": 200,
+      "bytes": 817,
+      "expect": "dn22",
+      "ok": true,
+      "sample": "{\"metadata\":{\"query\":\"черепаха\",\"scope\":\"default\",\"resolvedPrefixes\":[\"dn\",\"mn\",\"sn\",\"an\",\"ud\",\"snp\",\"dhp\",\"thag\",\"thig\",\"iti\"],\"langs\":[\"ru\",\"en\"],\"lb\":0,\"la\":0,\"exactMatch\":false,\"totalFiles\":1,\"totalMatches\":1,\"hasVariantMatch\":false},\"data\":{\"dn22\":{\"sutta_id\":\"dn22\",\"category\":\"dhamma\",\"dir_pat"
+    },
+    {
+      "name": "search-no-hits",
+      "url": "/search?q=zzzzzz&langs=ru,en",
+      "status": 200,
+      "bytes": 155,
+      "expect": null,
+      "ok": true,
+      "sample": "{\"metadata\":{\"query\":\"zzzzzz\",\"langs\":[\"ru\",\"en\"],\"totalFiles\":0,\"totalMatches\":0,\"hasVariantMatch\":false,\"suggestions\":[]},\"data\":{},\"variantSegments\":[]}"
+    },
+    {
+      "name": "text-dn22-st",
+      "url": "/api/text/dn22?mode=st",
+      "status": 200,
+      "bytes": 1583,
+      "expect": "Evaṁ me sutaṁ",
+      "ok": true,
+      "sample": "{\"sutta_id\":\"dn22\",\"category\":\"dhamma\",\"dir_path\":\"pli/ms/sutta/dn\",\"title\":\"Mahāsatipaṭṭhānasutta\",\"mr\":12,\"segments\":[{\"segment\":\"dn22:0.1\",\"root_text\":\"Dīgha Nikāya 22\",\"variant\":\"\",\"html\":\"<header><h1>\",\"translations\":{\"ru_o\":\"Дигха Никая 22\",\"en_thanissaro\":\"DN 22\"}},{\"segment\":\"dn22:1.1\",\"root"
+    },
+    {
+      "name": "text-dn22-mt",
+      "url": "/api/text/dn22?mode=mt",
+      "status": 200,
+      "bytes": 1583,
+      "expect": "evaṁ",
+      "ok": true,
+      "sample": "{\"sutta_id\":\"dn22\",\"category\":\"dhamma\",\"dir_path\":\"pli/ms/sutta/dn\",\"title\":\"Mahāsatipaṭṭhānasutta\",\"mr\":12,\"segments\":[{\"segment\":\"dn22:0.1\",\"root_text\":\"Dīgha Nikāya 22\",\"variant\":\"\",\"html\":\"<header><h1>\",\"translations\":{\"ru_o\":\"Дигха Никая 22\",\"en_thanissaro\":\"DN 22\"}},{\"segment\":\"dn22:1.1\",\"root"
+    },
+    {
+      "name": "nav-dn22",
+      "url": "/api/nav/dn22",
+      "status": 200,
+      "bytes": 76,
+      "expect": "sn56.11",
+      "ok": true,
+      "sample": "{\"prev\":null,\"next\":{\"slug\":\"sn56.11\",\"title\":\"Dhammacakkappavattanasutta\"}}"
+    },
+    {
+      "name": "toc-snapshot",
+      "url": "/api/toc",
+      "status": 200,
+      "bytes": 4024,
+      "expect": "dn",
+      "ok": true,
+      "sample": "{\"categories\":[{\"category\":\"dhamma\",\"label\":{\"ru\":\"Дхамма\",\"en\":\"Dhamma\"},\"books\":[{\"code\":\"dn\",\"label\":{\"ru\":\"Дигха Никая\",\"en\":\"Dīgha Nikāya\"},\"count\":34,\"tier\":\"default\"},{\"code\":\"mn\",\"label\":{\"ru\":\"Маджхима Никая\",\"en\":\"Majjhima Nikāya\"},\"count\":152,\"tier\":\"default\"},{\"code\":\"sn\",\"label\":{\"ru\":\""
+    }
+  ],
+  "navigatedTo": null,
+  "error": null,
+  "speech": {
+    "api": true,
+    "engine": "plugin",
+    "voices": 68,
+    "speaks": "ended"
+  },
+  "progressPlugin": {
+    "present": true,
+    "awake": true
+  },
+  "ttsPlugin": {
+    "present": true,
+    "voices": 68,
+    "sample": [
+      "en-US/Samantha",
+      "en-US/Albert",
+      "en-US/Bad News"
+    ],
+    "speak": "queued"
+  },
+  "downloadPlugin": {
+    "present": true,
+    "path": "/Users/runner/Library/Developer/CoreSimulator/Devices/88931AEA-62E6-447F-8697-DCE00A671384/data/Containers/Data/Application/06777F8C-8E58-4D93-909F-3C866659460D/Library/Application Support/dg-library/dg.db.gz",
+    "found": true
+  },
+  "linkCheck": {
+    "views": {
+      "/?q=kacchapa&langs=ru,en": 10,
+      "/toc": 6,
+      "/dn22:2.2": 17,
+      "/settings/index.html": 0
+    },
+    "checked": 4,
+    "external": 33,
+    "routes": 23,
+    "failed": []
+  },
+  "pageChecks": {
+    "checked": 12,
+    "byArea": {
+      "tools": 5,
+      "materials": 1,
+      "memo": 1,
+      "settings": 1,
+      "cloud": 2,
+      "dictionary": 1,
+      "tts": 1
+    },
+    "failed": []
+  },
+  "shortcuts": {
+    "present": true,
+    "count": 1,
+    "ok": true,
+    "item": {
+      "title": "Selftest text",
+      "type": "dg.route",
+      "route": "/dn22:2.2"
+    }
+  },
+  "dictionaryModes": {
+    "ok": true,
+    "keys": 2,
+    "why": null
+  },
+  "signInUrl": {
+    "ok": true,
+    "url": "http://127.0.0.1:59999/login/app-google.html?state=a1b2c3d4e5f60718293a4b5c6d7e8f90&pkg=gift.dhamma.mobile&lang=en&plat=ios",
+    "why": null
+  },
+  "dictionaryCode": {
+    "ok": true,
+    "how": "refused: dictionary is not downloaded yet and there is no network: /assets/js/standalone-dpd/pali-lookup-standalone.js",
+    "why": null
+  },
+  "viewport": {
+    "innerHeight": 812,
+    "innerWidth": 402,
+    "screenHeight": 874,
+    "screenWidth": 402,
+    "visualOffsetTop": 0,
+    "visualHeight": 812
+  },
+  "wakeLock": {
+    "api": true,
+    "requests": 2,
+    "releases": 1,
+    "how": "prototype"
+  }
+}

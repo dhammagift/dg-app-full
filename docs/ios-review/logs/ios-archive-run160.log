@@ -1,0 +1,147 @@
+Command line invocation:
+    /Applications/Xcode_26.6.app/Contents/Developer/usr/bin/xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release -destination generic/platform=iOS -archivePath ios/build/App.xcarchive -derivedDataPath ios/DerivedData -allowProvisioningUpdates -authenticationKeyPath /Users/runner/work/_temp/asc/AuthKey.p8 -authenticationKeyID 489X4G4H3P -authenticationKeyIssuerID e8feda24-06ee-420d-9aff-b1ebafa957c5 CURRENT_PROJECT_VERSION=160 DEVELOPMENT_TEAM=7MXRJUJ7C3 CODE_SIGN_STYLE=Automatic "CODE_SIGN_IDENTITY=Apple Distribution" archive
+
+Build settings from command line:
+    CODE_SIGN_IDENTITY = Apple Distribution
+    CODE_SIGN_STYLE = Automatic
+    CURRENT_PROJECT_VERSION = 160
+    DEVELOPMENT_TEAM = 7MXRJUJ7C3
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  CapacitorShare: /Users/runner/work/dg-app-full/dg-app-full/node_modules/@capacitor/share @ local
+  IONFilesystemLib: https://github.com/ionic-team/ion-ios-filesystem.git @ 1.1.4
+  CapApp-SPM: /Users/runner/work/dg-app-full/dg-app-full/ios/App/CapApp-SPM @ local
+  CapacitorNetwork: /Users/runner/work/dg-app-full/dg-app-full/node_modules/@capacitor/network @ local
+  CapacitorBrowser: /Users/runner/work/dg-app-full/dg-app-full/node_modules/@capacitor/browser @ local
+  CapacitorDialog: /Users/runner/work/dg-app-full/dg-app-full/node_modules/@capacitor/dialog @ local
+  CapacitorFilesystem: /Users/runner/work/dg-app-full/dg-app-full/node_modules/@capacitor/filesystem @ local
+  capacitor-swift-pm: https://github.com/ionic-team/capacitor-swift-pm.git @ 8.5.2
+  CapacitorApp: /Users/runner/work/dg-app-full/dg-app-full/node_modules/@capacitor/app @ local
+  CapacitorStatusBar: /Users/runner/work/dg-app-full/dg-app-full/node_modules/@capacitor/status-bar @ local
+
+2026-09-19 01:41:53.063 xcodebuild[5943:21006] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+note: Using codesigning identity override: Apple Distribution
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (22 targets)
+    Target 'App' in project 'App'
+        ➜ Explicit dependency on target 'ShareExtension' in project 'App'
+        ➜ Explicit dependency on target 'CapApp-SPM' in project 'CapApp-SPM'
+    Target 'CapApp-SPM' in project 'CapApp-SPM'
+        ➜ Explicit dependency on target 'CapApp-SPM' in project 'CapApp-SPM'
+        ➜ Explicit dependency on target 'Capacitor' in project 'capacitor-swift-pm'
+        ➜ Explicit dependency on target 'Cordova' in project 'capacitor-swift-pm'
+        ➜ Explicit dependency on target 'CapacitorApp' in project 'CapacitorApp'
+        ➜ Explicit dependency on target 'CapacitorBrowser' in project 'CapacitorBrowser'
+        ➜ Explicit dependency on target 'CapacitorDialog' in project 'CapacitorDialog'
+        ➜ Explicit dependency on target 'CapacitorFilesystem' in project 'CapacitorFilesystem'
+        ➜ Explicit dependency on target 'CapacitorNetwork' in project 'CapacitorNetwork'
+        ➜ Explicit dependency on target 'CapacitorShare' in project 'CapacitorShare'
+        ➜ Explicit dependency on target 'CapacitorStatusBar' in project 'CapacitorStatusBar'
+    Target 'CapApp-SPM' in project 'CapApp-SPM'
+        ➜ Explicit dependency on target 'Capacitor' in project 'capacitor-swift-pm'
+        ➜ Explicit dependency on target 'Cordova' in project 'capacitor-swift-pm'
+        ➜ Explicit dependency on target 'CapacitorApp' in project 'CapacitorApp'
+        ➜ Explicit dependency on target 'CapacitorBrowser' in project 'CapacitorBrowser'
+        ➜ Explicit dependency on target 'CapacitorDialog' in project 'CapacitorDialog'
+        ➜ Explicit dependency on target 'CapacitorFilesystem' in project 'CapacitorFilesystem'
+        ➜ Explicit dependency on target 'CapacitorNetwork' in project 'CapacitorNetwork'
+        ➜ Explicit dependency on target 'CapacitorShare' in project 'CapacitorShare'
+        ➜ Explicit dependency on target 'CapacitorStatusBar' in project 'CapacitorStatusBar'
+    Target 'CapacitorStatusBar' in project 'CapacitorStatusBar'
+        ➜ Explicit dependency on target 'StatusBarPlugin' in project 'CapacitorStatusBar'
+        ➜ Explicit dependency on target 'Capacitor' in project 'capacitor-swift-pm'
+        ➜ Explicit dependency on target 'Cordova' in project 'capacitor-swift-pm'
+    Target 'StatusBarPlugin' in project 'CapacitorStatusBar'
+        ➜ Explicit dependency on target 'Capacitor' in project 'capacitor-swift-pm'
+        ➜ Explicit dependency on target 'Cordova' in project 'capacitor-swift-pm'
+    Target 'CapacitorShare' in project 'CapacitorShare'
+        ➜ Explicit dependency on target 'SharePlugin' in project 'CapacitorShare'
+        ➜ Explicit dependency on target 'Capacitor' in project 'capacitor-swift-pm'
+        ➜ Explicit dependency on target 'Cordova' in project 'capacitor-swift-pm'
+    Target 'SharePlugin' in project 'CapacitorShare'
+        ➜ Explicit dependency on target 'Capacitor' in project 'capacitor-swift-pm'
+        ➜ Explicit dependency on target 'Cordova' in project 'capacitor-swift-pm'
+    Target 'CapacitorNetwork' in project 'CapacitorNetwork'
+        ➜ Explicit dependency on target 'CAPNetworkPlugin' in project 'CapacitorNetwork'
+        ➜ Explicit dependency on target 'Capacitor' in project 'capacitor-swift-pm'
+        ➜ Explicit dependency on target 'Cordova' in project 'capacitor-swift-pm'
+    Target 'CAPNetworkPlugin' in project 'CapacitorNetwork'
+        ➜ Explicit dependency on target 'Capacitor' in project 'capacitor-swift-pm'
+        ➜ Explicit dependency on target 'Cordova' in project 'capacitor-swift-pm'
+    Target 'CapacitorFilesystem' in project 'CapacitorFilesystem'
+        ➜ Explicit dependency on target 'FilesystemPlugin' in project 'CapacitorFilesystem'
+        ➜ Explicit dependency on target 'Capacitor' in project 'capacitor-swift-pm'
+        ➜ Explicit dependency on target 'Cordova' in project 'capacitor-swift-pm'
+        ➜ Explicit dependency on target 'IONFilesystemLib' in project 'IONFilesystemLib'
+    Target 'FilesystemPlugin' in project 'CapacitorFilesystem'
+        ➜ Explicit dependency on target 'Capacitor' in project 'capacitor-swift-pm'
+        ➜ Explicit dependency on target 'Cordova' in project 'capacitor-swift-pm'
+        ➜ Explicit dependency on target 'IONFilesystemLib' in project 'IONFilesystemLib'
+    Target 'IONFilesystemLib' in project 'IONFilesystemLib'
+        ➜ Explicit dependency on target 'IONFilesystemLib' in project 'IONFilesystemLib'
+    Target 'IONFilesystemLib' in project 'IONFilesystemLib' (no dependencies)
+    Target 'CapacitorDialog' in project 'CapacitorDialog'
+        ➜ Explicit dependency on target 'DialogPlugin' in project 'CapacitorDialog'
+        ➜ Explicit dependency on target 'Capacitor' in project 'capacitor-swift-pm'
+        ➜ Explicit dependency on target 'Cordova' in project 'capacitor-swift-pm'
+    Target 'DialogPlugin' in project 'CapacitorDialog'
+        ➜ Explicit dependency on target 'Capacitor' in project 'capacitor-swift-pm'
+        ➜ Explicit dependency on target 'Cordova' in project 'capacitor-swift-pm'
+    Target 'CapacitorBrowser' in project 'CapacitorBrowser'
+        ➜ Explicit dependency on target 'BrowserPlugin' in project 'CapacitorBrowser'
+        ➜ Explicit dependency on target 'Capacitor' in project 'capacitor-swift-pm'
+        ➜ Explicit dependency on target 'Cordova' in project 'capacitor-swift-pm'
+    Target 'BrowserPlugin' in project 'CapacitorBrowser'
+        ➜ Explicit dependency on target 'Capacitor' in project 'capacitor-swift-pm'
+        ➜ Explicit dependency on target 'Cordova' in project 'capacitor-swift-pm'
+    Target 'CapacitorApp' in project 'CapacitorApp'
+        ➜ Explicit dependency on target 'AppPlugin' in project 'CapacitorApp'
+        ➜ Explicit dependency on target 'Capacitor' in project 'capacitor-swift-pm'
+        ➜ Explicit dependency on target 'Cordova' in project 'capacitor-swift-pm'
+    Target 'AppPlugin' in project 'CapacitorApp'
+        ➜ Explicit dependency on target 'Capacitor' in project 'capacitor-swift-pm'
+        ➜ Explicit dependency on target 'Cordova' in project 'capacitor-swift-pm'
+    Target 'Cordova' in project 'capacitor-swift-pm' (no dependencies)
+    Target 'Capacitor' in project 'capacitor-swift-pm' (no dependencies)
+    Target 'ShareExtension' in project 'App' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode_26.6.app/Contents/Developer/usr/bin/ibtool --version --output-format xml1
+
+ExecuteExternalTool /Applications/Xcode_26.6.app/Contents/Developer/usr/bin/actool --print-asset-tag-combinations --output-format xml1 /Users/runner/work/dg-app-full/dg-app-full/ios/App/App/Assets.xcassets
+
+ExecuteExternalTool /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+ExecuteExternalTool /Applications/Xcode_26.6.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+Build description signature: 1f5e20dd81b75351f97fdad8a46f8268
+Build description path: /Users/runner/work/dg-app-full/dg-app-full/ios/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/App/IntermediateBuildFilesPath/XCBuildData/1f5e20dd81b75351f97fdad8a46f8268.xcbuilddata
+/Users/runner/work/dg-app-full/dg-app-full/ios/App/App.xcodeproj: error: ShareExtension has conflicting provisioning settings. ShareExtension is automatically signed for development, but a conflicting code signing identity Apple Distribution has been manually specified. Set the code signing identity value to "Apple Development" in the build settings editor, or switch to manual signing in the Signing & Capabilities editor. (in target 'ShareExtension' from project 'App')
+/Users/runner/work/dg-app-full/dg-app-full/ios/App/App.xcodeproj: error: App has conflicting provisioning settings. App is automatically signed for development, but a conflicting code signing identity Apple Distribution has been manually specified. Set the code signing identity value to "Apple Development" in the build settings editor, or switch to manual signing in the Signing & Capabilities editor. (in target 'App' from project 'App')
+** ARCHIVE FAILED **
+
+
+The following build commands failed:
+	Archiving project App with scheme App
+(1 failure)

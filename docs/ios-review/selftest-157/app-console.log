@@ -1,0 +1,82 @@
+2026-09-19 01:26:00.876 App[4992:20733] DiskCookieStorage changing policy from 2 to 0, cookie file: file:///Users/runner/Library/Developer/CoreSimulator/Devices/88931AEA-62E6-447F-8697-DCE00A671384/data/Containers/Data/Application/06777F8C-8E58-4D93-909F-3C866659460D/Library/Cookies/gift.dhamma.mobile.binarycookies
+Loading network plugin
+⚡️  Loading app at capacitor://localhost...
+Reachable via WiFi
+⚡️  To Native ->  DgTts addListener 122589151
+⚡️  To Native ->  DgTts getVoices 122589152
+⚡️  To Native ->  DgDownload addListener 122589153
+⚡️  To Native ->  App addListener 122589154
+⚡️  To Native ->  DgShortcuts set 122589155
+⚡️  To Native ->  App addListener 122589156
+⚡️  To Native ->  App addListener 122589157
+⚡️  TO JS {"voices":[{"lang":"en-US","localService":true,"name":"Samantha"},{"localService":true,"lang":"en-US","name":"Albert"},{"lang":"en-US","localService":true,"name":"Bad News"},{"localService":true,"lang":"en-US","name":"Bahh"},{"localService":true,"name":"Be
+⚡️  TO JS {"count":0}
+⚡️  WebView loaded
+⚡️  To Native ->  Network getStatus 122589158
+⚡️  [log] - [dg-offline] persistent storage: not granted
+⚡️  TO JS {"connectionType":"wifi","connected":true}
+⚡️  To Native ->  DgDownload existing 122589159
+⚡️  TO JS {"path":"\/Users\/runner\/Library\/Developer\/CoreSimulator\/Devices\/88931AEA-62E6-447F-8697-DCE00A671384\/data\/Containers\/Data\/Application\/06777F8C-8E58-4D93-909F-3C866659460D\/Library\/Application Support\/dg-library\/dg.db.gz"}
+⚡️  To Native ->  DgProgress update 122589160
+⚡️  TO JS {"awake":true}
+⚡️  To Native ->  DgProgress update 122589161
+⚡️  TO JS {"awake":true}
+⚡️  To Native ->  DgProgress update 122589162
+⚡️  TO JS {"awake":true}
+⚡️  To Native ->  DgProgress clear 122589163
+⚡️  TO JS {"awake":false}
+⚡️  To Native ->  DgTts speak 122589164
+⚡️  TO JS undefined
+⚡️  TO JS {"id":"u1","type":"end"}
+⚡️  To Native ->  DgProgress update 122589165
+⚡️  TO JS {"awake":true}
+⚡️  To Native ->  DgProgress clear 122589166
+⚡️  TO JS {"awake":false}
+⚡️  To Native ->  DgTts getVoices 122589167
+⚡️  TO JS {"voices":[{"lang":"en-US","localService":true,"name":"Samantha"},{"localService":true,"name":"Albert","lang":"en-US"},{"localService":true,"name":"Bad News","lang":"en-US"},{"name":"Bahh","localService":true,"lang":"en-US"},{"lang":"en-US","name":"Bells",
+⚡️  To Native ->  DgTts speak 122589168
+⚡️  TO JS undefined
+⚡️  To Native ->  DgDownload existing 122589169
+⚡️  TO JS {"path":"\/Users\/runner\/Library\/Developer\/CoreSimulator\/Devices\/88931AEA-62E6-447F-8697-DCE00A671384\/data\/Containers\/Data\/Application\/06777F8C-8E58-4D93-909F-3C866659460D\/Library\/Application Support\/dg-library\/dg.db.gz"}
+⚡️  To Native ->  DgShortcuts set 122589170
+⚡️  TO JS {"count":0}
+⚡️  TO JS {"id":"selftest","type":"end"}
+⚡️  To Native ->  DgShortcuts set 122589171
+⚡️  TO JS {"count":1}
+⚡️  To Native ->  DgShortcuts get 122589172
+⚡️  TO JS {"items":[{"title":"Selftest text","type":"dg.route","route":"\/dn22:2.2"}]}
+⚡️  To Native ->  DgSelfTest write 122589173
+2026-09-19 01:26:17.108 App[4992:21275] DG_SELFTEST_WRITTEN /Users/runner/Library/Developer/CoreSimulator/Devices/88931AEA-62E6-447F-8697-DCE00A671384/data/Containers/Data/Application/06777F8C-8E58-4D93-909F-3C866659460D/Documents/selftest.json
+⚡️  TO JS {"path":"\/Users\/runner\/Library\/Developer\/CoreSimulator\/Devices\/88931AEA-62E6-447F-8697-DCE00A671384\/data\/Containers\/Data\/Application\/06777F8C-8E58-4D93-909F-3C866659460D\/Documents\/selftest.json"}
+⚡️  TO JS {"iosSourceApplication":"","iosOpenInPlace":"","url":"dhammagift:\/\/route\/toc"}
+⚡️  To Native ->  DgTts addListener 53622635
+⚡️  To Native ->  DgTts getVoices 53622636
+⚡️  To Native ->  DgDownload addListener 53622637
+⚡️  To Native ->  App addListener 53622638
+⚡️  To Native ->  DgShortcuts set 53622639
+⚡️  To Native ->  App addListener 53622640
+⚡️  To Native ->  App addListener 53622641
+⚡️  TO JS {"voices":[{"lang":"en-US","localService":true,"name":"Samantha"},{"name":"Albert","localService":true,"lang":"en-US"},{"lang":"en-US","name":"Bad News","localService":true},{"lang":"en-US","name":"Bahh","localService":true},{"lang":"en-US","name":"Bells",
+⚡️  TO JS {"count":1}
+⚡️  To Native ->  DgShortcuts open 53622642
+⚡️  To Native ->  DgSelfTest write 53622643
+⚡️  TO JS {"url":"dhammagift:\/\/route\/4as","iosOpenInPlace":"","iosSourceApplication":""}
+⚡️  TO JS undefined
+2026-09-19 01:26:17.395 App[4992:20749] DG_SELFTEST_WRITTEN /Users/runner/Library/Developer/CoreSimulator/Devices/88931AEA-62E6-447F-8697-DCE00A671384/data/Containers/Data/Application/06777F8C-8E58-4D93-909F-3C866659460D/Documents/selftest.json
+⚡️  TO JS {"path":"\/Users\/runner\/Library\/Developer\/CoreSimulator\/Devices\/88931AEA-62E6-447F-8697-DCE00A671384\/data\/Containers\/Data\/Application\/06777F8C-8E58-4D93-909F-3C866659460D\/Documents\/selftest.json"}
+⚡️  To Native ->  DgTts addListener 34776746
+⚡️  To Native ->  DgTts getVoices 34776747
+⚡️  TO JS {"voices":[{"localService":true,"name":"Samantha","lang":"en-US"},{"name":"Albert","localService":true,"lang":"en-US"},{"name":"Bad News","lang":"en-US","localService":true},{"localService":true,"name":"Bahh","lang":"en-US"},{"name":"Bells","lang":"en-US",
+⚡️  To Native ->  DgDownload addListener 34776748
+⚡️  To Native ->  App addListener 34776749
+⚡️  To Native ->  DgShortcuts set 34776750
+⚡️  To Native ->  App addListener 34776751
+⚡️  To Native ->  App addListener 34776752
+⚡️  TO JS {"count":1}
+⚡️  To Native ->  DgSelfTest write 34776753
+2026-09-19 01:26:17.782 App[4992:21422] DG_SELFTEST_WRITTEN /Users/runner/Library/Developer/CoreSimulator/Devices/88931AEA-62E6-447F-8697-DCE00A671384/data/Containers/Data/Application/06777F8C-8E58-4D93-909F-3C866659460D/Documents/selftest.json
+⚡️  TO JS {"path":"\/Users\/runner\/Library\/Developer\/CoreSimulator\/Devices\/88931AEA-62E6-447F-8697-DCE00A671384\/data\/Containers\/Data\/Application\/06777F8C-8E58-4D93-909F-3C866659460D\/Documents\/selftest.json"}
+⚡️  WebView loaded
+⚡️  To Native ->  DgShortcuts set 34776754
+⚡️  TO JS {"count":1}
+gift.dhamma.mobile: 4992

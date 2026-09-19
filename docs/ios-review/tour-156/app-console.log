@@ -1,0 +1,66 @@
+2026-09-19 01:01:10.325 App[6111:24909] DiskCookieStorage changing policy from 2 to 0, cookie file: file:///Users/runner/Library/Developer/CoreSimulator/Devices/06FC15E2-B972-440C-BC55-82A3C0EF1B6D/data/Containers/Data/Application/D2A2330F-37F9-4448-BB0A-8085948CF06E/Library/Cookies/gift.dhamma.mobile.binarycookies
+Loading network plugin
+⚡️  Loading app at capacitor://localhost...
+Reachable via WiFi
+⚡️  To Native ->  DgTts addListener 99421908
+⚡️  To Native ->  DgTts getVoices 99421909
+⚡️  To Native ->  DgDownload addListener 99421910
+⚡️  To Native ->  App addListener 99421911
+⚡️  To Native ->  DgShortcuts set 99421912
+⚡️  To Native ->  App addListener 99421913
+⚡️  To Native ->  App addListener 99421914
+⚡️  TO JS {"voices":[{"name":"Samantha","lang":"en-US","localService":true},{"localService":true,"name":"Albert","lang":"en-US"},{"name":"Bad News","localService":true,"lang":"en-US"},{"lang":"en-US","name":"Bahh","localService":true},{"name":"Bells","lang":"en-US",
+⚡️  TO JS {"count":0}
+⚡️  WebView loaded
+⚡️  To Native ->  DgSelfTest stage 99421915
+⚡️  TO JS {"stage":"home"}
+⚡️  To Native ->  DgShortcuts set 99421916
+⚡️  TO JS {"count":0}
+⚡️  To Native ->  DgSelfTest stage 99421917
+⚡️  TO JS {"stage":"search"}
+⚡️  To Native ->  DgSelfTest stage 99421918
+⚡️  TO JS {"stage":"reader"}
+⚡️  To Native ->  DgSelfTest stage 99421919
+⚡️  TO JS {"stage":"settings"}
+⚡️  To Native ->  DgSelfTest stage 99421920
+⚡️  TO JS {"stage":"dictionary"}
+⚡️  To Native ->  DgSelfTest stage 99421921
+⚡️  TO JS {"stage":"favorites-history"}
+⚡️  To Native ->  DgSelfTest stage 99421922
+⚡️  TO JS {"stage":"toc"}
+⚡️  To Native ->  DgSelfTest stage 99421923
+⚡️  TO JS {"stage":"done"}
+gift.dhamma.mobile: 6111
+2026-09-19 01:02:14.107 App[7625:29483] DiskCookieStorage changing policy from 2 to 0, cookie file: file:///Users/runner/Library/Developer/CoreSimulator/Devices/06FC15E2-B972-440C-BC55-82A3C0EF1B6D/data/Containers/Data/Application/D2A2330F-37F9-4448-BB0A-8085948CF06E/Library/Cookies/gift.dhamma.mobile.binarycookies
+Loading network plugin
+⚡️  Loading app at capacitor://localhost...
+Reachable via WiFi
+⚡️  To Native ->  DgTts addListener 68010676
+⚡️  To Native ->  DgTts getVoices 68010677
+⚡️  To Native ->  DgDownload addListener 68010678
+⚡️  To Native ->  App addListener 68010679
+⚡️  To Native ->  DgShortcuts set 68010680
+⚡️  To Native ->  App addListener 68010681
+⚡️  To Native ->  App addListener 68010682
+⚡️  TO JS {"voices":[{"name":"Samantha","localService":true,"lang":"en-US"},{"name":"Albert","lang":"en-US","localService":true},{"localService":true,"name":"Bad News","lang":"en-US"},{"lang":"en-US","localService":true,"name":"Bahh"},{"name":"Bells","lang":"en-US",
+⚡️  TO JS {"count":1}
+⚡️  WebView loaded
+⚡️  To Native ->  DgSelfTest stage 68010683
+⚡️  TO JS {"stage":"home"}
+⚡️  To Native ->  DgShortcuts set 68010684
+⚡️  TO JS {"count":1}
+⚡️  To Native ->  DgSelfTest stage 68010685
+⚡️  TO JS {"stage":"search"}
+⚡️  To Native ->  DgSelfTest stage 68010686
+⚡️  TO JS {"stage":"reader"}
+⚡️  To Native ->  DgSelfTest stage 68010687
+⚡️  TO JS {"stage":"settings"}
+⚡️  To Native ->  DgSelfTest stage 68010688
+⚡️  TO JS {"stage":"dictionary"}
+⚡️  To Native ->  DgSelfTest stage 68010689
+⚡️  TO JS {"stage":"favorites-history"}
+⚡️  To Native ->  DgSelfTest stage 68010690
+⚡️  TO JS {"stage":"toc"}
+⚡️  To Native ->  DgSelfTest stage 68010691
+⚡️  TO JS {"stage":"done"}
+gift.dhamma.mobile: 7625
