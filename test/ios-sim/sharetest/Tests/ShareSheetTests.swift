@@ -110,13 +110,16 @@ final class ShareSheetTests: XCTestCase {
         // A WKWebView input's first tap after its window/sheet appears does not always pick up
         // keyboard focus in the simulator (run 252's failure: "Failed to synthesize event: Neither
         // element nor any descendant has keyboard focus", right after a plain tap()) — retapping
-        // after a short pause is the usual fix for this XCUITest quirk.
-        for _ in 0..<5 where !box.hasKeyboardFocus {
+        // after a short pause is the usual fix for this XCUITest quirk. XCUIElement has no
+        // `hasKeyboardFocus` in this SDK (253's compile error), so the software keyboard's own
+        // appearance is the readable signal that the tap actually landed.
+        let keyboard = safari.keyboards.firstMatch
+        for _ in 0..<5 where !keyboard.exists {
             box.tap()
-            usleep(300_000)
+            _ = keyboard.waitForExistence(timeout: 2)
         }
-        guard box.hasKeyboardFocus else {
-            XCTFail("could not give the search box keyboard focus")
+        guard keyboard.exists else {
+            XCTFail("could not give the search box keyboard focus (no keyboard appeared)")
             return
         }
         // The failed link-search left its own query in the box; backspace it out by its own length
