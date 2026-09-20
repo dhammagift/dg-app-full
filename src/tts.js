@@ -73,6 +73,53 @@
     } catch (e) {
         window.speechSynthesis = synth;
     }
+    // The lock screen. voice.js already says what is playing through navigator.mediaSession — title,
+    // artwork, play/pause handlers — and in a browser that is the whole job. Android's WebView has
+    // never implemented that API, so in the app those lines reached nobody: the PWA showed a player
+    // on the lock screen and the app, built from the same code, showed nothing. Stand in for it and
+    // forward to the plugin, which owns the platform side. WKWebView has the real thing, so iOS
+    // keeps it and none of this runs there.
+    if (!('mediaSession' in navigator) && typeof P.setPlaybackState === 'function') {
+        var handlers = {}, meta = null, playback = 'none';
+        var media = {
+            setActionHandler: function (action, fn) { handlers[action] = fn; },
+            // Speech is not a seekable track, and nothing asks for a scrubber.
+            setPositionState: function () { },
+        };
+        Object.defineProperty(media, 'metadata', {
+            get: function () { return meta; },
+            set: function (m) {
+                meta = m;
+                var art = m && m.artwork && m.artwork[0] && m.artwork[0].src;
+                P.setMediaMetadata({ title: (m && m.title) || '', artist: (m && m.artist) || '', artwork: art || '' });
+            },
+        });
+        Object.defineProperty(media, 'playbackState', {
+            get: function () { return playback; },
+            set: function (s) { playback = s; P.setPlaybackState({ state: s }); },
+        });
+        // A press on the notification or the lock screen comes back here, and the handler voice.js
+        // registered decides what it means — this side never guesses.
+        P.addListener('media', function (e) {
+            var f = handlers[e && e.action];
+            if (typeof f === 'function') f();
+        });
+        try {
+            Object.defineProperty(navigator, 'mediaSession', { configurable: true, value: media });
+        } catch (e) {
+            navigator.mediaSession = media;
+        }
+        if (!window.MediaMetadata) {
+            window.MediaMetadata = function (init) {
+                init = init || {};
+                this.title = init.title || '';
+                this.artist = init.artist || '';
+                this.album = init.album || '';
+                this.artwork = init.artwork || [];
+            };
+        }
+    }
+
     P.getVoices().then(function (r) {
         voices = (r && r.voices) || [];
         var ev = { type: 'voiceschanged' };
