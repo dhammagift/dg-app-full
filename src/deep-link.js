@@ -44,6 +44,69 @@
         return /^[a-z][a-z-]*\d/i.test(host);
     }
 
+    // The reader URLs the site has always had, and still answers with a 301 (dg-fastify.js,
+    // LEGACY_READERS + legacyReaderRedirect). External sites link to them — SuttaCentral points at
+    // find.dhamma.gift/read/?q=MN1, and Gemini now answers questions about a sutta with
+    // find.dhamma.gift/d/?q=mn5 — so they arrive on a phone as ordinary taps.
+    //
+    // The app has no server, so nothing performed that redirect: MainActivity handed the page
+    // /d/?q=mn5 as-is, the SPA had no such route and the APK no such file, and the tap landed on
+    // nothing. The table is mirrored here rather than the redirect followed over the network,
+    // because this has to work with the radio off, and because the same rewrite has to happen on
+    // iOS, where nothing goes through Android's intent at all.
+    //
+    // Owner (2026-09-20): keep accepting these for about a year.
+    var LEGACY_READERS = {
+        '/read': {}, '/r': { lang: 'ru' }, '/d': { mode: 'devanagari' }, '/memorize': { mode: 'memorize' },
+        '/ml': { mode: 'multi' }, '/mt': { mode: 'multi', lang: 'ru' }, '/multi': { mode: 'multi' },
+        '/th': { lang: 'th' }, '/th/read': { lang: 'th' }, '/mlth': { mode: 'multi', lang: 'th' },
+    };
+    // The server also sends /rv to /rev/, which this deliberately does not: /rev/ is not in the
+    // APK either, so it would only trade one dead route for another. It stays a normal link.
+    var LEGACY_PAGES = { '/history.php': '/4as', '/read.php': '/toc' };
+
+    // Modern routes pass through untouched, so applying this twice is the same as applying it once
+    // — which matters, because both the deep-link mapping below and native-bridge.js's
+    // _nativeRoute handler run it, and a URL can reach the page through either.
+    function legacyRoute(route) {
+        if (typeof route !== 'string' || route.charAt(0) !== '/') return route;
+        var hash = '';
+        var hashAt = route.indexOf('#');
+        if (hashAt !== -1) { hash = route.slice(hashAt); route = route.slice(0, hashAt); }
+        var cut = route.indexOf('?');
+        var pathPart = cut === -1 ? route : route.slice(0, cut);
+        var queryPart = cut === -1 ? '' : route.slice(cut + 1);
+        // /read/, /read/index.html and /read/index.php are all the same page, exactly as the
+        // server treats them.
+        var page = pathPart.replace(/\/(index\.(html|php))?$/, '').toLowerCase() || '/';
+        if (LEGACY_PAGES[page]) return LEGACY_PAGES[page] + hash;
+        var target = LEGACY_READERS[page];
+        if (!target) return route + hash;
+
+        var params = new URLSearchParams(queryPart);
+        var q = (params.get('q') || '').trim();
+        params.delete('q');
+        // The prefix IS the setting (/r means Russian, /d means Devanagari), but an explicit one in
+        // the query wins — same precedence the server applies.
+        Object.keys(target).forEach(function (key) {
+            if (!params.has(key)) params.set(key, target[key]);
+        });
+        var rest = params.toString();
+        if (!q) return '/' + (rest ? '?' + rest : '') + hash;
+
+        // ?q=MN1 is a text; ?q=kacchapa is a search. Same rule as the scheme above, and the same
+        // one documented in docs/DEEP_LINKS.md — the server reaches it through DgTextRouter, which
+        // is not in the app and is not needed for a decision this small.
+        var seg = '';
+        var base = q;
+        var colon = q.indexOf(':');
+        if (colon !== -1) { base = q.slice(0, colon); seg = q.slice(colon); }
+        if (canonId(base)) {
+            return '/' + encodeURIComponent(base.toLowerCase()) + seg + (rest ? '?' + rest : '') + hash;
+        }
+        return '/?q=' + encodeURIComponent(q) + (rest ? '&' + rest : '') + hash;
+    }
+
     function toLocalUrl(raw) {
         if (!raw || typeof raw !== 'string') return null;
 
@@ -59,7 +122,7 @@
         // the route, which is also what Android's intent filter pairs with.
         if (url.protocol === 'https:' || url.protocol === 'http:') {
             if (!SITE_HOSTS.test(url.hostname)) return null;
-            var sitePath = url.pathname + url.search + url.hash;
+            var sitePath = legacyRoute(url.pathname + url.search + url.hash);
             // The home page is not a route: nothing to rewrite, and an empty _nativeRoute would be
             // refused by the page's own handoff anyway.
             if (sitePath === '/' || sitePath === '') return null;
@@ -117,8 +180,15 @@
     }
 
     root.dgDeepLinkToLocalUrl = toLocalUrl;
+    // native-bridge.js applies the same rewrite to ?_nativeRoute=, which is how a tapped link
+    // reaches the page on Android — MainActivity builds that parameter itself and never comes
+    // through toLocalUrl.
+    root.dgLegacyRoute = legacyRoute;
     // Also a module export, so the contract is testable in node (test/deep-link.test.js) without a
     // browser and without a device — this mapping is pure string work and has no business needing
     // either. Everywhere else in src/ is a plain browser script; this one line is the whole cost.
-    if (typeof module !== 'undefined' && module.exports) module.exports = toLocalUrl;
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = toLocalUrl;
+        module.exports.legacyRoute = legacyRoute;
+    }
 })(typeof window !== 'undefined' ? window : globalThis);

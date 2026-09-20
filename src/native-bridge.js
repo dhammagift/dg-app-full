@@ -268,6 +268,15 @@
         var params = new URLSearchParams(location.search);
         var route = params.get('_nativeRoute');
         if (!route) return;
+        // A tapped link may be one of the site's legacy reader URLs (/read/?q=MN1 from
+        // SuttaCentral, /d/?q=mn5 from Gemini). On the site a 301 turns those into real routes;
+        // here there is no server to issue one, so the same table does it before anything else
+        // looks at the route — otherwise EXTERNAL_ROUTES below sends /memorize/?q=mn1 out to the
+        // browser, and everything else lands on a path the SPA cannot render.
+        // MainActivity builds this parameter itself from the intent's URL, so this is the only
+        // point Android's App Links pass through; src/deep-link.js owns the mapping and covers
+        // iOS, where the same link arrives as a Universal Link instead.
+        if (typeof window.dgLegacyRoute === 'function') route = window.dgLegacyRoute(route);
         // Two of the four App Shortcuts (Dictionary, Memo — same set as dg-twa's and the site
         // manifest's) name pages this app does not contain: /dict and /memo are rendered by the
         // server, /login and /docs were never bundled. Rewriting the URL for them would land the

@@ -45,7 +45,39 @@ const CASES = [
     ['refuse: search without q', 'dhammagift://search?langs=ru', null],
     ['refuse: an empty route', 'dhammagift://route/', null],
     ['refuse: the unparseable colon-in-host form (that is what route/ is for)', 'dhammagift://dn22:2.2', null],
+
+    // The site's legacy reader URLs, which external sites still link to (SuttaCentral:
+    // find.dhamma.gift/read/?q=MN1) and Gemini now answers questions with (/d/?q=mn5). The site
+    // 301s them; the app has no server, so src/deep-link.js mirrors dg-fastify.js's
+    // LEGACY_READERS table. Expectations below were taken from the live server, not invented —
+    // every one of them was diffed against its own 301 before being written down.
+    ['legacy: Gemini answers with /d/?q=mn5 (devanagari prefix)', 'https://find.dhamma.gift/d/?q=mn5',
+        '/?_nativeRoute=' + encodeURIComponent('/mn5?mode=devanagari')],
+    ['legacy: SuttaCentral links /read/?q=MN1, and the id is lowercased', 'https://find.dhamma.gift/read/?q=MN1',
+        '/?_nativeRoute=' + encodeURIComponent('/mn1')],
+    ['legacy: /r means Russian', 'https://dhamma.gift/r/?q=mn1',
+        '/?_nativeRoute=' + encodeURIComponent('/mn1?lang=ru')],
+    ['legacy: /memorize is a mode, not the external memo app', 'https://dhamma.gift/memorize/?q=sn56.11',
+        '/?_nativeRoute=' + encodeURIComponent('/sn56.11?mode=memorize')],
+    ['legacy: two settings at once (/mt = multi + Russian)', 'https://dhamma.gift/mt/?q=mn1',
+        '/?_nativeRoute=' + encodeURIComponent('/mn1?mode=multi&lang=ru')],
+    ['legacy: index.html is the same page, and a segment survives', 'https://dhamma.gift/read/index.html?q=mn1:2.3',
+        '/?_nativeRoute=' + encodeURIComponent('/mn1:2.3')],
+    ['legacy: a q that is not a text id is a search', 'https://dhamma.gift/read/?q=kacchapa',
+        '/?_nativeRoute=' + encodeURIComponent('/?q=kacchapa')],
+    ['legacy: /history.php is Favorites', 'https://dhamma.gift/history.php',
+        '/?_nativeRoute=' + encodeURIComponent('/4as')],
+    ['legacy: /read.php is the contents', 'https://dhamma.gift/read.php',
+        '/?_nativeRoute=' + encodeURIComponent('/toc')],
+    ['legacy: an explicit query key beats the prefix default', 'https://dhamma.gift/r/?q=mn1&lang=en',
+        '/?_nativeRoute=' + encodeURIComponent('/mn1?lang=en')],
+    ['legacy: a modern route is not touched', 'https://dhamma.gift/toc/pli-tv-bu-pm',
+        '/?_nativeRoute=' + encodeURIComponent('/toc/pli-tv-bu-pm')],
 ];
+
+// Applied twice must equal applied once: both this mapping and native-bridge.js's _nativeRoute
+// handler run legacyRoute, and one link can reach the page through either.
+const LEGACY_IDEMPOTENT = ['/d/?q=mn5', '/read/?q=MN1', '/mn1', '/toc/pli-tv-bu-pm', '/?q=x', '/4as'];
 
 let failed = 0;
 for (const [name, input, expected] of CASES) {
@@ -69,5 +101,16 @@ try {
     console.log('FAIL refuses undefined/null input');
 }
 
-console.log(failed ? `\nRESULT: FAILED (${failed} of ${CASES.length + 1})` : `\nRESULT: OK — ${CASES.length + 1} deep-link cases agree with the documented contract.`);
+try {
+    const { legacyRoute } = toLocalUrl;
+    for (const route of LEGACY_IDEMPOTENT) {
+        assert.strictEqual(legacyRoute(legacyRoute(route)), legacyRoute(route), route);
+    }
+    console.log('ok   legacy rewriting is idempotent');
+} catch (e) {
+    failed++;
+    console.log('FAIL legacy rewriting is not idempotent: ' + e.message);
+}
+
+console.log(failed ? `\nRESULT: FAILED (${failed} of ${CASES.length + 2})` : `\nRESULT: OK — ${CASES.length + 2} deep-link cases agree with the documented contract.`);
 process.exit(failed ? 1 : 0);
