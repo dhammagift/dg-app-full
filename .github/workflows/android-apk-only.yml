@@ -1,0 +1,111 @@
+name: Android APK only
+
+# The fast path for a change that touches only android/ — the manifest, shortcuts.xml, a plugin.
+#
+# Why the normal build is slow, and why the database is in it at all: the APK does NOT carry
+# dg.db (the app downloads it on the device). But www/ — the bundle that DOES go into the APK —
+# is generated from a RUNNING dg-fastify.js, which refuses to boot without dg.db: the TOC
+# snapshot and settings/{scripts,demo-data,lang-counts,translator-catalog}.json are its answers,
+# and build-assets.js fails without them. So the database is built for the sake of four JSON
+# files and the e2e checks, not for the package.
+#
+# A native-only change cannot alter any of that, so this workflow does what the iOS jobs in
+# build-app.yml already do inside a run — reuse the www-<run> artifact — only across runs.
+# ~3 minutes instead of the full pipeline.
+#
+# THE WEB BUNDLE IS THEREFORE NOT FROM THIS COMMIT. Touch anything under src/, or expect a change
+# from dg-node, and this APK will not show it: run build-app.yml instead. The artifact is named
+# apart from that workflow's for the same reason.
+
+on:
+  workflow_dispatch:
+    inputs:
+      www_run:
+        description: 'Run ID to take the web bundle from (default: the most recent run that has one)'
+        required: false
+        type: string
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read   # reading another run's artifacts
+
+    steps:
+      - name: Checkout this repo (the app)
+        uses: actions/checkout@v4
+
+      # download-artifact@v4 can reach another run, but only by artifact ID, which nobody has to
+      # hand — and the most recent run that HAS a bundle is not necessarily the most recent
+      # successful one (a run can fail in the e2e checks long after uploading it). So: walk the
+      # runs newest-first and take the first www-* artifact that is still alive.
+      - name: Find the web bundle to reuse
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WWW_RUN: ${{ inputs.www_run }}
+        run: |
+          set -euo pipefail
+          runs="${WWW_RUN:-$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/build-app.yml/runs?per_page=20" --jq '.workflow_runs[].id')}"
+          for id in $runs; do
+            name=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/artifacts" \
+                     --jq '.artifacts[] | select(.expired == false) | select(.name | startswith("www-")) | .name' | head -1)
+            if [ -n "$name" ]; then
+              echo "WWW_RUN_ID=$id"   >> "$GITHUB_ENV"
+              echo "WWW_ARTIFACT=$name" >> "$GITHUB_ENV"
+              echo "Reusing $name from run $id"
+              exit 0
+            fi
+          done
+          echo "::error::No unexpired www-* artifact in the last 20 runs of build-app.yml — run that workflow once."
+          exit 1
+
+      - name: Download the web bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download "$WWW_RUN_ID" -n "$WWW_ARTIFACT" -D www -R "$GITHUB_REPOSITORY"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.20.0'
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'  # Capacitor 8 (AGP 8.13) needs JDK 21
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
+
+      - name: Install app dependencies
+        run: npm install --legacy-peer-deps --no-audit
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Grant gradlew permissions
+        run: chmod +x android/gradlew
+
+      - name: Build Android Debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --stacktrace
+
+      # Named apart from build-app.yml's dg-app-full-apk-*: this one's web half is older than its
+      # native half, and the two must never be confused when picking a file to install.
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dg-app-android-only-${{ github.run_number }}
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Say what is in it
+        run: |
+          echo "### APK built from web bundle \`$WWW_ARTIFACT\` (run $WWW_RUN_ID)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Native half: \`${GITHUB_SHA:0:7}\`. Web half is NOT from this commit." >> "$GITHUB_STEP_SUMMARY"
