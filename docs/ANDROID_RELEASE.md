@@ -38,8 +38,18 @@ a Google Cloud Project in order to access the Google Play Developer API»*
    право **«Загружать приложения в тестовые каналы»** (Release apps to testing tracks).
    Больше ничего не давать: этого хватает для внутреннего трека и не хватает, чтобы выкатить
    что-то читателям.
-4. **GitHub → Settings → Secrets and variables → Actions → New repository secret**
-   → имя `PLAY_SERVICE_ACCOUNT_JSON`, значение — **содержимое JSON-файла целиком**.
+4. **Секрет в каждом репозитории**, где нужна загрузка:
+   - https://github.com/dhammagift/dg-app-full/settings/secrets/actions
+   - https://github.com/dhammagift/dg-twa/settings/secrets/actions
+   - https://github.com/dhammagift/notApp/settings/secrets/actions
+
+   **New repository secret** → имя `PLAY_SERVICE_ACCOUNT_JSON`, значение — **содержимое
+   JSON-файла целиком**. Один и тот же файл во все три: сервисный аккаунт один, права у него на
+   все три приложения.
+
+   Общего секрета на несколько репозиториев тут быть не может: `dhammagift` — **личный аккаунт**
+   (`GET /users/dhammagift` → `"type": "User"`), а секреты уровня организации бывают только у
+   организаций. Поэтому три раза одно и то же — это не лень, это единственный вариант.
 
 Правило Play «первую сборку загрузите вручную» нас не касается: пакет `gift.dhamma.twa` в консоли
 уже есть, он заменил листинг TWA.
