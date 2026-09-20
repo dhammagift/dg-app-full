@@ -49,7 +49,7 @@ LANGUAGES
 Pāli, Russian and English.
 
 WHERE THE TEXTS COME FROM
-The texts come from SuttaCentral and from the Dhamma.gift translation project. Dhamma.gift is a non-commercial project: no advertising, no tracking, and no account required — signing in with Google is optional and only syncs favourites and notes between your devices.
+The texts come from SuttaCentral and from the Dhamma.gift translation project. Dhamma.gift is a non-commercial project: no advertising, no tracking, and no account required — signing in is optional and only syncs favourites and notes between your devices.
 
 May all beings be happy.
 ```
@@ -73,13 +73,75 @@ May all beings be happy.
 
 | Данные | Когда | Связь с личностью | Использование | Трекинг |
 |---|---|---|---|---|
-| Contact Info → Email address | только если человек вошёл через Google (Firebase Auth) | да | App Functionality (синхронизация избранного и заметок) | нет |
-| User Content → Other user content (избранное, заметки) | только при входе | да | App Functionality | нет |
+| User Content → Other user content (избранное, заметки) | только при входе по кодовой фразе | да | App Functionality | нет |
 | Identifiers → User ID | только при входе (Firebase uid) | да | App Functionality | нет |
 
 Всё остальное — «Data Not Collected»: аналитики нет, рекламы нет, геолокации нет, контактов нет,
-трекинга нет (`NSPrivacyTracking = false`). Если решим не декларировать ничего, единственный способ —
-убрать вход Google, но он нужен для синхронизации.
+трекинга нет (`NSPrivacyTracking = false`). Email не собирается: в iOS-сборке кнопка входа через
+Google скрыта (`src/native-bridge.js`, Guideline 4.8 — сторонний вход требует Sign in with Apple
+рядом), остаётся только анонимный вход по кодовой фразе.
+
+## App Review Information
+
+**Sign-in required — снять галочку.** Вход необязателен, все функции работают без аккаунта; ревьюеру
+логин не нужен.
+
+**Notes** (поле под Contact Information; вставлять как есть):
+
+```
+Dhamma.gift is a free, offline-first reader and search engine for the Pali Canon (the Buddhist
+suttas and Vinaya) with a built-in Pali dictionary and text-to-speech. No account is required.
+
+The app's core is a text library that lives on the device: after a one-time download, search, the
+table of contents, every text, its translations and the dictionary work with no network at all.
+Online mode is the fallback for people who have no space for the library or are always connected:
+the same search and reader then run against our server (dhamma.gift).
+
+NATIVE APP FEATURES (not available in the browser version)
+- Offline library: a ~200 MB download (~590 MB on the device) with the whole canon and its
+  translations, fetched through a background URLSession — the download survives the app being
+  backgrounded and the screen being locked. Search runs on the device against that database.
+- Pali dictionary (Digital Pali Dictionary): tap any Pali word in a text; the dictionary is cached
+  on the device after the first use and works offline.
+- Text-to-speech via AVSpeechSynthesizer: tap any Pali or English paragraph — it gets highlighted
+  and a play button appears in the lower right corner.
+- Share Extension: select text or a link in any other app → Share → Dhamma.gift, and the search
+  results appear in the share sheet itself — a passage from any site or app looked up without
+  leaving it. A shared dhamma.gift link opens that text instead.
+- Home-screen quick actions: four fixed items (table of contents, favorites & history, memo,
+  dictionary) plus the texts read most recently.
+- Universal Links: https://dhamma.gift/mn1 tapped in Notes or Messages opens the text in the app.
+
+BASIC TEST — OFFLINE (5–15 minutes, depends on network speed; this is the core of the app)
+1. Launch the app. On the home screen, tap "Download the offline library" in the notice under the
+   search field (also: burger menu → Settings → Offline library → Download). Progress is shown in
+   the app; the download continues in the background and while the screen is locked.
+2. When it finishes, turn on Airplane Mode.
+3. Type "kacchapa" in the search field and press Search. Results come from the local database.
+4. Tap any result to open it in the reader; switch the Pali/translation view, scroll the text.
+5. Tap a Pali word: the dictionary popup opens, still offline.
+6. Tap a paragraph and press the play button: the text is read aloud.
+7. Turn Airplane Mode off. The library can be deleted at any time: Settings → Offline library →
+   Delete.
+
+BASIC TEST — ONLINE (about 1 minute)
+Cancel or skip the download and repeat steps 3–6: search results and texts then come from
+dhamma.gift, so everything can also be checked without waiting for the download.
+
+SIGN-IN
+Signing in is optional and is not needed for any feature. It only turns on syncing favorites and
+notes between devices, with an anonymous passphrase — no email, no third-party sign-in, no
+personal data.
+
+CONTENT
+Pali texts and translations come from SuttaCentral and the project's own translations; the
+dictionary is the Digital Pali Dictionary (DPD). All are used under their respective open
+licenses. The app is free, all content is included, there are no in-app purchases, no ads, no
+analytics and no tracking.
+```
+
+Цифры (размер базы, число голосов) при отправке сверить с текущей сборкой: `selftest.json` в
+`docs/ios-review/` даёт число голосов; размер базы — артефакт `dg-app-full-db-<прогон>`.
 
 ## Скриншоты
 

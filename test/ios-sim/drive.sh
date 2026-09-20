@@ -54,9 +54,12 @@ xcrun simctl uninstall "$UDID" "$BUNDLE" 2>/dev/null || true
 
 xcrun simctl install "$UDID" "$APP"
 
-# --library: put the packaged fixture where DgDownloadPlugin downloads to (Application Support,
-# excluded from backup), BEFORE the first launch. That is the whole point of the run: the app must
-# find the archive in its own storage and import it, with no network involved at all.
+# --library: put the packaged fixture where builds 170–215 downloaded to (Application Support),
+# BEFORE the first launch. DgDownloadPlugin treats an archive there as a library to migrate: it is
+# moved into the App Group container and unpacked into dg.db, which the worker then reads through
+# /dg-sql — the whole native path, exercised with no network involved at all. (The group container
+# itself is not addressed here on purpose: with CODE_SIGNING_ALLOWED=NO the simulator build carries
+# no entitlements, and `simctl get_app_container … group.…` would have nothing to answer with.)
 if [ -n "$LIBRARY" ]; then
     CONTAINER=$(xcrun simctl get_app_container "$UDID" "$BUNDLE" data)
     mkdir -p "$CONTAINER/Library/Application Support/dg-library"

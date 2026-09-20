@@ -19,9 +19,11 @@
 //   - mapStatic: TOC and the Patimokkha fragments are bundled as static files (build-toc-
 //     snapshot.js / build-assets.js), so their API URLs are rewritten to those files — no
 //     server exists here to compute them.
-//   - askConsent: Wi-Fi proceeds silently (the download card is its own signal); anything else
-//     asks through a native dialog (@capacitor/dialog), naming the real byte size from the
-//     published manifest.
+//   - askConsent: always asks, Wi-Fi included — App Store guideline 4.2.3(ii) requires disclosing
+//     the size and prompting before a first-launch download regardless of connection, and a
+//     reader on Wi-Fi is not automatically one who wants a ~600MB library. The site's own consent
+//     sheet handles it when present; a native dialog (@capacitor/dialog) is the fallback, naming
+//     the real byte size from the published manifest either way.
 //   - Auto-download on first open: the app must work offline by definition, so the first launch
 //     starts the download by itself (the site is opt-in — its app.js only downloads on an
 //     explicit intent key, which this file sets). A decline is remembered, so a reader on
@@ -45,50 +47,27 @@
     // published" during the update check.
     var REMOTE_BASE = ONLINE_ORIGIN + '/mobile-data';
     var ARCHIVE = 'dg.db.gz';
-    var MANIFEST = 'db-manifest.json';
 
-    // The archive, when iOS can fetch it better than a Web Worker can: a WebView's JavaScript is
-    // suspended the moment the app leaves the foreground, so DgDownloadPlugin.swift puts the 216 MB
-    // transfer on the system's background URLSession. What the worker then downloads is the FILE,
-    // from the app's own handler — a local read that takes seconds instead of minutes, which is why
-    // it survives the round trip to the background. The offline layer asks for this after consent
-    // and before its transfer (dg-node's offline/app.js, prepareArchive), so the consent sheet, the
-    // progress card and the update path are untouched: only the source of the bytes moves.
+    // iOS: the library is a plain dg.db in the App Group container, downloaded and unpacked by
+    // DgDownloadPlugin.swift on the system's background URLSession (a WebView's JavaScript is
+    // suspended the moment the app leaves the foreground) and read in place by the worker through
+    // the native /dg-sql endpoint (DgSharedLibrary.swift) — no import into OPFS, and the share
+    // extension reads the same file. The offline layer asks for this after consent and before its
+    // own transfer (dg-node's offline/app.js, prepareArchive), so the consent sheet, the progress
+    // card and the update path are untouched. `update` re-downloads; otherwise a file already on
+    // disk is the answer.
     //
     // Android has no such plugin (its foreground service does the same job for the worker's own
     // fetch) and a browser has no Capacitor at all, so both keep the code path they have always had.
-    function localBaseFor(path) {
-        var Cap = window.Capacitor;
-        if (!path || !Cap || typeof Cap.convertFileSrc !== 'function') return null;
-        var dir = path.replace(/\/[^/]*$/, '');
-        var url = Cap.convertFileSrc(dir);
-        return url ? url.replace(/\/$/, '') : null;
-    }
-
-    function prepareArchive() {
+    function prepareArchive(opts) {
         var Plugins = window.Capacitor && window.Capacitor.Plugins;
         var D = Plugins && Plugins.DgDownload;
         if (!D || typeof D.start !== 'function' || typeof D.existing !== 'function') return Promise.resolve(false);
-
-        function adopt(file) {
-            // A non-empty path, not a size: the plugin deliberately does not read file metadata (see
-            // DgDownloadPlugin.swift — it is a required-reason API and would drag a privacy manifest
-            // in behind it), and the byte counts arrive through the download's progress events.
-            var base = file && file.path ? localBaseFor(file.path) : null;
-            if (!base) return false;
-            window.dgPlatform.distBase = base;
-            return true;
-        }
-
-        return Promise.resolve(D.existing()).then(function (onDisk) {
-            if (adopt(onDisk)) return true;   // a previous run's archive: import it, no transfer at all
-            return Promise.resolve(D.start({ url: REMOTE_BASE + '/' + ARCHIVE })).then(function (file) {
-                // The manifest has to sit beside the archive: db-worker.js names the OPFS file after
-                // its build_id and reads file_gz from it, so a local base without one would be read
-                // as a plain, uncompressed database and rejected.
-                return Promise.resolve(D.start({ url: REMOTE_BASE + '/' + MANIFEST }))
-                    .then(function () { return file; });
-            }).then(adopt);
+        var fresh = !!(opts && opts.update);
+        return Promise.resolve(fresh ? null : D.existing()).then(function (onDisk) {
+            if (onDisk && onDisk.path) return true;
+            return Promise.resolve(D.start({ url: REMOTE_BASE + '/' + ARCHIVE }))
+                .then(function (file) { return !!(file && file.path); });
         }).catch(function () { return false; });   // refused, offline, plugin unhappy: the worker's own path
     }
 
@@ -97,6 +76,9 @@
         distBase: window.DG_DIST_BASE || REMOTE_BASE,
         onlineBase: ONLINE_ORIGIN,
         prepareArchive: prepareArchive,
+        // Set by the iOS shell (DgSharedLibrary.userScript): SQL runs natively at this path on the
+        // page's own origin, and db-worker.js takes its native branch. Undefined on Android.
+        nativeSql: window.DG_NATIVE_SQL || null,
 
         mapStatic: function (p) {
             if (p === '/api/toc') return '/api-snapshots/toc.json';
@@ -118,7 +100,6 @@
             return Promise.all([Network.getStatus(), readManifest()]).then(function (out) {
                 var status = out[0];
                 var m = out[1] || {};
-                if (status.connectionType === 'wifi') return true;
                 if (status.connected === false) return true; // the download itself will fail visibly
                 // The site's own consent sheet (dg-node offline-status.js, 'dg:need-consent'): themed,
                 // both figures — the archive that downloads and the database on the device. The native
@@ -146,8 +127,8 @@
             : '';
         return Dialog.confirm({
             title: ru ? 'Офлайн-библиотека' : 'Offline library',
-            message: ru ? 'Скачать офлайн-библиотеку' + size + ' через мобильный интернет?'
-                        : 'Download the offline library' + size + ' over mobile data?',
+            message: ru ? 'Скачать офлайн-библиотеку' + size + '?'
+                        : 'Download the offline library' + size + '?',
             okButtonTitle: ru ? 'Скачать' : 'Download',
             cancelButtonTitle: ru ? 'Не сейчас' : 'Not now',
         }).then(function (v) { return !!v.value; });
@@ -166,12 +147,14 @@
     // library exists — app.js only acts on it when the probe finds none) and when a previous
     // decline is still standing. The decline flag is cleared by the download itself: once
     // dg.offline.state reports present, the flag is history.
+    // Not in the iOS share sheet: that process cannot download (no plugin), it only reads what the
+    // app downloaded, and the extension seeds the layer's own "a library exists" flag when it does.
     try {
         var state = JSON.parse(localStorage.getItem(STATE_KEY) || 'null');
         var declined = localStorage.getItem(DECLINED_KEY) === '1';
         if (state && state.present) {
             if (declined) localStorage.removeItem(DECLINED_KEY);
-        } else if (!declined) {
+        } else if (!declined && !window.DG_SHARE_SHEET) {
             localStorage.setItem(WANT_DATA_KEY, '1');
         }
     } catch (e) { /* private mode / quota — the reader downloads from Settings as on the site */ }

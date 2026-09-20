@@ -1,4 +1,5 @@
 import UIKit
+import WebKit
 import Capacitor
 
 // The app's own bridge view controller: CAPBridgeViewController plus the plugins that live in this
@@ -21,7 +22,48 @@ import Capacitor
 // any method from its superclass".
 class DgBridgeViewController: CAPBridgeViewController {
 
+    // Capacitor registers its asset handler for capacitor://localhost on the configuration this
+    // returns, after it returns — the one moment /dg-sql can be put on the same origin, which is
+    // what lets the worker reach it with a plain same-origin XMLHttpRequest. So the configuration is
+    // a subclass that wraps whatever handler is registered on it (DgSchemeRouter), and this method
+    // mirrors CAPBridgeViewController.webViewConfiguration(for:) setting by setting, because super
+    // would hand back a plain WKWebViewConfiguration.
+    override func webViewConfiguration(for instanceConfiguration: InstanceConfiguration) -> WKWebViewConfiguration {
+        let configuration = DgWebViewConfiguration()
+        configuration.websiteDataStore.httpCookieStore.add(CapacitorWKCookieObserver())
+        configuration.allowsInlineMediaPlayback = true
+        configuration.suppressesIncrementalRendering = false
+        configuration.allowsAirPlayForMediaPlayback = true
+        configuration.mediaTypesRequiringUserActionForPlayback = []
+        configuration.limitsNavigationsToAppBoundDomains = instanceConfiguration.limitsNavigationsToAppBoundDomains
+        if #available(iOS 15.4, *) {
+            configuration.preferences.isElementFullscreenEnabled = true
+        }
+        if let appendUserAgent = instanceConfiguration.appendedUserAgentString {
+            if let appName = configuration.applicationNameForUserAgent {
+                configuration.applicationNameForUserAgent = "\(appName) \(appendUserAgent)"
+            } else {
+                configuration.applicationNameForUserAgent = appendUserAgent
+            }
+        }
+        if let preferredContentMode = instanceConfiguration.preferredContentMode {
+            var mode = WKWebpagePreferences.ContentMode.recommended
+            if preferredContentMode == "mobile" {
+                mode = .mobile
+            } else if preferredContentMode == "desktop" {
+                mode = .desktop
+            }
+            configuration.defaultWebpagePreferences.preferredContentMode = mode
+        }
+        return configuration
+    }
+
     override func capacitorDidLoad() {
+        // The page learns that SQL runs natively (DgSharedLibrary.swift). Added here and not in
+        // webViewConfiguration(for:), because Capacitor replaces the user content controller after
+        // that call.
+        webView?.configuration.userContentController.addUserScript(DgLibrary.userScript(shareSheet: false))
+
         // Ships in the app: it keeps the screen awake while the offline library downloads
         // (DgProgressPlugin.swift), which is what stops iOS suspending the transfer mid-way.
         bridge?.registerPluginInstance(DgProgressPlugin())
@@ -42,5 +84,33 @@ class DgBridgeViewController: CAPBridgeViewController {
         // behalf. A release build's `Capacitor.Plugins.DgSelfTest` is therefore undefined.
         bridge?.registerPluginInstance(DgSelfTestPlugin())
         #endif
+    }
+}
+
+final class DgWebViewConfiguration: WKWebViewConfiguration {
+    override func setURLSchemeHandler(_ urlSchemeHandler: WKURLSchemeHandler?, forURLScheme urlScheme: String) {
+        super.setURLSchemeHandler(urlSchemeHandler.map { DgSchemeRouter(inner: $0) }, forURLScheme: urlScheme)
+    }
+}
+
+// /dg-sql/* goes to the SQL handler, everything else to Capacitor's asset handler.
+final class DgSchemeRouter: NSObject, WKURLSchemeHandler {
+    private let inner: WKURLSchemeHandler
+    private let sql = DgSqlSchemeHandler()
+
+    init(inner: WKURLSchemeHandler) {
+        self.inner = inner
+    }
+
+    private func isSql(_ task: WKURLSchemeTask) -> Bool {
+        return task.request.url?.path.hasPrefix(DgLibrary.endpointPath + "/") == true
+    }
+
+    func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
+        (isSql(urlSchemeTask) ? sql : inner).webView(webView, start: urlSchemeTask)
+    }
+
+    func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {
+        (isSql(urlSchemeTask) ? sql : inner).webView(webView, stop: urlSchemeTask)
     }
 }

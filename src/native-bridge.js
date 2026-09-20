@@ -331,23 +331,28 @@
     var HANDLED_KEY = 'dg.deeplink.handled';
 
     // The offline layer's progress card is driven by dg:dl-progress events, and while
-    // DgDownloadPlugin does the transfer (src/platform.js's prepareArchive) those bytes cross on the
-    // native side — so the plugin's own events are forwarded in the same shape. Deliberately NOT the
-    // plugin's "done": the library is not usable until the worker has imported the file, and that
-    // import reports its own progress a moment later.
+    // DgDownloadPlugin does the transfer and the unpacking (src/platform.js's prepareArchive) those
+    // bytes cross on the native side — so the plugin's own events are forwarded in the same shape:
+    // "progress" is the download, "unpack" is the card's import phase ("Unpacking and applying").
+    // Deliberately NOT the plugin's "done": the library is usable once the worker has opened the
+    // file, and the worker reports that itself a moment later.
     (function bridgeNativeDownloadProgress() {
         var Plugins = window.Capacitor && window.Capacitor.Plugins;
         var D = Plugins && Plugins.DgDownload;
         if (!D || typeof D.addListener !== 'function') return;
-        D.addListener('progress', function (e) {
-            var detail = e || {};
-            window.dispatchEvent(new CustomEvent('dg:dl-progress', { detail: {
-                phase: 'download',
-                loaded: detail.loaded || 0,
-                total: detail.total || 0,
-                done: false,
-            } }));
-        });
+        function forward(phase) {
+            return function (e) {
+                var detail = e || {};
+                window.dispatchEvent(new CustomEvent('dg:dl-progress', { detail: {
+                    phase: phase,
+                    loaded: detail.loaded || 0,
+                    total: detail.total || 0,
+                    done: false,
+                } }));
+            };
+        }
+        D.addListener('progress', forward('download'));
+        D.addListener('unpack', forward('import'));
     })();
 
     (function followLiveDeepLinks() {
@@ -949,6 +954,14 @@
     // signed in with it. The merge/overwrite choice made before leaving is kept with the state: the
     // login page reloads on the way back.
     (function googleSignInViaBrowser() {
+        // App Review 4.8: a third-party sign-in has to come with Sign in with Apple, so the iOS build
+        // hides the Google button and the divider that separated it, leaving the passphrase login.
+        // Only the button goes: the rest of this function also defines window.dgSignInUrl, which the
+        // simulator self-test asserts on (run 200 went red on "no sign-in URL builder in the page"),
+        // and the sign-in return path needs it. A hidden button offers nothing, which is what 4.8 asks.
+        if (window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'ios') {
+            document.head.insertAdjacentHTML('beforeend', '<style>#btn-google-login,#btn-google-login+div{display:none!important}</style>');
+        }
         var KEY = 'dg.app.googleSignIn';
         var origin = window.DG_ONLINE_ORIGIN || 'https://dhamma.gift';
         var Plugins = (window.Capacitor && window.Capacitor.Plugins) || {};
