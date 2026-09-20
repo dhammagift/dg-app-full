@@ -74,12 +74,20 @@
         window.speechSynthesis = synth;
     }
     // The lock screen. voice.js already says what is playing through navigator.mediaSession — title,
-    // artwork, play/pause handlers — and in a browser that is the whole job. Android's WebView has
-    // never implemented that API, so in the app those lines reached nobody: the PWA showed a player
-    // on the lock screen and the app, built from the same code, showed nothing. Stand in for it and
-    // forward to the plugin, which owns the platform side. WKWebView has the real thing, so iOS
-    // keeps it and none of this runs there.
-    if (!('mediaSession' in navigator) && typeof P.setPlaybackState === 'function') {
+    // artwork, play/pause handlers — and in a browser that is the whole job. In the app those lines
+    // reached nobody: the PWA showed a player on the lock screen and the app, built from the same
+    // code, showed nothing at all.
+    //
+    // The first attempt gated this on `!('mediaSession' in navigator)`, on the assumption that
+    // WebView simply has no such API. It HAS one — Blink defines it, so the check is false and the
+    // stand-in never installed — and it goes nowhere: WebView has no media notification of its own
+    // to put the metadata in (crbug 40765779). An API that exists and does nothing is worse than a
+    // missing one, because every feature test passes. So the platform decides, not the presence of
+    // a property: on Android the plugin IS the media session, exactly as it is already the speech
+    // engine a dozen lines above. WKWebView's implementation is real, so iOS keeps its own.
+    var isAndroidApp = !!(window.Capacitor && window.Capacitor.getPlatform
+                          && window.Capacitor.getPlatform() === 'android');
+    if (isAndroidApp && typeof P.setPlaybackState === 'function') {
         var handlers = {}, meta = null, playback = 'none';
         var media = {
             setActionHandler: function (action, fn) { handlers[action] = fn; },

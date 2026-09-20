@@ -463,6 +463,14 @@ const ASSET_LOOSE_FILES = [
     'img/gray-white.png', 'img/icon-192x192.png',
     // Found by the app's error reports, not by verifyReferencedAssets (legacy pages it does not parse).
     'img/dictSettingsRu.jpg', 'img/dhammafindlogo.webp',
+    // 40KB of silence, and the lock-screen player depends on it. voice.js plays this looping track
+    // for as long as it is reading: a page with no media element is not "playing" as far as the
+    // platform is concerned, and everything the player says about itself (title, artwork, the
+    // play/pause handlers) lives inside that track's play() callback. It was missing from the APK,
+    // so in the app that callback never ran — the reading was audible and completely invisible,
+    // with no controls in the tray or on the lock screen. verifyReferencedAssets() could not catch
+    // it: the URL is built from a const in voice.js, not written into any page it parses.
+    'sounds/silence.mp3',
 ];
 
 function copyAssetLooseFiles() {

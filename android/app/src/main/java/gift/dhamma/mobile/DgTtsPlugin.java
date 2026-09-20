@@ -1,5 +1,6 @@
 package gift.dhamma.mobile;
 
+import android.Manifest;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -27,10 +28,13 @@ import androidx.core.app.NotificationManagerCompat;
 
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
+import com.getcapacitor.PermissionState;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.Permission;
+import com.getcapacitor.annotation.PermissionCallback;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -59,7 +63,12 @@ import java.util.Set;
  *   setPlaybackState({ state })                         -> playing | paused | none (none tears it down)
  *   "media" event { action }                            -> play | pause | stop | previoustrack | nexttrack
  */
-@CapacitorPlugin(name = "DgTts")
+// POST_NOTIFICATIONS is declared here, not only in the manifest: since Android 13 the notification
+// this plugin posts IS the controls, and an ungranted permission makes notify() a silent no-op —
+// the reading plays and nothing appears anywhere, which is exactly how this looked on a device.
+@CapacitorPlugin(name = "DgTts", permissions = {
+        @Permission(alias = "notifications", strings = { Manifest.permission.POST_NOTIFICATIONS })
+})
 public class DgTtsPlugin extends Plugin implements TextToSpeech.OnInitListener {
 
     private static final String CHANNEL_ID = "dg_playback";
@@ -75,6 +84,11 @@ public class DgTtsPlugin extends Plugin implements TextToSpeech.OnInitListener {
     private String artist = "";
     private Bitmap artwork;
     private AudioFocusRequest focusRequest;
+    // Asked at most once per process. Android stops showing the dialog after two refusals anyway,
+    // and a reader who said no should not be asked again every time they press play.
+    private boolean askedNotifications;
+    // null while nothing is posted; otherwise the state the posted notification was drawn for.
+    private Boolean showing;
 
     private final BroadcastReceiver buttons = new BroadcastReceiver() {
         @Override public void onReceive(Context context, Intent intent) {
@@ -192,12 +206,42 @@ public class DgTtsPlugin extends Plugin implements TextToSpeech.OnInitListener {
         if (art != null && !art.isEmpty()) artwork = assetBitmap(art);
         getActivity().runOnUiThread(() -> {
             if (session != null) session.setMetadata(metadata());
+            // And post it again if it is already up. voice.js sets playbackState BEFORE metadata,
+            // so the first notification is always drawn with no title and no cover; older Androids
+            // read the picture off the notification's own large icon rather than off the session,
+            // and never learn about it otherwise. This is what puts our album art on the screen.
+            if (showing != null) show(showing);
         });
         call.resolve();
     }
 
     @PluginMethod
     public void setPlaybackState(PluginCall call) {
+        // The one honest moment to ask: the reader has just started a reading, and the permission
+        // buys them the controls for it. Asking at launch would be a dialog about nothing.
+        if (!"none".equals(call.getString("state", "none")) && needsNotificationPermission()) {
+            askedNotifications = true;
+            requestPermissionForAlias("notifications", call, "afterNotificationPermission");
+            return;
+        }
+        applyPlaybackState(call);
+    }
+
+    // Granted or refused, the reading goes on — a refusal costs the controls, not the audio.
+    @PermissionCallback
+    private void afterNotificationPermission(PluginCall call) {
+        applyPlaybackState(call);
+    }
+
+    private boolean needsNotificationPermission() {
+        // Before Android 13 there is no such runtime permission, and asking for one that does not
+        // exist answers DENIED forever.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return false;
+        if (askedNotifications) return false;
+        return getPermissionState("notifications") != PermissionState.GRANTED;
+    }
+
+    private void applyPlaybackState(PluginCall call) {
         String state = call.getString("state", "none");
         getActivity().runOnUiThread(() -> {
             if ("none".equals(state)) { teardown(); return; }
@@ -281,6 +325,7 @@ public class DgTtsPlugin extends Plugin implements TextToSpeech.OnInitListener {
                         .setShowActionsInCompactView(0, 1));
         try {
             NotificationManagerCompat.from(ctx).notify(NOTIFICATION_ID, b.build());
+            showing = playing;
         } catch (SecurityException e) {
             // Android 13+ without POST_NOTIFICATIONS: the lock screen controls are gone, the reading
             // is not. Nothing to recover from, and nothing worth failing a speak() over.
@@ -339,6 +384,7 @@ public class DgTtsPlugin extends Plugin implements TextToSpeech.OnInitListener {
 
     private void teardown() {
         abandonFocus();
+        showing = null;
         NotificationManagerCompat.from(getContext()).cancel(NOTIFICATION_ID);
         if (session != null) {
             session.setActive(false);
