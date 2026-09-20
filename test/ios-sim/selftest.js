@@ -75,6 +75,17 @@
         error: null,
     };
 
+    // platform.js now asks before every first download, Wi-Fi included (App Store guideline
+    // 4.2.3(ii) — see src/platform.js's askConsent). Right, for a reader; fatal for this script:
+    // nobody is here to tap the sheet's "Download" button, and the auto-download intent that used
+    // to start silently on Wi-Fi now blocks on it forever — run 263's actual failure, a 300s
+    // timeout with "TO JS {"connected":true,"connectionType":"wifi"}" as the last console line and
+    // no selftest.json ever written. This harness IS the reader tapping "Download": it answers the
+    // sheet the instant it opens, same as a human would.
+    window.addEventListener('dg:need-consent', function (event) {
+        if (event && event.detail && typeof event.detail.resolve === 'function') event.detail.resolve(true);
+    });
+
     // Progress lines the page already dispatches (offline-status.js paints them): the first thing
     // to look at when the library never becomes present.
     ['dg:dl-progress', 'dg:offline-invalid', 'dg:download-declined', 'dg:update-available'].forEach(function (name) {
