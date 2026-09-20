@@ -1074,12 +1074,30 @@
     }
 
     // Settings → "Recent texts in app shortcuts" switch (row injected by build-assets.js).
+    //
+    // Android only. The row used to appear on both platforms, and on iOS it governed nothing:
+    // quick actions there are capped at four IN TOTAL, all four of ours are static in Info.plist,
+    // and static ones win — so no dynamic entry ever reaches the screen whatever this switch says.
+    // A switch that changes nothing is worse than a missing one: it teaches the reader that the
+    // setting is broken rather than absent.
+    //
+    // The count comes from SHORTCUTS_MAX rather than being typed into the sentence: it went from
+    // two to three the moment the static order changed, and a number written twice is a number
+    // that will disagree with itself.
     function wireShortcutsToggle() {
         var box = document.getElementById('dgDynShortcuts');
         if (!box) return;
+        if ((window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform()) === 'ios') {
+            var row = document.getElementById('dgDynShortcutsRow');
+            if (row) row.style.display = 'none';
+            return;
+        }
         var ru = isRu();
+        var n = SHORTCUTS_MAX;
         document.getElementById('dgDynShortcutsTitle').textContent = ru ? 'Недавние тексты в ярлыках' : 'Recent texts in app shortcuts';
-        document.getElementById('dgDynShortcutsDesc').textContent = ru ? 'Меню долгого нажатия на значок приложения.' : 'Long-press menu of the app icon.';
+        document.getElementById('dgDynShortcutsDesc').textContent = ru
+            ? 'До ' + n + (n === 1 ? ' текста' : ' текстов') + ' в меню долгого нажатия на значок приложения.'
+            : 'Up to ' + n + (n === 1 ? ' text' : ' texts') + ' in the long-press menu of the app icon.';
         box.checked = localStorage.getItem(SHORTCUTS_FLAG) !== 'off';
         box.addEventListener('change', function () {
             localStorage.setItem(SHORTCUTS_FLAG, box.checked ? 'on' : 'off');
