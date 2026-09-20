@@ -45,6 +45,11 @@ on:
         description: 'Site the app talks to (default: dhamma.gift; https://test.dhamma.gift to try unreleased site changes)'
         required: false
         type: string
+      release:
+        description: 'Archive and upload to TestFlight (off by default — iterating on ios-build/ios-ui does not need a new build in App Store Connect every run; turn on for an actual release candidate)'
+        required: false
+        type: boolean
+        default: false
 
 env:
   # Builds talk to dhamma.gift (owner, 2026-09-15: the site's app layer is deployed to prod). For
@@ -1127,10 +1132,14 @@ jobs:
   # Why TestFlight rather than an ad-hoc IPA: TestFlight installs on a phone with no Mac, no cable and
   # no registered UDID, which is exactly the situation the device checks are waiting on (background
   # download, audible TTS, the dictionary tap, the share sheet).
+  # Runs on a tag always (a real release); on workflow_dispatch only with release=true ticked — a
+  # workflow_dispatch run defaults to skipping this, so iterating on ios-build/ios-ui (or the share
+  # sheet's XCUITest) does not leave a build in App Store Connect nobody asked for. push never runs
+  # it (see the `on:` block above — push builds are for the installable APK, not TestFlight).
   ios-release:
     name: iOS release (TestFlight)
     needs: build
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
+    if: (github.event_name == 'workflow_dispatch' && inputs.release) || startsWith(github.ref, 'refs/tags/')
     runs-on: macos-26
     steps:
       - name: Checkout this repo (the app)
