@@ -45,6 +45,11 @@ on:
         description: 'Site the app talks to (default: dhamma.gift; https://test.dhamma.gift to try unreleased site changes)'
         required: false
         type: string
+      release:
+        description: 'Send the build to Google Play (INTERNAL track — testers only, production still needs a promote in the console). Off by default: a manual run is usually about trying something, not about shipping.'
+        required: false
+        type: boolean
+        default: false
 
 env:
   # Builds talk to dhamma.gift (owner, 2026-09-15: the site's app layer is deployed to prod). For
@@ -1101,6 +1106,80 @@ jobs:
           if-no-files-found: warn
 
   # ---------------------------------------------------------------------------------------------
+  # The Android half of the release path: the AAB the `build` job already signed, straight to Play,
+  # so a release stops depending on someone remembering to drag a file into a browser.
+  #
+  # Same shape as ios-release below, and dormant for the same reason: no secret, no upload, and a
+  # job summary that says so, instead of a green tick that reads like a release happened.
+  #
+  # The INTERNAL track on purpose. It is the only track that reaches a device in minutes with no
+  # review, it is limited to the testers listed in the console, and production still costs a
+  # deliberate promote there — so an automated upload can never be the thing that ships to readers
+  # by accident. Promoting internal -> production stays a human decision, which is the one part of
+  # this nobody asked to automate.
+  #
+  # What this needs once, in the Play Console (docs/ANDROID_RELEASE.md):
+  #   Setup -> API access -> link a Google Cloud project -> create a service account -> JSON key;
+  #   Users and permissions -> invite that service account's email -> give it "Release apps to
+  #   testing tracks" on gift.dhamma.twa;
+  #   GitHub -> Settings -> Secrets -> PLAY_SERVICE_ACCOUNT_JSON = the whole JSON file.
+  # Play's "the first upload must be done by hand" rule is already satisfied: the package exists,
+  # it replaced the TWA listing.
+  android-release:
+    name: Android release (Play internal track)
+    needs: build
+    if: (github.event_name == 'workflow_dispatch' && inputs.release) || startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Is the service account there?
+        id: play
+        env:
+          PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -n "$PLAY_JSON" ]; then
+            echo "have=yes" >> "$GITHUB_OUTPUT"
+            echo "service account present"
+          else
+            echo "have=no" >> "$GITHUB_OUTPUT"
+            echo "::notice::PLAY_SERVICE_ACCOUNT_JSON is not set - nothing was uploaded to Play."
+            {
+              echo "### Android release: nothing happened"
+              echo ""
+              echo "Missing repository secret: \`PLAY_SERVICE_ACCOUNT_JSON\`."
+              echo ""
+              echo "Nothing was uploaded to Google Play. See docs/ANDROID_RELEASE.md."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      # The artifact the build job uploaded, not a rebuild: the bytes that go to Play are the same
+      # ones the checks ran against and the same ones in dg-app-full-aab-release-<run>.
+      - name: Download the signed AAB
+        if: steps.play.outputs.have == 'yes'
+        uses: actions/download-artifact@v4
+        with:
+          name: dg-app-full-aab-release-${{ github.run_number }}
+          path: aab
+
+      - name: Upload to Google Play
+        if: steps.play.outputs.have == 'yes'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: gift.dhamma.twa
+          releaseFiles: aab/app-release.aab
+          track: internal
+          status: completed
+
+      - name: Say what went to Play
+        if: success() && steps.play.outputs.have == 'yes'
+        run: |
+          {
+            echo "### Android release: uploaded"
+            echo ""
+            echo "versionCode ${{ github.run_number }} is on the **internal** track of \`gift.dhamma.twa\`."
+            echo "Testers get it within minutes. Production needs a promote in the Play Console."
+          } >> "$GITHUB_STEP_SUMMARY"
+
   # The release path: archive, export and upload to TestFlight.
   #
   # It stays dormant until the account exists — every step that needs a secret checks for it first and
