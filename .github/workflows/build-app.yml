@@ -63,10 +63,11 @@ on:
         required: false
         type: string
       release:
-        description: 'Send the build to the stores — TestFlight and the Play INTERNAL track (testers only; production still needs a promote in the console). Off by default: a manual run is usually about trying something, not about shipping, and an unasked-for build in App Store Connect or a burnt versionCode is the cost of getting that wrong.'
+        description: 'Which store gets this build. Play goes to the INTERNAL track (testers only; production still needs a promote in the console). Default none: a manual run is usually about trying something, not about shipping, and an unasked-for build in App Store Connect or a burnt versionCode is the cost of getting that wrong. A tag always releases to both.'
         required: false
-        type: boolean
-        default: false
+        type: choice
+        default: none
+        options: [none, play, testflight, both]
 
 # One build per branch. A new push supersedes the one still running on the same ref rather than
 # queueing behind it: the older run was going to produce an APK nobody would install anyway, and
@@ -1153,7 +1154,7 @@ jobs:
   android-release:
     name: Android release (Play internal track)
     needs: build
-    if: (github.event_name == 'workflow_dispatch' && inputs.release) || startsWith(github.ref, 'refs/tags/')
+    if: (github.event_name == 'workflow_dispatch' && (inputs.release == 'play' || inputs.release == 'both')) || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
       - name: Is the service account there?
@@ -1215,16 +1216,19 @@ jobs:
   # Why TestFlight rather than an ad-hoc IPA: TestFlight installs on a phone with no Mac, no cable and
   # no registered UDID, which is exactly the situation the device checks are waiting on (background
   # download, audible TTS, the dictionary tap, the share sheet).
-  # Runs on a tag always (a real release); on workflow_dispatch only with release=true ticked. Every
-  # manual run used to archive and upload unconditionally, so iterating on ios-build/ios-ui left a
-  # new App Store Connect build behind each time, none of them asked for (owner, 2026-09-20: a
-  # manual run must not release). The same gate as android-release above, on purpose: two release
-  # paths that answer differently to the same checkbox is a trap for whoever presses it.
+  # Runs on a tag always (a real release); on workflow_dispatch only when release names this store.
+  # Every manual run used to archive and upload unconditionally, so iterating on ios-build/ios-ui
+  # left a new App Store Connect build behind each time, none of them asked for (owner, 2026-09-20:
+  # a manual run must not release).
+  # One switch rather than two booleans, and it names a store rather than saying yes: the first
+  # shape of this was a single checkbox meaning "both", and the first time the Play upload needed a
+  # retry it would have put a second, identical build in TestFlight for nothing (owner: "жди эпл,
+  # не перезаливай"). Retrying one store must not disturb the other.
   # push never runs this — push builds are for the installable APK, not for the stores.
   ios-release:
     name: iOS release (TestFlight)
     needs: build
-    if: (github.event_name == 'workflow_dispatch' && inputs.release) || startsWith(github.ref, 'refs/tags/')
+    if: (github.event_name == 'workflow_dispatch' && (inputs.release == 'testflight' || inputs.release == 'both')) || startsWith(github.ref, 'refs/tags/')
     runs-on: macos-26
     steps:
       - name: Checkout this repo (the app)

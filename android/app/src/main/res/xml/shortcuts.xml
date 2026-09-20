@@ -36,9 +36,6 @@
             android:targetClass="gift.dhamma.mobile.MainActivity">
             <extra android:name="route" android:value="/toc" />
         </intent>
-        <capability-binding android:key="actions.intent.OPEN_APP_FEATURE">
-            <parameter-binding android:key="feature" />
-        </capability-binding>
     </shortcut>
     <shortcut
         android:shortcutId="favorites_history"
@@ -78,23 +75,16 @@
             android:targetClass="gift.dhamma.mobile.MainActivity">
             <extra android:name="route" android:value="/dict" />
         </intent>
-        <capability-binding android:key="actions.intent.OPEN_APP_FEATURE">
-            <parameter-binding android:key="feature" />
-        </capability-binding>
     </shortcut>
-    <!-- App Actions: the Assistant's half of the same file. A <capability> maps a Google
-         built-in intent to a URL this app already answers, so nothing native is added:
-         dhammagift://search?q=… and dhammagift://route/… are the deep links of
-         docs/DEEP_LINKS.md, mapped by src/deep-link.js on both platforms. -->
-    <capability android:name="actions.intent.GET_THING">
-        <intent>
-            <url-template android:value="dhammagift://search{?q}" />
-            <parameter android:name="thing.name" android:key="q" />
-        </intent>
-    </capability>
-    <capability android:name="actions.intent.OPEN_APP_FEATURE">
-        <intent>
-            <url-template android:value="dhammagift://route/toc" />
-        </intent>
-    </capability>
+    <!-- No <capability> here, and that is a decision, not an omission.
+         App Actions were declared in this file and worked for nobody: Google discontinued
+         Assistant on 4 September 2026, Gemini does not read shortcuts.xml capabilities, and no
+         migration was ever documented. They were left in anyway, on the grounds that dead XML
+         costs nothing — until Play refused the upload outright:
+             "APK contains an actions resource, but Actions on Google terms of service not yet
+              accepted"
+         A capability compiles into an actions resource, and a package carrying one cannot be
+         uploaded until a separate Actions on Google agreement is accepted for the account. So the
+         declarations cost exactly one thing: the ability to ship. Removed (owner, 2026-09-20).
+         The git history has them if Gemini is ever wired to the existing built-in intents. -->
 </shortcuts>
