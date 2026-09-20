@@ -1,4 +1,5 @@
 import Foundation
+import Compression
 import Capacitor
 
 // The library download, moved off the WebView and onto the system's background transfer service.
@@ -9,22 +10,20 @@ import Capacitor
 // foreground service (DgDownloadService); iOS's answer is a background URLSession, which the system
 // keeps running, and relaunches the app for when it finishes.
 //
-//   start({url})  -> {path} once the archive is on disk; "progress" events {loaded, total}
-//   existing()    -> {path} or {path: null} if nothing was downloaded yet
-//
-// Deliberately no file size in either answer: FileManager's size/metadata reads are Apple's
-// required-reason FileTimestamp APIs, and a plugin that does not use them needs no privacy manifest
-// of its own (the ones Capacitor ships cover Capacitor). If a size is ever genuinely needed, this is
-// the place to add the manifest with reason C617.1 — not to read it silently.
+//   start({url})  -> {path} once dg.db is unpacked in the App Group container (DgSharedLibrary);
+//                    "progress" events {loaded, total} while the archive downloads, "unpack"
+//                    events {loaded, total} while it is being unpacked
+//   existing()    -> {path} or {path: null} if no library is on disk
 //   cancel()      -> stops the transfer; the partial file is discarded (the caller can start again)
 //
-// The file lands in Application Support, NOT Caches: Caches can be purged under storage pressure,
-// and this is the app's whole offline library. It is also excluded from iCloud backup — 216 MB of
-// re-downloadable data has no business in someone's backup quota.
+// The archive is unpacked here and deleted at once: the worker reads dg.db in place through
+// /dg-sql (DgSharedLibrary.swift), so the file is the library — there is no import into OPFS and
+// no second copy. An archive left by an earlier build in Application Support is unpacked too, so
+// nobody downloads 216 MB again for the move.
 //
-// What it deliberately does NOT do: unpack anything. The archive import belongs to the offline layer
-// that already knows how (db-worker.js's OPFS SAH-pool path), and it stays there: this plugin's job
-// ends at "the bytes are on disk", which is also the only part that has to survive backgrounding.
+// Deliberately no file size in any answer: FileManager's size/metadata reads are Apple's
+// required-reason FileTimestamp APIs, and a plugin that does not use them needs no privacy manifest
+// of its own. The byte counts the page shows come from the transfer's progress events.
 //
 // ponytail: one download at a time, no resume-data bookkeeping (a restart re-requests the file and
 // the server's Range support does the rest), no notification and no Live Activity — progress is
@@ -47,50 +46,24 @@ public class DgDownloadPlugin: CAPPlugin, CAPBridgedPlugin, URLSessionDownloadDe
     private var session: URLSession!
     private var task: URLSessionDownloadTask?
     private var waiting: [CAPPluginCall] = []
-    private var destination: URL?
+    private var unpackError: Error?
 
     override public func load() {
         let config = URLSessionConfiguration.background(withIdentifier: Self.sessionIdentifier)
         // Not discretionary: a discretionary transfer waits for a good moment (charging, Wi-Fi) and
         // the reader is standing there watching a progress card.
         config.isDiscretionary = false
-        // Relaunch the app when the transfer finishes, so the import can start.
+        // Relaunch the app when the transfer finishes, so the unpacking can run.
         config.sessionSendsLaunchEvents = true
         session = URLSession(configuration: config, delegate: self, delegateQueue: nil)
     }
 
-    private func libraryDir() throws -> URL {
-        let base = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask,
-                                               appropriateFor: nil, create: true)
-        let dir = base.appendingPathComponent("dg-library", isDirectory: true)
-        if !FileManager.default.fileExists(atPath: dir.path) {
-            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        }
-        return dir
-    }
-
-    private func fileURL(for url: URL) throws -> URL {
-        let name = url.lastPathComponent.isEmpty ? "dg.db.gz" : url.lastPathComponent
-        return try libraryDir().appendingPathComponent(name)
-    }
-
     @objc func existing(_ call: CAPPluginCall) {
         do {
-            // Names only, deliberately: asking FileManager for a file's SIZE or metadata puts this
-            // app in Apple's NSPrivacyAccessedAPICategoryFileTimestamp, which then requires a
-            // PrivacyInfo.xcprivacy declaring a reason (C617.1 — "size or metadata for files in the
-            // app container"). The size is not needed here: a non-empty path is what "an archive is
-            // on disk" means, the page gets real byte counts from the download's progress events, and
-            // nothing else reads a size.
-            let dir = try libraryDir()
-            let names = try FileManager.default.contentsOfDirectory(atPath: dir.path)
-            guard let name = names.first else {
-                call.resolve(["path": NSNull()])
-                return
-            }
-            call.resolve(["path": dir.appendingPathComponent(name).path])
+            try unpackIfNeeded()
+            call.resolve(["path": DgLibrary.isPresent ? DgLibrary.dbURL.path : NSNull()])
         } catch {
-            call.reject("could not look for a downloaded archive: \(error.localizedDescription)")
+            call.reject("could not unpack the downloaded archive: \(error.localizedDescription)")
         }
     }
 
@@ -105,13 +78,8 @@ public class DgDownloadPlugin: CAPPlugin, CAPBridgedPlugin, URLSessionDownloadDe
             waiting.append(call)
             return
         }
-        do {
-            destination = try fileURL(for: url)
-        } catch {
-            call.reject("could not prepare the download directory: \(error.localizedDescription)")
-            return
-        }
         waiting = [call]
+        unpackError = nil
         let newTask = session.downloadTask(with: url)
         task = newTask
         newTask.resume()
@@ -128,17 +96,120 @@ public class DgDownloadPlugin: CAPPlugin, CAPBridgedPlugin, URLSessionDownloadDe
         let calls = waiting
         waiting = []
         task = nil
-        guard let path = destination?.path else {
-            calls.forEach { $0.reject("download failed: no destination") }
-            return
-        }
-        if let error = error {
+        if let error = error ?? unpackError {
             calls.forEach { $0.reject("download failed: \(error.localizedDescription)") }
             return
         }
-        // No size: see existing() — reading it is a required-reason API, and the caller does not
-        // need it (the progress events carried the byte counts while the transfer ran).
-        calls.forEach { $0.resolve(["path": path]) }
+        guard DgLibrary.isPresent else {
+            calls.forEach { $0.reject("download failed: no library on disk afterwards") }
+            return
+        }
+        calls.forEach { $0.resolve(["path": DgLibrary.dbURL.path]) }
+    }
+
+    // MARK: - Unpacking
+
+    // An archive in the library directory, or one an earlier build left in Application Support,
+    // becomes dg.db; the archive is deleted once the file is complete. Nothing to do when dg.db is
+    // already there and no newer archive waits beside it.
+    private func unpackIfNeeded() throws {
+        let fm = FileManager.default
+        let target = DgLibrary.archiveURL
+        let legacy = DgLibrary.legacyDirectory().appendingPathComponent(DgLibrary.archiveName)
+        if !fm.fileExists(atPath: target.path), legacy != target, fm.fileExists(atPath: legacy.path) {
+            try fm.moveItem(at: legacy, to: target)
+            try? fm.removeItem(at: DgLibrary.legacyDirectory())
+        }
+        guard fm.fileExists(atPath: target.path) else { return }
+        try unpack(archive: target, expectedBytes: 0)
+    }
+
+    private func unpack(archive: URL, expectedBytes: Int64) throws {
+        let fm = FileManager.default
+        let tmp = DgLibrary.dbURL.appendingPathExtension("tmp")
+        try? fm.removeItem(at: tmp)
+        try Self.gunzip(archive, to: tmp) { loaded in
+            self.notifyListeners("unpack", data: ["loaded": loaded, "total": expectedBytes])
+        }
+        // Replace, not remove-then-move: a reader (or the extension) holding the old file keeps
+        // reading it, and there is never a moment without a library.
+        if fm.fileExists(atPath: DgLibrary.dbURL.path) {
+            _ = try fm.replaceItemAt(DgLibrary.dbURL, withItemAt: tmp)
+        } else {
+            try fm.moveItem(at: tmp, to: DgLibrary.dbURL)
+        }
+        try? fm.removeItem(at: archive)
+        var values = URLResourceValues()
+        values.isExcludedFromBackup = true
+        var mutable = DgLibrary.dbURL
+        try? mutable.setResourceValues(values)
+    }
+
+    // gzip = a 10-byte header (+ optional fields), a raw deflate stream, an 8-byte trailer. The
+    // Compression framework decodes raw deflate (COMPRESSION_ZLIB); the header is skipped here
+    // and the trailer is never reached — the stream ends at the deflate end marker.
+    private static func gunzip(_ source: URL, to destination: URL, progress: (Int64) -> Void) throws {
+        let input = try FileHandle(forReadingFrom: source)
+        defer { try? input.close() }
+        let header = input.readData(ofLength: 10)
+        guard header.count == 10, header[0] == 0x1f, header[1] == 0x8b, header[2] == 8 else {
+            throw DgSqlError("not a gzip archive")
+        }
+        let flags = header[3]
+        if flags & 0x04 != 0 {
+            let extra = input.readData(ofLength: 2)
+            guard extra.count == 2 else { throw DgSqlError("truncated gzip header") }
+            _ = input.readData(ofLength: Int(extra[0]) | Int(extra[1]) << 8)
+        }
+        for bit in [UInt8(0x08), UInt8(0x10)] where flags & bit != 0 {
+            while let byte = input.readData(ofLength: 1).first, byte != 0 {}
+        }
+        if flags & 0x02 != 0 { _ = input.readData(ofLength: 2) }
+
+        guard FileManager.default.createFile(atPath: destination.path, contents: nil) else {
+            throw DgSqlError("cannot create \(destination.lastPathComponent)")
+        }
+        let output = try FileHandle(forWritingTo: destination)
+        defer { try? output.close() }
+
+        let stream = UnsafeMutablePointer<compression_stream>.allocate(capacity: 1)
+        defer { stream.deallocate() }
+        guard compression_stream_init(stream, COMPRESSION_STREAM_DECODE, COMPRESSION_ZLIB) != COMPRESSION_STATUS_ERROR else {
+            throw DgSqlError("cannot start the decoder")
+        }
+        defer { compression_stream_destroy(stream) }
+
+        let bufferSize = 1 << 20
+        let out = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
+        defer { out.deallocate() }
+        var chunk = [UInt8]()
+        var offset = 0
+        var eof = false
+        var consumed: Int64 = 10
+        while true {
+            if offset == chunk.count && !eof {
+                chunk = [UInt8](input.readData(ofLength: bufferSize))
+                offset = 0
+                eof = chunk.isEmpty
+            }
+            let status: compression_status = chunk.withUnsafeBufferPointer { buffer in
+                stream.pointee.src_ptr = (buffer.baseAddress ?? UnsafePointer(out)) + offset
+                stream.pointee.src_size = chunk.count - offset
+                stream.pointee.dst_ptr = out
+                stream.pointee.dst_size = bufferSize
+                let result = compression_stream_process(stream, eof ? Int32(COMPRESSION_STREAM_FINALIZE.rawValue) : 0)
+                let used = chunk.count - offset - stream.pointee.src_size
+                offset += used
+                consumed += Int64(used)
+                return result
+            }
+            let produced = bufferSize - stream.pointee.dst_size
+            if produced > 0 { output.write(Data(bytesNoCopy: out, count: produced, deallocator: .none)) }
+            progress(consumed)
+            if status == COMPRESSION_STATUS_END { return }
+            guard status == COMPRESSION_STATUS_OK else { throw DgSqlError("the archive is damaged") }
+            if eof && produced == 0 && stream.pointee.src_size == 0 { throw DgSqlError("the archive ended early") }
+        }
     }
 
     // MARK: - URLSessionDownloadDelegate
@@ -146,19 +217,19 @@ public class DgDownloadPlugin: CAPPlugin, CAPBridgedPlugin, URLSessionDownloadDe
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask,
                            didFinishDownloadingTo location: URL) {
         // Called before didCompleteWithError, and the temporary file is deleted the moment this
-        // returns — so the move happens here, synchronously.
-        guard let destination = destination else { return }
+        // returns — so the move happens here, synchronously; and so does the unpacking, which the
+        // system's background time for a finished transfer covers. If it does not, the archive is
+        // still on disk and existing() unpacks it at the next launch.
+        let archive = DgLibrary.archiveURL
         do {
-            if FileManager.default.fileExists(atPath: destination.path) {
-                try FileManager.default.removeItem(at: destination)
+            if FileManager.default.fileExists(atPath: archive.path) {
+                try FileManager.default.removeItem(at: archive)
             }
-            try FileManager.default.moveItem(at: location, to: destination)
-            var values = URLResourceValues()
-            values.isExcludedFromBackup = true
-            var mutable = destination
-            try? mutable.setResourceValues(values)
-            notifyListeners("done", data: ["path": destination.path])
+            try FileManager.default.moveItem(at: location, to: archive)
+            try unpack(archive: archive, expectedBytes: downloadTask.countOfBytesReceived)
+            notifyListeners("done", data: ["path": DgLibrary.dbURL.path])
         } catch {
+            unpackError = error
             notifyListeners("failed", data: ["error": error.localizedDescription])
         }
     }

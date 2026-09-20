@@ -1,0 +1,4 @@
+module DgSQLite {
+    header "sqlite3.h"
+    export *
+}

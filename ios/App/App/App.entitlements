@@ -19,5 +19,13 @@
 		<string>applinks:find.dhamma.gift</string>
 		<string>applinks:www.find.dhamma.gift</string>
 	</array>
+	<!-- App Group: the offline library (dg.db) is downloaded into this group's container, where
+	     the share extension (ShareExtension.entitlements, same group) reads it too — see
+	     DgSharedLibrary.swift. Like Associated Domains, the App Group has to be enabled on the App
+	     ID in the developer account before a signed build can carry it. -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.gift.dhamma.mobile</string>
+	</array>
 </dict>
 </plist>
