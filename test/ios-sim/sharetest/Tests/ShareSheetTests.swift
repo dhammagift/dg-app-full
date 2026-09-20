@@ -86,13 +86,30 @@ final class ShareSheetTests: XCTestCase {
         attach("2-dhamma-gift-sheet", safari)
         XCTAssertTrue(done.exists, "the sheet closed by itself")
 
-        // Offline search inside the sheet: Safari shared a link (not a word), so the query is typed
-        // into the page's own search box. Every network origin in this build points at a dead port
-        // (prepare-www.js), so dn22 can only come from the fixture dg.db read by the extension's
-        // native SQLite through /dg-sql.
-        let box = web.searchFields.firstMatch
-        XCTAssertTrue(box.waitForExistence(timeout: 20), "the page's search box is not there")
+        // Offline search inside the sheet: Safari shared a link (not a word), so the extension
+        // already ran that link as its own query (search(for:) in ShareViewController.swift — it is
+        // not dhamma.gift, so the raw URL became `?q=https://example.com/`, which the search core
+        // rejects as an invalid regular expression, run 229's actual screenshot). The real query is
+        // typed into the page's own search box over whatever that left behind.
+        //
+        // WKWebView has reported an `<input type="search">` as a plain text field before, not a
+        // "search field" trait — .searchFields is tried first (it is what type="search" SHOULD be),
+        // .textFields is the fallback the 229 failure (this exact assertion) showed was needed.
+        var box = web.searchFields.firstMatch
+        if !box.waitForExistence(timeout: 10) { box = web.textFields.firstMatch }
+        guard box.waitForExistence(timeout: 15) else {
+            print("--- Safari accessibility tree (search box not found) ---")
+            print(safari.debugDescription)
+            XCTFail("the page's search box is not there (tried searchFields and textFields)")
+            return
+        }
         box.tap()
+        // The failed link-search left its own query in the box; backspace it out by its own length
+        // rather than assume the field starts empty (an empty web input can report its placeholder
+        // as `.value`, which is harmless to over-delete into).
+        if let existing = box.value as? String, !existing.isEmpty {
+            box.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: existing.count))
+        }
         box.typeText("kacchapa\n")
         let hit = web.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Mahāsatipaṭṭhānasutta'")).firstMatch
         XCTAssertTrue(hit.waitForExistence(timeout: 45), "no offline result for kacchapa in the sheet")
