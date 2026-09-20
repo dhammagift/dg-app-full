@@ -2,10 +2,11 @@ package gift.dhamma.mobile;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ShortcutInfo;
-import android.content.pm.ShortcutManager;
-import android.graphics.drawable.Icon;
 import android.os.Build;
+
+import androidx.core.content.pm.ShortcutInfoCompat;
+import androidx.core.content.pm.ShortcutManagerCompat;
+import androidx.core.graphics.drawable.IconCompat;
 
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
@@ -54,11 +55,6 @@ public class DgShortcutsPlugin extends Plugin {
             return;
         }
         Context context = getContext();
-        ShortcutManager manager = (ShortcutManager) context.getSystemService(Context.SHORTCUT_SERVICE);
-        if (manager == null) {
-            call.resolve();
-            return;
-        }
 
         JSArray items = call.getArray("items");
         if (items == null) {
@@ -66,7 +62,7 @@ public class DgShortcutsPlugin extends Plugin {
             return;
         }
 
-        List<ShortcutInfo> shortcuts = new ArrayList<>();
+        List<ShortcutInfoCompat> shortcuts = new ArrayList<>();
         for (int i = 0; i < items.length() && shortcuts.size() < MAX_SHORTCUTS; i++) {
             JSONObject item;
             try {
@@ -87,14 +83,17 @@ public class DgShortcutsPlugin extends Plugin {
                 // treats two items with the same route as different shortcuts.
                 intent.setAction("gift.dhamma.mobile.SHORTCUT");
                 intent.putExtra("route", route);
-                shortcuts.add(new ShortcutInfo.Builder(context, id)
+                shortcuts.add(new ShortcutInfoCompat.Builder(context, id)
                         .setShortLabel(clamp(label, SHORT_LABEL_MAX))
                         .setLongLabel(clamp(label, LONG_LABEL_MAX))
                         .setRank(rank)
                         // The launcher icon rather than a per-item drawable: recent texts have no
                         // icon of their own, and a monochrome launcher mark reads better than a
                         // generic glyph repeated in the menu.
-                        .setIcon(Icon.createWithResource(context, R.mipmap.ic_launcher))
+                        .setIcon(IconCompat.createWithResource(context, R.mipmap.ic_launcher))
+                        // Required for the shortcut to be donated to Google's on-device index
+                        // (core-google-shortcuts): a short-lived shortcut is launcher-only.
+                        .setLongLived(true)
                         .setIntent(intent)
                         .build());
             } catch (Exception e) {
@@ -103,7 +102,7 @@ public class DgShortcutsPlugin extends Plugin {
         }
 
         try {
-            manager.setDynamicShortcuts(shortcuts);
+            ShortcutManagerCompat.setDynamicShortcuts(context, shortcuts);
             JSObject result = new JSObject();
             result.put("count", shortcuts.size());
             call.resolve(result);

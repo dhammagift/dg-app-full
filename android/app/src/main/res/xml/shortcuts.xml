@@ -36,6 +36,9 @@
             android:targetClass="gift.dhamma.mobile.MainActivity">
             <extra android:name="route" android:value="/toc" />
         </intent>
+        <capability-binding android:key="actions.intent.OPEN_APP_FEATURE">
+            <parameter-binding android:key="feature" />
+        </capability-binding>
     </shortcut>
     <shortcut
         android:shortcutId="favorites_history"
@@ -75,5 +78,23 @@
             android:targetClass="gift.dhamma.mobile.MainActivity">
             <extra android:name="route" android:value="/dict" />
         </intent>
+        <capability-binding android:key="actions.intent.OPEN_APP_FEATURE">
+            <parameter-binding android:key="feature" />
+        </capability-binding>
     </shortcut>
+    <!-- App Actions: the Assistant's half of the same file. A <capability> maps a Google
+         built-in intent to a URL this app already answers, so nothing native is added:
+         dhammagift://search?q=… and dhammagift://route/… are the deep links of
+         docs/DEEP_LINKS.md, mapped by src/deep-link.js on both platforms. -->
+    <capability android:name="actions.intent.GET_THING">
+        <intent>
+            <url-template android:value="dhammagift://search{?q}" />
+            <parameter android:name="thing.name" android:key="q" />
+        </intent>
+    </capability>
+    <capability android:name="actions.intent.OPEN_APP_FEATURE">
+        <intent>
+            <url-template android:value="dhammagift://route/toc" />
+        </intent>
+    </capability>
 </shortcuts>
