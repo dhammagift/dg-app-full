@@ -19,9 +19,11 @@
 //   - mapStatic: TOC and the Patimokkha fragments are bundled as static files (build-toc-
 //     snapshot.js / build-assets.js), so their API URLs are rewritten to those files — no
 //     server exists here to compute them.
-//   - askConsent: Wi-Fi proceeds silently (the download card is its own signal); anything else
-//     asks through a native dialog (@capacitor/dialog), naming the real byte size from the
-//     published manifest.
+//   - askConsent: always asks, Wi-Fi included — App Store guideline 4.2.3(ii) requires disclosing
+//     the size and prompting before a first-launch download regardless of connection, and a
+//     reader on Wi-Fi is not automatically one who wants a ~600MB library. The site's own consent
+//     sheet handles it when present; a native dialog (@capacitor/dialog) is the fallback, naming
+//     the real byte size from the published manifest either way.
 //   - Auto-download on first open: the app must work offline by definition, so the first launch
 //     starts the download by itself (the site is opt-in — its app.js only downloads on an
 //     explicit intent key, which this file sets). A decline is remembered, so a reader on
@@ -98,7 +100,6 @@
             return Promise.all([Network.getStatus(), readManifest()]).then(function (out) {
                 var status = out[0];
                 var m = out[1] || {};
-                if (status.connectionType === 'wifi') return true;
                 if (status.connected === false) return true; // the download itself will fail visibly
                 // The site's own consent sheet (dg-node offline-status.js, 'dg:need-consent'): themed,
                 // both figures — the archive that downloads and the database on the device. The native
@@ -126,8 +127,8 @@
             : '';
         return Dialog.confirm({
             title: ru ? 'Офлайн-библиотека' : 'Offline library',
-            message: ru ? 'Скачать офлайн-библиотеку' + size + ' через мобильный интернет?'
-                        : 'Download the offline library' + size + ' over mobile data?',
+            message: ru ? 'Скачать офлайн-библиотеку' + size + '?'
+                        : 'Download the offline library' + size + '?',
             okButtonTitle: ru ? 'Скачать' : 'Download',
             cancelButtonTitle: ru ? 'Не сейчас' : 'Not now',
         }).then(function (v) { return !!v.value; });
