@@ -34,7 +34,24 @@ on:
   # Every push builds — no tag needed to get an installable APK artifact (see the "Upload APK
   # artifact" step, which runs on every run). Tags/releases are for when there is actually
   # something to release: push one deliberately, don't tag routine work-in-progress commits.
+  #
+  # Except a push that cannot change the package. This run costs the better part of an hour and
+  # builds a 213MB database on the way; six of them queued up on one branch in a morning, four for
+  # commits that touched nothing but .md files, and they sat in front of the runs another branch
+  # was waiting on. Documentation is not an input to the APK.
+  #
+  # A push that mixes docs with code still builds — paths-ignore only skips a push where EVERY
+  # changed file matches. DG_NODE_REF is deliberately absent from this list: it picks the dg-node
+  # commit the UI is built from, so changing it changes the package.
+  # To skip a build for any other reason, put [skip ci] in the commit message.
   push:
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'issue-images/**'
+      - 'ios-screenshots/**'
+      - '.gitignore'
+      - 'LICENSE'
   workflow_dispatch:
     inputs:
       dg_node_ref:
@@ -50,6 +67,14 @@ on:
         required: false
         type: boolean
         default: false
+
+# One build per branch. A new push supersedes the one still running on the same ref rather than
+# queueing behind it: the older run was going to produce an APK nobody would install anyway, and
+# the queue is shared with every other branch. Tags are exempt — a release run must never be
+# cancelled by whatever is pushed next.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
 env:
   # Builds talk to dhamma.gift (owner, 2026-09-15: the site's app layer is deployed to prod). For
