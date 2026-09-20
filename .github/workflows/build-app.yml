@@ -31,27 +31,25 @@ name: Build App
 # All repos are public, so no token needed for the checkouts.
 
 on:
-  # Every push builds — no tag needed to get an installable APK artifact (see the "Upload APK
-  # artifact" step, which runs on every run). Tags/releases are for when there is actually
-  # something to release: push one deliberately, don't tag routine work-in-progress commits.
+  # A tag builds. Run workflow builds. A push does not.
   #
-  # Except a push that cannot change the package. This run costs the better part of an hour and
-  # builds a 213MB database on the way; six of them queued up on one branch in a morning, four for
-  # commits that touched nothing but .md files, and they sat in front of the runs another branch
-  # was waiting on. Documentation is not an input to the APK.
+  # It used to build on EVERY push to every branch, on the reasoning that then there is always an
+  # installable APK without tagging anything. That reasoning costs the better part of an hour and a
+  # 213MB database each time: six runs queued on one branch in a single morning, four of them for
+  # commits that touched nothing but .md files, sitting in front of the runs another branch was
+  # waiting on (owner: "зачем любой пуш запускает сборку.... это же бред" — and, on a README fix,
+  # "зачем сборка"). Narrowing it to "pushes that can change the package" was still the wrong
+  # shape: work in progress does not need a build at all. It needs one when someone asks.
   #
-  # A push that mixes docs with code still builds — paths-ignore only skips a push where EVERY
-  # changed file matches. DG_NODE_REF is deliberately absent from this list: it picks the dg-node
-  # commit the UI is built from, so changing it changes the package.
-  # To skip a build for any other reason, put [skip ci] in the commit message.
+  # So: a tag is a release and always builds; Actions → Build App → Run workflow builds any branch
+  # on demand, with the same artifacts. Nothing else starts a run.
+  #
+  # The cost, stated rather than discovered later: main is no longer checked automatically by the
+  # e2e steps below. Whoever merges something worth checking presses Run workflow — or we add a
+  # light job that runs the checks without building the database, which is the expensive half.
   push:
-    paths-ignore:
-      - '**/*.md'
-      - 'docs/**'
-      - 'issue-images/**'
-      - 'ios-screenshots/**'
-      - '.gitignore'
-      - 'LICENSE'
+    tags:
+      - '**'
   workflow_dispatch:
     inputs:
       dg_node_ref:
