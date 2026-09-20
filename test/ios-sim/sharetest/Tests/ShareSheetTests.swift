@@ -107,7 +107,18 @@ final class ShareSheetTests: XCTestCase {
             XCTFail("the page's search box is not there")
             return
         }
-        box.tap()
+        // A WKWebView input's first tap after its window/sheet appears does not always pick up
+        // keyboard focus in the simulator (run 252's failure: "Failed to synthesize event: Neither
+        // element nor any descendant has keyboard focus", right after a plain tap()) — retapping
+        // after a short pause is the usual fix for this XCUITest quirk.
+        for _ in 0..<5 where !box.hasKeyboardFocus {
+            box.tap()
+            usleep(300_000)
+        }
+        guard box.hasKeyboardFocus else {
+            XCTFail("could not give the search box keyboard focus")
+            return
+        }
         // The failed link-search left its own query in the box; backspace it out by its own length
         // rather than assume the field starts empty (an empty web input can report its placeholder
         // as `.value`, which is harmless to over-delete into).
