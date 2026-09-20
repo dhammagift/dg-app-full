@@ -46,7 +46,7 @@ on:
         required: false
         type: string
       release:
-        description: 'Send the build to Google Play (INTERNAL track — testers only, production still needs a promote in the console). Off by default: a manual run is usually about trying something, not about shipping.'
+        description: 'Send the build to the stores — TestFlight and the Play INTERNAL track (testers only; production still needs a promote in the console). Off by default: a manual run is usually about trying something, not about shipping, and an unasked-for build in App Store Connect or a burnt versionCode is the cost of getting that wrong.'
         required: false
         type: boolean
         default: false
@@ -1190,10 +1190,16 @@ jobs:
   # Why TestFlight rather than an ad-hoc IPA: TestFlight installs on a phone with no Mac, no cable and
   # no registered UDID, which is exactly the situation the device checks are waiting on (background
   # download, audible TTS, the dictionary tap, the share sheet).
+  # Runs on a tag always (a real release); on workflow_dispatch only with release=true ticked. Every
+  # manual run used to archive and upload unconditionally, so iterating on ios-build/ios-ui left a
+  # new App Store Connect build behind each time, none of them asked for (owner, 2026-09-20: a
+  # manual run must not release). The same gate as android-release above, on purpose: two release
+  # paths that answer differently to the same checkbox is a trap for whoever presses it.
+  # push never runs this — push builds are for the installable APK, not for the stores.
   ios-release:
     name: iOS release (TestFlight)
     needs: build
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
+    if: (github.event_name == 'workflow_dispatch' && inputs.release) || startsWith(github.ref, 'refs/tags/')
     runs-on: macos-26
     steps:
       - name: Checkout this repo (the app)
