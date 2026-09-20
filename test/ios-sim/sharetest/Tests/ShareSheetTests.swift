@@ -22,9 +22,30 @@ final class ShareSheetTests: XCTestCase {
         let safari = XCUIApplication(bundleIdentifier: "com.apple.mobilesafari")
         safari.activate()
         XCTAssertTrue(safari.wait(for: .runningForeground, timeout: 30), "Safari did not come to the foreground")
+        // A page fully on screen before anything is tapped: on a simulator that never ran Safari
+        // before, the toolbar the share button lives in is not drawn until the page has settled.
+        _ = safari.otherElements.firstMatch.waitForExistence(timeout: 10)
 
-        let share = safari.buttons["ShareButton"]
-        XCTAssertTrue(share.waitForExistence(timeout: 30), "Safari's share button is not on screen")
+        // "ShareButton" is the identifier on older iOS; newer ones only carry the label. Tried in
+        // order rather than one predicate, so a match is not accidentally the WRONG share-shaped
+        // button (a page can have its own).
+        let candidates = [
+            safari.buttons["ShareButton"],
+            safari.toolbars.buttons["Share"],
+            safari.buttons.matching(NSPredicate(format: "label == 'Share'")).firstMatch,
+        ]
+        var share: XCUIElement?
+        for candidate in candidates where candidate.waitForExistence(timeout: 15) {
+            share = candidate
+            break
+        }
+        guard let share = share else {
+            // Not a guess this time: the actual tree, so a second failure is fixed from evidence.
+            print("--- Safari accessibility tree (share button not found) ---")
+            print(safari.debugDescription)
+            XCTFail("Safari's share button is not on screen")
+            return
+        }
         share.tap()
         attach("1-share-sheet", safari)
 
