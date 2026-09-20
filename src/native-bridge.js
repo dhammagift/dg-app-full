@@ -406,7 +406,12 @@
     // (Before, this list was everything the history held: "toc", "bupm", "история", "запись1/2" —
     // bare commands and memo recordings, none of them a text — and the designed shortcuts were
     // pushed out of the menu entirely.)
-    var SHORTCUTS_MAX = 2;
+    // Three, not two (owner, 2026-09-20). The four static entries are ordered so the two a reader
+    // returns to sit on top, which makes the tail of the menu the natural place for history — so
+    // the settings switch below now governs three slots instead of two. Android only in practice:
+    // iOS shows four quick actions IN TOTAL and all four static ones are declared in Info.plist,
+    // so nothing dynamic reaches the screen there however many we push.
+    var SHORTCUTS_MAX = 3;
     // Settings switch "Recent texts in app shortcuts" (dg-app-full#4). 'off' disables them; any
     // other value (including none) keeps the default, on. Static shortcuts are unaffected.
     var SHORTCUTS_FLAG = 'dgDynamicShortcuts';

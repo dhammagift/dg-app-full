@@ -4,8 +4,10 @@
      Icons come from dg-twa (owner: "шорткаты и иконки неактуальные возьми из dg-twa там последняя
      версия") — drawable-*/shortcut_N.png, mirrored here.
 
-     The order below is dg-twa's (app/build.gradle twaManifest.shortcuts, owner: "twa актуальнее"):
-     Table of Contents, Favorites & History, Memo, Dictionary (owner's order, 2026-09-15). It has to be STATIC — the first attempt kept
+     The order below is the owner's (2026-09-20): Favorites & History, Table of Contents, Memo,
+     Dictionary. Favourites and history come first because that is what a reader returns to —
+     the contents are for finding something new, and that is the rarer errand. It used to lead
+     with Contents, inherited from dg-twa's list. It has to be STATIC — the first attempt kept
      Contents/Favorites as dynamic shortcuts with rank 0/1, on the assumption that Android lists
      dynamic ones above static ones. On the owner's launcher the opposite happens: the static pair
      (Dictionary, Memo) came first and the pinned two fell to the bottom, which is exactly the
@@ -25,19 +27,6 @@
      the launcher has left. -->
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
     <shortcut
-        android:shortcutId="toc"
-        android:enabled="true"
-        android:icon="@drawable/shortcut_2"
-        android:shortcutShortLabel="@string/shortcut_toc_short"
-        android:shortcutLongLabel="@string/shortcut_toc_long">
-        <intent
-            android:action="android.intent.action.MAIN"
-            android:targetPackage="gift.dhamma.mobile"
-            android:targetClass="gift.dhamma.mobile.MainActivity">
-            <extra android:name="route" android:value="/toc" />
-        </intent>
-    </shortcut>
-    <shortcut
         android:shortcutId="favorites_history"
         android:enabled="true"
         android:icon="@drawable/shortcut_0"
@@ -48,6 +37,19 @@
             android:targetPackage="gift.dhamma.mobile"
             android:targetClass="gift.dhamma.mobile.MainActivity">
             <extra android:name="route" android:value="/4as" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="toc"
+        android:enabled="true"
+        android:icon="@drawable/shortcut_2"
+        android:shortcutShortLabel="@string/shortcut_toc_short"
+        android:shortcutLongLabel="@string/shortcut_toc_long">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="gift.dhamma.mobile"
+            android:targetClass="gift.dhamma.mobile.MainActivity">
+            <extra android:name="route" android:value="/toc" />
         </intent>
     </shortcut>
     <shortcut

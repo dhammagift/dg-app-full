@@ -97,7 +97,7 @@
 		<string>audio</string>
 	</array>
 	<!-- Static Home Screen quick actions, long-press the icon. Same four, same order as
-	     android/app/src/main/res/xml/shortcuts.xml (owner's order: dg-twa's). Each one carries
+	     android/app/src/main/res/xml/shortcuts.xml (owner's order, 2026-09-20: favourites first). Each one carries
 	     the SPA route the app must open; AppDelegate turns it into ?_nativeRoute=..., which the
 	     page rewrites into the visible URL before its own bootstrap reads window.location —
 	     the same mechanism the Android MainActivity.handleIntent uses for its "route" extra.
@@ -111,19 +111,6 @@
 			<key>UIApplicationShortcutItemType</key>
 			<string>route</string>
 			<key>UIApplicationShortcutItemIconType</key>
-			<string>UIApplicationShortcutIconTypeBookmark</string>
-			<key>UIApplicationShortcutItemTitle</key>
-			<string>Table of Contents</string>
-			<key>UIApplicationShortcutItemUserInfo</key>
-			<dict>
-				<key>route</key>
-				<string>/toc</string>
-			</dict>
-		</dict>
-		<dict>
-			<key>UIApplicationShortcutItemType</key>
-			<string>route</string>
-			<key>UIApplicationShortcutItemIconType</key>
 			<string>UIApplicationShortcutIconTypeFavorite</string>
 			<key>UIApplicationShortcutItemTitle</key>
 			<string>Favorites &amp; History</string>
@@ -131,6 +118,19 @@
 			<dict>
 				<key>route</key>
 				<string>/4as</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>route</string>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeBookmark</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Table of Contents</string>
+			<key>UIApplicationShortcutItemUserInfo</key>
+			<dict>
+				<key>route</key>
+				<string>/toc</string>
 			</dict>
 		</dict>
 		<dict>
