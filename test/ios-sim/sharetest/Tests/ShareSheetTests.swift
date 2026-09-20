@@ -23,27 +23,41 @@ final class ShareSheetTests: XCTestCase {
         safari.activate()
         XCTAssertTrue(safari.wait(for: .runningForeground, timeout: 30), "Safari did not come to the foreground")
         // A page fully on screen before anything is tapped: on a simulator that never ran Safari
-        // before, the toolbar the share button lives in is not drawn until the page has settled.
+        // before, the toolbar is not drawn until the page has settled.
         _ = safari.otherElements.firstMatch.waitForExistence(timeout: 10)
 
-        // "ShareButton" is the identifier on older iOS; newer ones only carry the label. Tried in
-        // order rather than one predicate, so a match is not accidentally the WRONG share-shaped
-        // button (a page can have its own).
-        let candidates = [
+        // A simulator's first-ever Safari launch shows a one-time tip ("View Bookmarks, Share
+        // Menu, and Open Tabs — you can now view these items in the ⊙ menu") over a TipView
+        // popover, and it eats the first tap if not dismissed.
+        let tipClose = safari.buttons["xmark.circle.fill"]
+        if tipClose.waitForExistence(timeout: 5) { tipClose.tap() }
+
+        // This Safari's compact toolbar folded Bookmarks/Share/Tabs into one overflow button — the
+        // tip above says so, and the accessibility tree confirms it: no "Share"-labelled button
+        // exists directly in the toolbar any more, only 'MoreMenuButton' ("More"). Older Safari
+        // (still what devices run today) keeps a direct "ShareButton"/"Share" button, so both are
+        // tried before assuming which shape this run has.
+        let direct = [
             safari.buttons["ShareButton"],
             safari.toolbars.buttons["Share"],
-            safari.buttons.matching(NSPredicate(format: "label == 'Share'")).firstMatch,
         ]
         var share: XCUIElement?
-        for candidate in candidates where candidate.waitForExistence(timeout: 15) {
+        for candidate in direct where candidate.waitForExistence(timeout: 5) {
             share = candidate
             break
         }
+        if share == nil {
+            let more = safari.buttons["MoreMenuButton"]
+            if more.waitForExistence(timeout: 15) {
+                more.tap()
+                let menuShare = safari.buttons.matching(NSPredicate(format: "label == 'Share'")).firstMatch
+                if menuShare.waitForExistence(timeout: 10) { share = menuShare }
+            }
+        }
         guard let share = share else {
-            // Not a guess this time: the actual tree, so a second failure is fixed from evidence.
             print("--- Safari accessibility tree (share button not found) ---")
             print(safari.debugDescription)
-            XCTFail("Safari's share button is not on screen")
+            XCTFail("Safari's share button is not on screen (tried the toolbar and the More menu)")
             return
         }
         share.tap()
