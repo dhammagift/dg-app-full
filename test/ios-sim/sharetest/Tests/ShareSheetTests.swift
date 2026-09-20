@@ -92,15 +92,19 @@ final class ShareSheetTests: XCTestCase {
         // rejects as an invalid regular expression, run 229's actual screenshot). The real query is
         // typed into the page's own search box over whatever that left behind.
         //
-        // WKWebView has reported an `<input type="search">` as a plain text field before, not a
-        // "search field" trait — .searchFields is tried first (it is what type="search" SHOULD be),
-        // .textFields is the fallback the 229 failure (this exact assertion) showed was needed.
-        var box = web.searchFields.firstMatch
-        if !box.waitForExistence(timeout: 10) { box = web.textFields.firstMatch }
-        guard box.waitForExistence(timeout: 15) else {
+        // NOT `web.searchFields` — the 251 failure's accessibility dump showed why: `web` (from
+        // `safari.webViews.firstMatch`) matched Safari's OWN page's webview (the shared
+        // "Example Domain" tab, first in the tree), not our extension's, which lives in a separate
+        // top-level window below it. The dump also settled the earlier guess: the field's real type
+        // IS `SearchField` (placeholder "e.g. Kāyagat or sn56.11") — the type wasn't the problem,
+        // the scope was. Queried app-wide instead: Safari's own address bar is a plain `TextField`
+        // (identifier 'TabBarItemTitle'), so `searchFields` has exactly one match regardless of
+        // which window it is in.
+        let box = safari.searchFields.firstMatch
+        guard box.waitForExistence(timeout: 20) else {
             print("--- Safari accessibility tree (search box not found) ---")
             print(safari.debugDescription)
-            XCTFail("the page's search box is not there (tried searchFields and textFields)")
+            XCTFail("the page's search box is not there")
             return
         }
         box.tap()
@@ -111,7 +115,9 @@ final class ShareSheetTests: XCTestCase {
             box.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: existing.count))
         }
         box.typeText("kacchapa\n")
-        let hit = web.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Mahāsatipaṭṭhānasutta'")).firstMatch
+        // App-wide too, for the same reason `box` is: the result lives in the extension's own
+        // window, not in `web` (Safari's page webview).
+        let hit = safari.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Mahāsatipaṭṭhānasutta'")).firstMatch
         XCTAssertTrue(hit.waitForExistence(timeout: 45), "no offline result for kacchapa in the sheet")
         attach("3-offline-results", safari)
     }
