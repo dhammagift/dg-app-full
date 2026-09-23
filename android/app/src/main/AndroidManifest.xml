@@ -37,11 +37,22 @@
                  taps it directly instead of going through Share → Dhamma.gift — one chooser less.
                  The label Android prints there is this activity's own android:label above, which
                  is the app name, so nothing extra to declare. MainActivity.handleIntent treats
-                 the selected text exactly like a shared one (same ?q= path). -->
-            <intent-filter>
+                 the selected text exactly like a shared one (same ?q= path).
+
+                 android:priority="1000": the platform appends these items in the order
+                 PackageManager.queryIntentActivities hands them over, and for activities that
+                 order is RESOLVE_PRIORITY_SORTER — priority first, then system-before-user, and
+                 only then the package name alphabetically (Editor.ProcessTextIntentActions
+                 Handler.onInitializeMenu). At the default 0 we sorted after every com.* app, at
+                 the bottom of a menu that scrolls; 1000 is the maximum, so we come first.
+
+                 text/* rather than text/plain: the platform's own selection intent is text/plain
+                 and matches either, but rich-text editors send text/html — and those are exactly
+                 the apps (Gmail's composer) where the item never showed up. -->
+            <intent-filter android:priority="1000">
                 <action android:name="android.intent.action.PROCESS_TEXT" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="text/plain" />
+                <data android:mimeType="text/*" />
             </intent-filter>
 
             <meta-data
