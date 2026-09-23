@@ -32,6 +32,18 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
 
+            <!-- Text-selection menu: select a passage in any app and "Dhamma.gift" sits right in
+                 the selection toolbar (or its ⋮ overflow) next to Copy/Translate, so the reader
+                 taps it directly instead of going through Share → Dhamma.gift — one chooser less.
+                 The label Android prints there is this activity's own android:label above, which
+                 is the app name, so nothing extra to declare. MainActivity.handleIntent treats
+                 the selected text exactly like a shared one (same ?q= path). -->
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+
             <meta-data
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />

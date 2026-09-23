@@ -90,6 +90,17 @@ public class MainActivity extends BridgeActivity {
                 // incoming shares belongs in a wrapper.
                 url = "https://localhost/?q=" + Uri.encode(sharedText);
             }
+        } else if (Intent.ACTION_PROCESS_TEXT.equals(intent.getAction())) {
+            // Text-selection menu (see the PROCESS_TEXT intent-filter in AndroidManifest.xml): the
+            // reader selected a passage and tapped Dhamma.gift directly, so no share chooser ever
+            // opened. Same ?q= handoff as a share — the site owns the cleaning either way.
+            // getCharSequenceExtra, not getStringExtra: a selection arrives as a Spannable. Nothing
+            // is returned to the app that offered the selection; the text is the query, not a
+            // replacement for it.
+            CharSequence selected = intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT);
+            if (selected != null && selected.length() > 0) {
+                url = "https://localhost/?q=" + Uri.encode(selected.toString());
+            }
         } else if (Intent.ACTION_VIEW.equals(intent.getAction()) && intent.getData() != null
                 && "dhammagift".equals(intent.getData().getScheme())) {
             // Google sign-in handoff: dhamma.gift/login/app-google.html (system browser) returns the
