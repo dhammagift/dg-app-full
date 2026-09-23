@@ -93,6 +93,16 @@ App Group и показывает локальное уведомление «И
 чтение при старте в `native-bridge.js` через плагин). Это надёжно, но с лишним тапом.
 Источники: developer.apple.com/forums/thread/764570, /763568, /776488.
 
+**Apple Books: расширения там не будет, и это не наш баг.** Шторку «Поделиться» в Books обслуживает
+закрытый список приложений — сторонний Share Extension туда не попадает ни с каким
+`NSExtensionActivationRule`, хоть `TRUEPREDICATE`: «There are a predefined set of apps allowed to
+receive data from Books… not achievable with our presently shipped configurations» (Apple, radar
+FB15013575). Поэтому в Books пункта Dhamma.gift нет, и целей для шаринга там заметно меньше, чем в
+Safari — Books вообще отдаёт данные только своим. В Safari всё штатно: правило расширения принимает
+текст, web-URL и веб-страницу, поэтому оно и висит в шторке (иконкой в верхнем ряду и строкой в
+списке действий).
+Источники: developer.apple.com/forums/thread/762784, stackoverflow.com/q/78895358.
+
 ### Остальные нюансы перед подачей
 
 - **Проверки на телефоне** (§6): тап по слову → словарь (починен в коде, на телефоне не видели),
