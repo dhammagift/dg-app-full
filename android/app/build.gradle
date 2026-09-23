@@ -6,8 +6,19 @@ android {
     // Google Play knows this app as gift.dhamma.twa: it replaces the TWA's listing, whose package id cannot
     // change. Test APKs stay gift.dhamma.mobile so both can sit on one phone; CI passes -PdgAppId for the AAB.
     // versionCode from the CI run number: Play refuses a code it has already seen (17 was fixed before).
+    //
+    // Two packages that can be installed at once are two apps in the same launcher, so they cannot both be
+    // called "Dhamma.gift" (owner: "у меня две аппки dhamma.gift сейчас"). The Play package keeps the name
+    // readers know; the sideload/test package is DGift. Keyed on the id in one place, so the AAB the store
+    // gets is untouched and there is no second strings.xml to drift.
+    def dgApplicationId = (project.findProperty('dgAppId') ?: "gift.dhamma.mobile").toString()
+    def dgAppLabel = (dgApplicationId == "gift.dhamma.twa") ? "Dhamma.gift" : "DGift"
     defaultConfig {
-        applicationId (project.findProperty('dgAppId') ?: "gift.dhamma.mobile")
+        applicationId dgApplicationId
+        // Generated rather than @string-ed in res/values/strings.xml: one value per build, no duplicate
+        // resource, and the manifest's @string/app_name / @string/title_activity_main keep working.
+        resValue "string", "app_name", dgAppLabel
+        resValue "string", "title_activity_main", dgAppLabel
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode ((project.findProperty('dgVersionCode') ?: '17') as Integer)

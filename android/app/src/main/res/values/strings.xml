@@ -1,7 +1,9 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Dhamma.gift</string>
-    <string name="title_activity_main">Dhamma.gift</string>
+    <!-- app_name and title_activity_main are NOT here on purpose: build.gradle generates them with
+         resValue, because the label depends on the applicationId (gift.dhamma.twa is "Dhamma.gift",
+         the test package gift.dhamma.mobile is "DGift"). A copy here would collide with the
+         generated one. -->
     <string name="package_name">gift.dhamma.mobile</string>
     <string name="custom_url_scheme">gift.dhamma.mobile</string>
 
