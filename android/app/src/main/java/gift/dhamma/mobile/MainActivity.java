@@ -24,6 +24,10 @@ public class MainActivity extends BridgeActivity {
         // transfer (the page keeps reporting it; this only mirrors it natively).
         registerPlugin(DgProgressPlugin.class);
         registerPlugin(DgTtsPlugin.class);
+        // OS-level search: the offline library's metadata into Android's own AppSearch, so a sutta
+        // is findable from the phone's search. Platform API only, so it adds no dependency and no
+        // APK weight; below Android 12 every call resolves with available=false.
+        registerPlugin(DgSearchPlugin.class);
         super.onCreate(savedInstanceState);
         // Deliberately no handleIntent() here — see handledIntent above.
 
