@@ -28,6 +28,13 @@
 		D60000382FE00000000000D8 /* DgSQLite in Frameworks */ = {isa = PBXBuildFile; productRef = D60000372FE00000000000D7 /* DgSQLite */; };
 		D60000122FE00000000000B2 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D60000112FE00000000000B1 /* ShareViewController.swift */; };
 		D600001B2FE00000000000BB /* ShareExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = D60000142FE00000000000B4 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		D60000402FE00000000000E0 /* DgAppIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = D600003F2FE00000000000DF /* DgAppIntents.swift */; };
+		D60000482FE00000000000E8 /* AppShortcuts.strings in Resources */ = {isa = PBXBuildFile; fileRef = D60000412FE00000000000E1 /* AppShortcuts.strings */; };
+		D600005E2FE00000000000FE /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = D60000452FE00000000000E5 /* Localizable.strings */; };
+		D600004B2FE00000000000EB /* DgControlWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = D600004A2FE00000000000EA /* DgControlWidget.swift */; };
+		D600004D2FE00000000000ED /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D600004C2FE00000000000EC /* WidgetKit.framework */; };
+		D600004F2FE00000000000EF /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D600004E2FE00000000000EE /* SwiftUI.framework */; };
+		D60000502FE00000000000F0 /* DgControls.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = D60000512FE00000000000F1 /* DgControls.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -37,6 +44,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = D60000162FE00000000000B6;
 			remoteInfo = ShareExtension;
+		};
+		D60000542FE00000000000F4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 504EC2FC1FED79650016851F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D60000492FE00000000000E9;
+			remoteInfo = DgControls;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -48,6 +62,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				D600001B2FE00000000000BB /* ShareExtension.appex in Embed App Extensions */,
+				D60000502FE00000000000F0 /* DgControls.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -60,10 +75,19 @@
 			target = D60000162FE00000000000B6 /* ShareExtension */;
 			targetProxy = D60000202FE00000000000C0 /* PBXContainerItemProxy */;
 		};
+		D60000552FE00000000000F5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D60000492FE00000000000E9 /* DgControls */;
+			targetProxy = D60000542FE00000000000F4 /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin PBXFileReference section */
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
+		D60000422FE00000000000E2 /* en */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/AppShortcuts.strings; sourceTree = "<group>"; };
+		D60000432FE00000000000E3 /* ru */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/AppShortcuts.strings; sourceTree = "<group>"; };
+		D60000462FE00000000000E6 /* en */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		D60000472FE00000000000E7 /* ru */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
 		50379B222058CBB4000EE86E /* capacitor.config.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capacitor.config.json; sourceTree = "<group>"; };
 		504EC3041FED79650016851F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		504EC3071FED79650016851F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -85,6 +109,13 @@
 		D60000112FE00000000000B1 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		D60000132FE00000000000B3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D60000142FE00000000000B4 /* ShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		D600003F2FE00000000000DF /* DgAppIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DgAppIntents.swift; sourceTree = "<group>"; };
+		D600004A2FE00000000000EA /* DgControlWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DgControlWidget.swift; sourceTree = "<group>"; };
+		D600004C2FE00000000000EC /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		D600004E2FE00000000000EE /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		D60000512FE00000000000F1 /* DgControls.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DgControls.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		D60000522FE00000000000F2 /* DgControls.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DgControls.entitlements; sourceTree = "<group>"; };
+		D60000532FE00000000000F3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -106,6 +137,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D600005A2FE00000000000FA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D600004D2FE00000000000ED /* WidgetKit.framework in Frameworks */,
+				D600004F2FE00000000000EF /* SwiftUI.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -115,6 +155,7 @@
 				958DCC722DB07C7200EA8C5F /* debug.xcconfig */,
 				504EC3061FED79650016851F /* App */,
 				D60000152FE00000000000B5 /* ShareExtension */,
+				D60000562FE00000000000F6 /* DgControls */,
 				504EC3051FED79650016851F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -124,8 +165,19 @@
 			children = (
 				504EC3041FED79650016851F /* App.app */,
 				D60000142FE00000000000B4 /* ShareExtension.appex */,
+				D60000512FE00000000000F1 /* DgControls.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		D60000562FE00000000000F6 /* DgControls */ = {
+			isa = PBXGroup;
+			children = (
+				D600004A2FE00000000000EA /* DgControlWidget.swift */,
+				D60000522FE00000000000F2 /* DgControls.entitlements */,
+				D60000532FE00000000000F3 /* Info.plist */,
+			);
+			path = DgControls;
 			sourceTree = "<group>";
 		};
 		504EC3061FED79650016851F /* App */ = {
@@ -139,6 +191,9 @@
 				D60000092FE00000000000A9 /* DgDownloadPlugin.swift */,
 				D60000302FE00000000000D0 /* DgSharedLibrary.swift */,
 				D60000212FE00000000000C1 /* DgShortcutsPlugin.swift */,
+				D600003F2FE00000000000DF /* DgAppIntents.swift */,
+				D60000412FE00000000000E1 /* en.lproj */,
+				D60000452FE00000000000E5 /* en.lproj */,
 				D60000232FE00000000000C3 /* App.entitlements */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
@@ -178,6 +233,7 @@
 			);
 			dependencies = (
 				D600001F2FE00000000000BF /* PBXTargetDependency */,
+				D60000552FE00000000000F5 /* PBXTargetDependency */,
 			);
 			name = App;
 			packageProductDependencies = (
@@ -187,6 +243,23 @@
 			productName = App;
 			productReference = 504EC3041FED79650016851F /* App.app */;
 			productType = "com.apple.product-type.application";
+		};
+		D60000492FE00000000000E9 /* DgControls */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D60000582FE00000000000F8 /* Build configuration list for PBXNativeTarget "DgControls" */;
+			buildPhases = (
+				D60000592FE00000000000F9 /* Sources */,
+				D600005A2FE00000000000FA /* Frameworks */,
+				D600005B2FE00000000000FB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = DgControls;
+			productName = DgControls;
+				productReference = D60000512FE00000000000F1 /* DgControls.appex */;
+				productType = "com.apple.product-type.app-extension";
 		};
 		D60000162FE00000000000B6 /* ShareExtension */ = {
 			isa = PBXNativeTarget;
@@ -225,6 +298,9 @@
 					D60000162FE00000000000B6 = {
 						ProvisioningStyle = Automatic;
 					};
+					D60000492FE00000000000E9 = {
+						ProvisioningStyle = Automatic;
+					};
 				};
 			};
 			buildConfigurationList = 504EC2FF1FED79650016851F /* Build configuration list for PBXProject "App" */;
@@ -246,6 +322,7 @@
 			targets = (
 				504EC3031FED79650016851F /* App */,
 				D60000162FE00000000000B6 /* ShareExtension */,
+				D60000492FE00000000000E9 /* DgControls */,
 			);
 		};
 /* End PBXProject section */
@@ -261,10 +338,19 @@
 				50379B232058CBB4000EE86E /* capacitor.config.json in Resources */,
 				504EC30D1FED79650016851F /* Main.storyboard in Resources */,
 				2FAD9763203C412B000D30F8 /* config.xml in Resources */,
+				D60000482FE00000000000E8 /* AppShortcuts.strings in Resources */,
+				D600005E2FE00000000000FE /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		D60000192FE00000000000B9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D600005B2FE00000000000FB /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -287,6 +373,7 @@
 				D600000A2FE00000000000AA /* DgDownloadPlugin.swift in Sources */,
 				D60000222FE00000000000C2 /* DgShortcutsPlugin.swift in Sources */,
 				D60000312FE00000000000D1 /* DgSharedLibrary.swift in Sources */,
+				D60000402FE00000000000E0 /* DgAppIntents.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -299,9 +386,35 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D60000592FE00000000000F9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D600004B2FE00000000000EB /* DgControlWidget.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
+		D60000412FE00000000000E1 /* AppShortcuts.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				D60000422FE00000000000E2 /* en */,
+				D60000432FE00000000000E3 /* ru */,
+			);
+			name = AppShortcuts.strings;
+			sourceTree = "<group>";
+		};
+		D60000452FE00000000000E5 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				D60000462FE00000000000E6 /* en */,
+				D60000472FE00000000000E7 /* ru */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
 		504EC30B1FED79650016851F /* Main.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -519,6 +632,52 @@
 			};
 			name = Release;
 		};
+		D600005C2FE00000000000FC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = DgControls/DgControls.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = DgControls/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.17;
+				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"DGCONTROLS_TARGET\"";
+				PRODUCT_BUNDLE_IDENTIFIER = gift.dhamma.mobile.controls;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D600005D2FE00000000000FD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = DgControls/DgControls.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = DgControls/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.17;
+				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"DGCONTROLS_TARGET\"";
+				PRODUCT_BUNDLE_IDENTIFIER = gift.dhamma.mobile.controls;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -527,6 +686,15 @@
 			buildConfigurations = (
 				504EC3141FED79650016851F /* Debug */,
 				504EC3151FED79650016851F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D60000582FE00000000000F8 /* Build configuration list for PBXNativeTarget "DgControls" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D600005C2FE00000000000FC /* Debug */,
+				D600005D2FE00000000000FD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

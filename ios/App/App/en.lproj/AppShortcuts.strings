@@ -1,0 +1,12 @@
+// The App Shortcuts phrases Siri matches, English.
+//
+// The App Intents compiler requires this exact format: the KEY repeats a phrase declared in Swift
+// with ${applicationName}/${section}/${query} placeholders, and EVERY key must contain
+// ${applicationName} — an utterance without it fails the build with "Invalid Utterance". The value
+// is what Siri listens for in an English (US) locale.
+"Open ${applicationName}" = "Open ${applicationName}";
+"Открыть ${applicationName}" = "Открыть ${applicationName}";
+
+"Open ${applicationName} ${section}" = "Open ${applicationName} ${section}";
+
+"Search ${applicationName} for ${query}" = "Search ${applicationName} for ${query}";

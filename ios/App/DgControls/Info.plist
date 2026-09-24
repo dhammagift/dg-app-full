@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- A widget extension: the extension point the system discovers Control Center controls
+	     (and Home Screen widgets) through. -->
+	<key>NSExtension</key>
+	<dict>
+		<key>NSExtensionPointIdentifier</key>
+		<string>com.apple.widgetkit-extension</string>
+	</dict>
+	<key>NSHumanReadableCopyright</key>
+	<string></string>
+	<!-- The extension's own identifier: the app's bundle id plus a .controls suffix, the same
+	     pattern the share extension uses (.share). -->
+	<key>CFBundleIdentifier</key>
+	<string>gift.dhamma.mobile.controls</string>
+	<key>CFBundleName</key>
+	<string>DgControls</string>
+	<key>CFBundleDisplayName</key>
+	<string>Dhamma.gift Controls</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.17</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>CFBundlePackageType</key>
+	<string>XPC!</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+</dict>
+</plist>

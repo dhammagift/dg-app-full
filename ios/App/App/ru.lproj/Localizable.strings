@@ -1,0 +1,15 @@
+// App Intents strings, Russian. The phrase utterances live in AppShortcuts.strings — these are the
+// strings shown in the Shortcuts app UI and spoken for the section names.
+"Dhamma.gift section" = "Раздел Dhamma.gift";
+
+"Dhamma.gift Reader" = "Dhamma.gift Чтение";
+"Dhamma.gift Favorites" = "Dhamma.gift Избранное";
+"Dhamma.gift Table of Contents" = "Dhamma.gift Оглавление";
+"Dhamma.gift Memo" = "Dhamma.gift Заметки";
+"Dhamma.gift Dictionary" = "Dhamma.gift Словарь";
+
+"Open Dhamma.gift" = "Открыть Dhamma.gift";
+"Open Section" = "Открыть раздел";
+"Search Dhamma.gift" = "Искать в Dhamma.gift";
+"Section" = "Раздел";
+"Query" = "Запрос";
