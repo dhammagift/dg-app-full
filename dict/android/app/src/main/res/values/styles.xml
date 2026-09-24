@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Base application theme. DayNight, not fixed Light: the dictionary site has its own night
+         theme (stored in localStorage and applied by the page), so the native chrome — the window
+         behind the WebView before the first paint, dialogs, the system bars — should follow the OS
+         instead of forcing everything light. -->
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <!-- The strip behind the status bar is the dictionary's own dark band in both themes.
+             Android 15 enforces edge-to-edge and ignores android:statusBarColor (targetSdk is 36),
+             so what actually shows is this window background; light icons on it, never the
+             system's light-mode default. -->
+        <item name="android:windowBackground">@color/dg_navbar</item>
+        <item name="android:statusBarColor">@color/dg_navbar</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:background">@null</item>
+        <item name="android:windowBackground">@color/dg_navbar</item>
+        <item name="android:statusBarColor">@color/dg_navbar</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <!-- The launch screen. On the TWA this was a Chrome splash; here it is the launcher icon's own
+         plate with the mark centred, so a dark-mode device gets no white flash before the (dark)
+         page appears. postSplashScreenTheme is what hands over to the real theme; without it the
+         app would keep the splash theme and the WebView would never appear. -->
+    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/ic_launcher_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
+        <item name="android:background">@color/ic_launcher_background</item>
+        <!-- The splash window is dark, so its status bar needs the same light icons as the real
+             theme. -->
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

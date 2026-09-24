@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Static App Shortcuts (long-press the launcher icon).
+
+     Icons are the ones the Trusted Web Activity used (drawable-*/shortcut_N.png, kept as they
+     were), and so are the four entries — this migration must not silently drop a shortcut a reader
+     already has on their home screen.
+
+     FOUR static shortcuts, and the burger menu's own switch decides which set the reader sees
+     (owner, 2026-09-24: "опцию вкл выкл история в 1-3 шорткатах"). The launcher's long-press menu
+     shows four entries in total, so:
+
+       "Recent words in app shortcuts" OFF -> all four of these (the programmed set);
+       ON  -> Favorites & History (static) + three "recent words" (dynamic, DgShortcutsPlugin).
+
+     Exactly one set at a time, never a mixture that leaves a slot empty: when the setting is on,
+     DgShortcutsPlugin.set({programmed:false}) DISABLES toc/dharmamitra/aksharamukha through
+     ShortcutManager.disableShortcuts() — a static shortcut can be hidden and shown again at
+     runtime, and that is the only way to take it out of the menu without deleting it from the
+     manifest. They stay static on purpose: a shortcut declared here exists in the launcher the
+     moment the app is installed, before it has ever run, which a dynamic one cannot do.
+
+     Each shortcut starts MainActivity with a "route" extra, which MainActivity loads into the
+     WebView. The two dhamma.gift routes are in capacitor.config.json's server.allowNavigation, so
+     they open inside this app exactly as they did inside the TWA; dharmamitra.org and
+     aksharamukha.com are not, so those two open in the system browser (which is what a reader
+     wants from an external tool anyway). -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="favorites"
+        android:enabled="true"
+        android:icon="@drawable/shortcut_1"
+        android:shortcutShortLabel="@string/shortcut_fav_short"
+        android:shortcutLongLabel="@string/shortcut_fav_long">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="gift.dhamma.pali"
+            android:targetClass="gift.dhamma.pali.MainActivity">
+            <extra android:name="route" android:value="https://dhamma.gift/4as" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="toc"
+        android:enabled="true"
+        android:icon="@drawable/shortcut_0"
+        android:shortcutShortLabel="@string/shortcut_toc_short"
+        android:shortcutLongLabel="@string/shortcut_toc_long">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="gift.dhamma.pali"
+            android:targetClass="gift.dhamma.pali.MainActivity">
+            <extra android:name="route" android:value="https://dhamma.gift/toc" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="dharmamitra"
+        android:enabled="true"
+        android:icon="@drawable/shortcut_2"
+        android:shortcutShortLabel="@string/shortcut_dharmamitra_short"
+        android:shortcutLongLabel="@string/shortcut_dharmamitra_long">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="gift.dhamma.pali"
+            android:targetClass="gift.dhamma.pali.MainActivity">
+            <extra android:name="route" android:value="https://dharmamitra.org/" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="aksharamukha"
+        android:enabled="true"
+        android:icon="@drawable/shortcut_3"
+        android:shortcutShortLabel="@string/shortcut_aksharamukha_short"
+        android:shortcutLongLabel="@string/shortcut_aksharamukha_long">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="gift.dhamma.pali"
+            android:targetClass="gift.dhamma.pali.MainActivity">
+            <extra android:name="route" android:value="https://www.aksharamukha.com/converter" />
+        </intent>
+    </shortcut>
+</shortcuts>

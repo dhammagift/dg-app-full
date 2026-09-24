@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The adaptive icon's plate: the dictionary's own dark page (#111111), the same value the
+         TWA used and the same one capacitor.config.json gives the Android window background. -->
+    <color name="ic_launcher_background">#111111</color>
+    <!-- The strip behind the status bar / navigation bar. Android 15 enforces edge-to-edge and
+         IGNORES android:statusBarColor (targetSdk is 36), so this is mostly the window background
+         the page paints over — but it is also the first frame the splash leaves behind. The
+         dictionary's own dark navbar, #00131B, taken from ddg-ui/public/static/manifest.json's
+         theme_color. -->
+    <color name="dg_navbar">#00131B</color>
+</resources>
