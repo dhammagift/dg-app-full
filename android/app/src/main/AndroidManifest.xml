@@ -132,6 +132,21 @@
             android:name=".DgDownloadService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+
+        <!-- The Quick Settings tile (DgTileService): Dhamma.gift in the shade, one tap from
+             anywhere, offline — the Android counterpart of a Control Center button. exported="true"
+             is required because the system's tile host binds this service from outside the app;
+             BIND_QUICK_SETTINGS_TILE is what still keeps every other app out. -->
+        <service
+            android:name=".DgTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_tile"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
     </application>
 
     <!-- Permissions -->
