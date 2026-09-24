@@ -450,9 +450,23 @@
         return /^\/[a-z][a-z-]*\d/i.test(path);
     }
 
+    // The three entries the settings switch turns off when it is on. They used to be STATIC
+    // shortcuts in res/xml/shortcuts.xml, and three statics there cost exactly the slots the recent
+    // texts need: the launcher counts DECLARED shortcuts against its four-entry menu even when they
+    // are disabled at runtime, which is why "three recently read" kept coming out as two. One static
+    // entry is declared there now (Favorites & History) and this trio is pushed instead — each with
+    // the drawable it had while it was static (res/drawable-*/shortcut_N.png, the files dg-twa
+    // shipped), because a dynamic shortcut must be handed an icon and without one every entry got
+    // the app's own mark. Owner: "если опция выключена то были правильные иконки".
+    //
+    // Labels are not translated, same as the site manifest and as these were in strings.xml before.
+    var PROGRAMMED = [
+        { id: 'toc', label: 'Table of Contents', route: '/toc', icon: 'shortcut_2' },
+        { id: 'memo', label: 'Memo', route: '/memo', icon: 'shortcut_3' },
+        { id: 'dictionary', label: 'Dictionary', route: '/dict', icon: 'shortcut_1' }
+    ];
+
     function collectRecent() {
-        // An empty list is still pushed, and that is what removes the ones already in the launcher.
-        if (localStorage.getItem(SHORTCUTS_FLAG) === 'off') return [];
         var items = [];
         var seen = {};
         function push(id, label, route, rank) {
@@ -485,6 +499,17 @@
         return items.slice(0, SHORTCUTS_MAX);
     }
 
+    // Whichever set the settings switch asks for — one function, so the menu can never show a
+    // mixture and there is one place to read what the switch actually does.
+    function collectShortcuts() {
+        if (localStorage.getItem(SHORTCUTS_FLAG) === 'off') {
+            return PROGRAMMED.map(function (p, i) {
+                return { id: 'dg-programmed-' + p.id, label: p.label, route: p.route, icon: p.icon, rank: i };
+            });
+        }
+        return collectRecent();
+    }
+
     function pushDynamicShortcuts() {
         var plugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.DgShortcuts;
         if (!plugin || typeof plugin.set !== 'function') return; // plain browser / older build
@@ -492,15 +517,11 @@
         // Shortcuts set by an earlier build (bare commands, memo recordings) stay in the launcher
         // until setDynamicShortcuts() replaces the list, so skipping the call when there is nothing
         // new left the owner staring at "toc / bupm / история / запись1" forever.
-        var items = collectRecent();
-        // The other half of the setting (owner, 2026-09-24): with "recent texts" OFF the menu shows
-        // the four programmed shortcuts from res/xml/shortcuts.xml, and three of them have to be
-        // hidden while it is ON — the launcher's menu holds four entries, so it is four programmed
-        // OR one programmed + three recent, never a mixture with a slot left empty. Android only in
-        // effect: on iOS the four statics are Info.plist quick actions and dynamic ones never reach
-        // the screen anyway (see the comment above).
-        var programmed = localStorage.getItem(SHORTCUTS_FLAG) === 'off';
-        Promise.resolve(plugin.set({ items: items, programmed: programmed })).catch(function (e) {
+        //
+        // No "programmed" flag any more: the one static entry is always visible and never disabled,
+        // and everything else is this list — which is what gives the recent texts all three slots.
+        var items = collectShortcuts();
+        Promise.resolve(plugin.set({ items: items })).catch(function (e) {
             console.log('[dg-shortcuts] set failed:', (e && e.message) || e);
         });
     }

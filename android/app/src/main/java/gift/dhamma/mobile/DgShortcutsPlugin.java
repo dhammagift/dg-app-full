@@ -2,7 +2,6 @@ package gift.dhamma.mobile;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ShortcutManager;
 import android.os.Build;
 
 import androidx.core.content.pm.ShortcutInfoCompat;
@@ -19,7 +18,6 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -89,10 +87,7 @@ public class DgShortcutsPlugin extends Plugin {
                         .setShortLabel(clamp(label, SHORT_LABEL_MAX))
                         .setLongLabel(clamp(label, LONG_LABEL_MAX))
                         .setRank(rank)
-                        // The launcher icon rather than a per-item drawable: recent texts have no
-                        // icon of their own, and a monochrome launcher mark reads better than a
-                        // generic glyph repeated in the menu.
-                        .setIcon(IconCompat.createWithResource(context, R.mipmap.ic_launcher))
+                        .setIcon(iconFor(context, item.optString("icon", "")))
                         // Required for the shortcut to be donated to Google's on-device index
                         // (core-google-shortcuts): a short-lived shortcut is launcher-only.
                         .setLongLived(true)
@@ -105,14 +100,12 @@ public class DgShortcutsPlugin extends Plugin {
 
         try {
             ShortcutManagerCompat.setDynamicShortcuts(context, shortcuts);
-            // The other half of the setting: the four programmed shortcuts live in
-            // res/xml/shortcuts.xml, and when the reader wants "recently read" instead, the three
-            // beyond Favourites & History are hidden rather than deleted — a static shortcut can be
-            // disabled and enabled again at runtime, and that is the only way to keep them
-            // declared (so they exist in the launcher the moment the app is installed, before it
-            // has ever run) while showing one set or the other. The launcher's menu holds four
-            // entries, so it is four programmed OR one programmed + three recent, never a mixture.
-            setProgrammedVisible(context, call.getBoolean("programmed", false));
+            // No enable/disable of static shortcuts here any more. The plugin used to hide the three
+            // programmed entries while "recently read" were on — and that is the shape that showed
+            // two texts out of three: the launcher counts what res/xml/shortcuts.xml DECLARES
+            // against its four-entry menu even when a declared shortcut is disabled. One static
+            // entry is declared there now (Favorites & History) and the rest of the menu is this
+            // list, whichever set the page decided on.
             JSObject result = new JSObject();
             result.put("count", shortcuts.size());
             call.resolve(result);
@@ -121,25 +114,25 @@ public class DgShortcutsPlugin extends Plugin {
         }
     }
 
-    // The programmed shortcuts that step aside when "recently read" takes their slots. Favourites &
-    // History is not here: it is the one that stays in both sets.
-    private static final List<String> PROGRAMMED_IDS =
-            Arrays.asList("toc", "memo", "dictionary");
-
-    // ShortcutManager itself, not the Compat class: enableShortcuts/disableShortcuts exist there
-    // since API 25 and take ids, which is exactly what a static shortcut is addressed by. Fails
-    // silently on older releases and on any error — a shortcut the launcher refused must never
-    // turn into a failed search.
-    private void setProgrammedVisible(Context context, boolean visible) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N_MR1) return;
-        try {
-            ShortcutManager manager = context.getSystemService(ShortcutManager.class);
-            if (manager == null) return;
-            if (visible) manager.enableShortcuts(PROGRAMMED_IDS);
-            else manager.disableShortcuts(PROGRAMMED_IDS);
-        } catch (Exception e) {
-            // Nothing to report: the menu keeps whatever it had.
+    /**
+     * The icon a page asked for, by drawable name — or the app's own mark when it asked for none.
+     *
+     * A dynamic shortcut must be given a drawable, so every entry used to get R.mipmap.ic_launcher:
+     * the three programmed entries lost the icons they had while they were declared in
+     * res/xml/shortcuts.xml (drawable/shortcut_1, _2, _3), and the owner's report was exactly that
+     * — they showed the same mark as the recent texts, and asked for the right ones back "если
+     * опция выключена ... псевдо статические иконки". The name is resolved at runtime rather than
+     * switched on, so the page stays the one place that decides which entry gets which artwork.
+     *
+     * An unknown or missing name falls back to the launcher mark instead of failing the item:
+     * shortcuts are a convenience, and one bad icon must not cost a reader the entry.
+     */
+    private static IconCompat iconFor(Context context, String name) {
+        if (name != null && !name.isEmpty()) {
+            int res = context.getResources().getIdentifier(name, "drawable", context.getPackageName());
+            if (res != 0) return IconCompat.createWithResource(context, res);
         }
+        return IconCompat.createWithResource(context, R.mipmap.ic_launcher);
     }
 
     private static String clamp(String text, int max) {

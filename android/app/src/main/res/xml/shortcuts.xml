@@ -4,19 +4,20 @@
      Icons come from dg-twa (owner: "шорткаты и иконки неактуальные возьми из dg-twa там последняя
      версия") — drawable-*/shortcut_N.png, mirrored here.
 
-     FOUR static shortcuts, and a setting decides which set the reader sees (owner, 2026-09-24:
-     "должно быть либо четыре запрограммированных, либо один запрограмменный и три истории").
-     The launcher's long-press menu shows four entries in total, so:
+     ONE static shortcut, deliberately. The launcher's long-press menu holds four entries and it
+     counts what is DECLARED HERE against that budget even when a declared shortcut is disabled at
+     runtime — which is what cost the third "recently read" slot (owner: "должны быть 3 пункта под
+     историю... почему-то всё ещё два"). The dictionary app was built the other way round first and
+     showed exactly the same two out of three, so both apps now keep one declared entry and push
+     everything else:
 
-       "Recent texts in app shortcuts" OFF → all four of these (the programmed set);
-       ON  → Favourites & History (static) + three "recently read" (dynamic, native-bridge.js).
-
-     Exactly one set at a time, never a mixture that leaves a slot empty: when the setting is on,
-     DgShortcutsPlugin.set({programmed:false}) DISABLES toc/memo/dictionary through
-     ShortcutManager.disableShortcuts() — a static shortcut can be hidden and shown again at
-     runtime, and that is the only way to take it out of the menu without deleting it from the
-     manifest. They stay static on purpose: a shortcut declared here exists in the launcher the
-     moment the app is installed, before it has ever run, which a dynamic one cannot do.
+       "Recent texts in app shortcuts" OFF -> three programmed (Contents, Memo, Dictionary) as
+                                              dynamic shortcuts, native-bridge.js, each with the
+                                              drawable it had while it was static;
+       ON (default)                       -> up to three "recently read";
+       either way                         -> plus this one, which is the errand a reader returns to
+                                              and the only entry that exists before the app has ever
+                                              run (a dynamic shortcut cannot).
 
      It has to be STATIC — the first attempt kept Contents/Favorites as dynamic shortcuts with
      rank 0/1, on the assumption that Android lists dynamic ones above static ones. On the owner's
@@ -25,9 +26,9 @@
 
      Each shortcut launches MainActivity with a "route" extra; MainActivity turns it into
      https://localhost/?_nativeRoute=..., and the page rewrites the visible URL before its own
-     bootstrap reads it. Two of the four are routed to the real browser by native-bridge.js
-     (see EXTERNAL_ROUTES there): /dict is a server-rendered page of dict.dhamma.gift, /memo is
-     deliberately not bundled. -->
+     bootstrap reads it. Two of the three programmed routes are routed to the real browser by
+     native-bridge.js (see EXTERNAL_ROUTES there): /dict is a server-rendered page of
+     dict.dhamma.gift, /memo is deliberately not bundled. -->
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
     <shortcut
         android:shortcutId="favorites_history"
@@ -42,54 +43,4 @@
             <extra android:name="route" android:value="/4as" />
         </intent>
     </shortcut>
-    <shortcut
-        android:shortcutId="toc"
-        android:enabled="true"
-        android:icon="@drawable/shortcut_2"
-        android:shortcutShortLabel="@string/shortcut_toc_short"
-        android:shortcutLongLabel="@string/shortcut_toc_long">
-        <intent
-            android:action="android.intent.action.MAIN"
-            android:targetPackage="gift.dhamma.mobile"
-            android:targetClass="gift.dhamma.mobile.MainActivity">
-            <extra android:name="route" android:value="/toc" />
-        </intent>
-    </shortcut>
-    <shortcut
-        android:shortcutId="memo"
-        android:enabled="true"
-        android:icon="@drawable/shortcut_3"
-        android:shortcutShortLabel="@string/shortcut_memo_short"
-        android:shortcutLongLabel="@string/shortcut_memo_long">
-        <intent
-            android:action="android.intent.action.MAIN"
-            android:targetPackage="gift.dhamma.mobile"
-            android:targetClass="gift.dhamma.mobile.MainActivity">
-            <extra android:name="route" android:value="/memo" />
-        </intent>
-    </shortcut>
-    <shortcut
-        android:shortcutId="dictionary"
-        android:enabled="true"
-        android:icon="@drawable/shortcut_1"
-        android:shortcutShortLabel="@string/shortcut_dict_short"
-        android:shortcutLongLabel="@string/shortcut_dict_long">
-        <intent
-            android:action="android.intent.action.MAIN"
-            android:targetPackage="gift.dhamma.mobile"
-            android:targetClass="gift.dhamma.mobile.MainActivity">
-            <extra android:name="route" android:value="/dict" />
-        </intent>
-    </shortcut>
-    <!-- No <capability> here, and that is a decision, not an omission.
-         App Actions were declared in this file and worked for nobody: Google discontinued
-         Assistant on 4 September 2026, Gemini does not read shortcuts.xml capabilities, and no
-         migration was ever documented. They were left in anyway, on the grounds that dead XML
-         costs nothing — until Play refused the upload outright:
-             "APK contains an actions resource, but Actions on Google terms of service not yet
-              accepted"
-         A capability compiles into an actions resource, and a package carrying one cannot be
-         uploaded until a separate Actions on Google agreement is accepted for the account. So the
-         declarations cost exactly one thing: the ability to ship. Removed (owner, 2026-09-20).
-         The git history has them if Gemini is ever wired to the existing built-in intents. -->
 </shortcuts>
