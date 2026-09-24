@@ -1,8 +1,12 @@
 package gift.dhamma.mobile;
 
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
+
+import androidx.core.view.WindowInsetsControllerCompat;
+
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
@@ -37,6 +41,35 @@ public class MainActivity extends BridgeActivity {
         if (getBridge() != null && getBridge().getWebView() != null) {
             getBridge().getWebView().getSettings().setSupportMultipleWindows(false);
         }
+
+        // After the bridge, deliberately: the Capacitor StatusBar plugin applies its style inside
+        // super.onCreate (its load()), and it would undo the theme.
+        applyStatusBarIcons();
+    }
+
+    /**
+     * The strip behind the status bar is the site's own dark band in both themes (issue #15), and
+     * the theme says so — {@code windowLightStatusBar=false}, light icons. The Capacitor StatusBar
+     * plugin overrides that anyway: with no "style" in capacitor.config.json it applies DEFAULT,
+     * which takes the icon colour from the SYSTEM night mode (see its own getStyleForTheme()), so a
+     * phone in light mode got dark icons on our dark band and the clock vanished (owner report,
+     * 2026-09-24: "чёрное на тёмном, не видел часов" — while every other app was fine, because
+     * every other app's strip follows the same theme it derives the icons from).
+     *
+     * Re-asserted on configuration changes too: that is exactly the moment the plugin re-applies
+     * DEFAULT, and the manifest's configChanges list means this activity is not recreated for a
+     * uiMode change, so onCreate alone would not run again.
+     */
+    private void applyStatusBarIcons() {
+        WindowInsetsControllerCompat controller =
+                new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView());
+        controller.setAppearanceLightStatusBars(false);
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        applyStatusBarIcons();
     }
 
     @Override

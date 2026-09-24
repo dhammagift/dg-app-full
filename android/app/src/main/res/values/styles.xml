@@ -39,5 +39,9 @@
         <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
         <item name="android:background">@color/ic_launcher_background</item>
+        <!-- The splash window is #2E3E50 — dark — so its status bar needs the same light icons as
+             the real theme; without this the launch screen inherited the light-mode default (dark
+             icons) and the clock was invisible from the first frame. -->
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 </resources>
