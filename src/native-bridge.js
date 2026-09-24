@@ -1119,7 +1119,47 @@
         });
     }
 
-    function onReady() { fillVersionRow(); wireShortcutsToggle(); }
+    // ---------------------------------------------------------------------------------------
+    // Rate Us row (settings → "Rate Us", injected by build-assets.js)
+    // ---------------------------------------------------------------------------------------
+
+    // Owner (2026-09-24): the app had no way to ask for a review, and a reader no way to find the
+    // listing. One row, one tap, the store page.
+    //
+    // Android: the Play listing is gift.dhamma.twa — the package the store already knows, which
+    // this Capacitor app replaced. The test/sideload build installs as gift.dhamma.mobile and has
+    // no listing of its own, so the id is a constant here and NOT App.getInfo().id. The https URL
+    // rather than market://: play.google.com is an App Link, so Android opens the Play app when it
+    // is installed and a browser when it is not, while a market:// intent fails outright on a
+    // device without Play.
+    // iOS: the numeric App Store id, which exists only once the app is on the store — hence the
+    // constant. Until it is filled in, the row opens the App Store search for the app's name
+    // rather than a dead id (the iOS build is not live yet).
+    var DG_PLAY_PACKAGE = 'gift.dhamma.twa';
+    var DG_IOS_APP_ID = '';
+
+    function rateUsUrl() {
+        var plat = (window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform()) || 'web';
+        if (plat === 'ios') {
+            return DG_IOS_APP_ID
+                ? 'https://apps.apple.com/app/id' + DG_IOS_APP_ID + '?action=write-review'
+                : 'https://apps.apple.com/search?term=' + encodeURIComponent('Dhamma.gift');
+        }
+        return 'https://play.google.com/store/apps/details?id=' + DG_PLAY_PACKAGE;
+    }
+
+    function wireRateUsRow() {
+        var row = document.getElementById('dgRateUsRow');
+        if (!row) return;
+        var ru = isRu();
+        document.getElementById('dgRateUsTitle').textContent = ru ? 'Оценить приложение' : 'Rate Us';
+        document.getElementById('dgRateUsDesc').textContent = ru
+            ? 'Открыть страницу в магазине и оставить отзыв.'
+            : 'Open the store page and leave a review.';
+        row.addEventListener('click', function () { openExternal(rateUsUrl()); });
+    }
+
+    function onReady() { fillVersionRow(); wireShortcutsToggle(); wireRateUsRow(); }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onReady);
     else onReady();
 })();
