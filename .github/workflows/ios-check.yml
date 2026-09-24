@@ -144,7 +144,7 @@ jobs:
       # makes a failure readable through the API without downloading the artifact.
       - name: Print the compiler errors
         if: failure()
-        run: grep -E "error:" ios-build.log | sort -u || true
+        run: grep -E "error:|note:" ios-build.log | sort -u || true
 
       # Job log downloads need admin rights on this repo, so an artifact is the only way to read a
       # failed xcodebuild's output.

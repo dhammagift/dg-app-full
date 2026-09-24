@@ -27,8 +27,11 @@ import Foundation
 // Assets.xcassets), not a system glyph — these tiles appear in Siri suggestions and the Shortcuts
 // app next to the app's icon, and "book" could be any reader.
 struct DgAppShortcuts: AppShortcutsProvider {
+    // static, not an instance property: AppShortcutsProvider requires
+    // `static var appShortcuts: [AppShortcut]`, and without the keyword Siri sees no shortcuts at
+    // all — the type simply fails to conform.
     @AppShortcutsBuilder
-    var appShortcuts: [AppShortcut] {
+    static var appShortcuts: [AppShortcut] {
         AppShortcut(
             intent: DgOpenAppIntent(),
             phrases: [
