@@ -56,30 +56,39 @@ site's own classes so they do not look bolted on:
 
 ## Launcher shortcuts
 
-Four static shortcuts ship in `res/xml/shortcuts.xml`, in the TWA's own order and with its icons, so
-nothing disappears from a reader's launcher during the migration. When the switch above is on,
-`DgShortcutsPlugin.set({programmed:false})` disables the three beyond Favorites & History and three
-dynamic "recent word" entries take their slots — the launcher's menu holds four, so it is four
-programmed OR one plus three recent, never a mixture.
+**Exactly one** static shortcut ships in `res/xml/shortcuts.xml`: DG Favorites & History.
 
-The words the plugin gets are the site's own favourites (`fav-list`) first and then its lookup
-history (`history-list`), deduplicated on the route and capped at three — the reader app's own order
-and reasoning ("favourites and history are what a reader returns to"): `dg-apps/src/native-bridge.js`.
-Each route comes from the site's `dictUrl()`, so a shortcut opens exactly the address the history
-entry does.
+That is the whole trick, and it is the part the migration got wrong twice. The launcher's long-press
+menu holds four entries, and it counts what the manifest DECLARES against that budget **even when a
+declared shortcut is disabled at runtime**. The reader app learned this first (`dg-apps` adcd32d:
+"four static shortcuts left room for two 'recently read' texts, not three"), then went back to four
+declared statics while hiding three with `disableShortcuts()` (3b08f69) — and the dictionary app
+copied that shape, which is why the owner counted two history entries out of three while the row
+itself said "Сейчас: 3".
+
+So everything else is dynamic, and `DgShortcutsPlugin` pushes whichever set the switch asks for:
+
+| switch | dynamic entries | plus the static |
+|---|---|---|
+| on (default) | up to three recent words from `history-list` | DG Favorites & History |
+| off | Table of Contents, Dharmamitra.org, Aksharamukha.com | DG Favorites & History |
+
+Four entries either way, and the plugin no longer disables anything — there is nothing to disable.
+
+History **only**: the dictionary has no favourites in this set (owner: "не нужно брать избранное. в
+словаре только история слов"). Each route comes from the site's `dictUrl()`, so a shortcut opens
+exactly the address the history entry does.
 
 Pushes happen on page load, once four seconds later (the reader app's own belt: the first visit of a
 session has nothing in history yet), on every lookup — the bridge wraps the site's `addToHistory()` —
 and when the app is backgrounded (`appStateChange` *and* `visibilitychange`, since either can be the
 only one that fires on a given device). The switch's row states how many entries the app is handing
-over, and adds what Android accepted when the two disagree, so "the history has two words" and "the
-launcher dropped one" are not the same screenshot.
+over, and adds what Android accepted when the two disagree.
 
-Both labels of the first two shortcuts carry the full wording — "DG Favorites & History" and
-"Table of Contents" — because the launcher's long-press menu renders the SHORT label, and an
-abbreviated one ("Favorites", "Contents") is all a reader would ever see. `DG ` is on Favorites &
-History only: the reader app declares a shortcut with exactly that name, both can sit on one phone
-and both open dhamma.gift/4as.
+Favorites & History carries the full wording in BOTH labels — "DG Favorites & History" — because the
+launcher renders the SHORT label: an abbreviated one is all a reader ever sees. `DG ` is there because
+the reader app declares a shortcut with exactly that name, both apps can sit on one phone and both
+open dhamma.gift/4as.
 
 ## The system bars
 

@@ -80,7 +80,6 @@
   }
 
   function readHistory() { return readJson('history-list'); }
-  function readFavorites() { return readJson('fav-list'); }
 
   // The site's own URL builder, so a shortcut opens the same address the history entry does
   // (including the /ru/ prefix and ?lang=ru). Only if it is missing does this fall back to the
@@ -92,27 +91,40 @@
     return '/' + encodeURIComponent(word);
   }
 
-  // The words that make it into the launcher, in order, capped at SHORTCUTS_MAX. One function so
-  // the menu row's own note and the list handed to the plugin can never disagree.
+  // The three entries the switch turns off when it is on. They used to be static shortcuts in
+  // res/xml/shortcuts.xml, and three statics there cost exactly the slots the history needs: the
+  // launcher counts DECLARED shortcuts against its four-entry menu even when they are disabled at
+  // runtime, which is why the reader app shows three "recently read" entries and this app showed
+  // two. One static (Favorites & History) plus these three as dynamic is four either way.
+  var PROGRAMMED = [
+    { id: 'toc', label: 'Table of Contents', route: 'https://dhamma.gift/toc' },
+    { id: 'dharmamitra', label: 'Dharmamitra.org', route: 'https://dharmamitra.org/' },
+    { id: 'aksharamukha', label: 'Aksharamukha.com', route: 'https://www.aksharamukha.com/converter' }
+  ];
+
+  // The words that make it into the launcher. One function so the menu row's own note and the list
+  // handed to the plugin can never disagree.
   //
-  // Favourites first, then the lookup history — the reader app's own order and its own reasoning
-  // (dg-apps/src/native-bridge.js: "favourites and history are what a reader returns to"), which is
-  // also what this app's first shortcut is called. The two lists are deduplicated on the ROUTE, so
-  // a word that is both favourited and recently looked up takes one slot, not two.
+  // History only — the owner was explicit (2026-09-24: "не нужно брать избранное. в словаре только
+  // история слов"): favourites are a different errand and have their own entry in the menu above.
+  // The reader app mixes the two because its history is a list of texts it can rank; the dictionary
+  // has one list, and it is this one.
   function collectShortcuts() {
+    if (!shortcutsOn()) {
+      return PROGRAMMED.map(function (p, i) {
+        return { id: 'dg-dict-programmed-' + p.id, label: p.label, route: p.route, rank: i };
+      });
+    }
     var items = [];
-    if (!shortcutsOn()) return items;
     var seen = {};
-    function add(word) {
+    readHistory().forEach(function (word) {
       if (items.length >= SHORTCUTS_MAX) return;
       if (typeof word !== 'string' || !word) return;
       var route = routeFor(word);
       if (!route || seen[route]) return;
       seen[route] = 1;
       items.push({ id: 'dg-dict-' + items.length, label: word, route: route, rank: 10 + items.length });
-    }
-    readFavorites().forEach(add);
-    readHistory().forEach(add);
+    });
     return items;
   }
 
@@ -122,22 +134,26 @@
   // the outside, and both look like the same bug from a screenshot. `accepted` is what the plugin
   // reports back after Android has taken the list — shown only when it disagrees with what was sent.
   function shortcutsNote(sent, accepted) {
+    var base = isRu()
+      ? 'До ' + SHORTCUTS_MAX + ' слов в меню долгого нажатия на значок приложения.'
+      : 'Up to ' + SHORTCUTS_MAX + ' words in the long-press menu of the app icon.';
+    // With the switch off the menu holds the programmed set, not words, so the count means nothing
+    // there — the sentence would be describing a list that is not on screen.
+    if (!shortcutsOn()) return base;
     var tail = (accepted == null || accepted === sent) ? '' : (isRu() ? ' (ярлыков ' + accepted + ')' : ' (shortcuts ' + accepted + ')');
-    return isRu()
-      ? 'До ' + SHORTCUTS_MAX + ' слов в меню долгого нажатия на значок приложения. Сейчас: ' + sent + tail + '.'
-      : 'Up to ' + SHORTCUTS_MAX + ' words in the long-press menu of the app icon. Right now: ' + sent + tail + '.';
+    return base + (isRu() ? ' Сейчас: ' : ' Right now: ') + sent + tail + '.';
   }
 
   function pushShortcuts() {
-    var on = shortcutsOn();
     var items = collectShortcuts();
     var note = document.getElementById('dg-shortcuts-note');
     if (note) note.textContent = shortcutsNote(items.length);
     var plugin = Cap.Plugins && Cap.Plugins.DgShortcuts;
     if (!plugin || typeof plugin.set !== 'function') return; // plugin missing: nothing to do
     // Pushed even when empty ON PURPOSE: that is what clears the entries an earlier run left in
-    // the launcher (dg-app-full learned this the hard way).
-    Promise.resolve(plugin.set({ items: items, programmed: !on })).then(function (result) {
+    // the launcher (dg-app-full learned this the hard way). No "programmed" flag any more: the one
+    // static shortcut is always visible and never disabled, and everything else is this list.
+    Promise.resolve(plugin.set({ items: items })).then(function (result) {
       // DgShortcutsPlugin resolves with the number of shortcuts it actually built. A smaller number
       // than we sent means Android refused some of them, and that is worth saying out loud rather
       // than leaving the reader to count entries in the launcher.

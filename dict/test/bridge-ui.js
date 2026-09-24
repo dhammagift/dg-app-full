@@ -24,9 +24,6 @@ const BASE = process.env.DG_DICT_URL || 'http://test.dhamma.gift/dict/';
 const SHOTS = process.env.DG_SHOTS || '/var/www/html/dict-app';
 const BRIDGE = fs.readFileSync(path.join(__dirname, '..', 'src', 'dict-bridge.js'), 'utf8');
 const HISTORY = ['kacchapa', 'dukkha', 'satipaṭṭhāna', 'anattā'];
-// The dict site keeps favourites in their own list (js/ui.js: 'fav-list'), and the reader app's
-// own collection puts favourites ahead of history — the parity this test pins.
-const FAVORITES = ['anattā'];
 
 const CASES = [
     { lang: 'en', url: BASE, theme: 'light', device: 'mobile', width: 390, height: 844, dsf: 3 },
@@ -36,11 +33,10 @@ const CASES = [
     { lang: 'ru', url: BASE + 'ru/', theme: 'light', device: 'desktop', width: 1280, height: 900, dsf: 1 },
 ];
 
-function initScript({ version, history, favorites, theme }) {
+function initScript({ version, history, theme }) {
     // Runs before the page's own scripts, like capacitor.config.json's native runtime would.
     try {
         localStorage.setItem('history-list', JSON.stringify(history));
-        localStorage.setItem('fav-list', JSON.stringify(favorites));
         localStorage.setItem('theme', theme);
     } catch (e) { /* first paint of a fresh origin: storage may be unavailable */ }
     window.__DG_APP_VERSION__ = version;
@@ -85,7 +81,7 @@ function check(name, actual, expected) {
             isMobile: c.device === 'mobile',
             hasTouch: c.device === 'mobile',
         });
-        await context.addInitScript(initScript, { version: '2.0.0 (3)', history: HISTORY, favorites: FAVORITES, theme: c.theme });
+        await context.addInitScript(initScript, { version: '2.0.0 (3)', history: HISTORY, theme: c.theme });
         const page = await context.newPage();
         await page.goto(c.url, { waitUntil: 'domcontentloaded' });
         await page.waitForTimeout(600);
@@ -151,18 +147,20 @@ function check(name, actual, expected) {
         const version = await page.evaluate(() => document.querySelector('#dg-version-row .lb em').textContent.trim());
         check(`${c.lang}/${c.theme}/${c.device}: version value`, version, '2.0.0 (3)');
 
-        // The plugin must have been handed the history, routed by the site's own URL builder, with
-        // the programmed set off. dictUrl() builds from the deployment's app base — "/" on
-        // dict.dhamma.gift, "/dict/" on the test host — and carries the language as ?lang=ru rather
-        // than a /ru/ path segment, so the expectation mirrors that instead of the page URL.
+        // The plugin must have been handed the history — and ONLY the history: the dictionary has no
+        // favourites in its shortcut set (owner: "не нужно брать избранное. в словаре только история
+        // слов"). dictUrl() builds from the deployment's app base — "/" on dict.dhamma.gift, "/dict/"
+        // on the test host — and carries the language as ?lang=ru rather than a /ru/ path segment, so
+        // the expectation mirrors that instead of the page URL.
         const base = new URL(c.url).pathname.replace(/ru\/$/, '');
         const suffix = c.lang === 'ru' ? '?lang=ru' : '';
         const push = await page.evaluate(() => (window.__dgCalls.shortcuts[0] || null));
         check(`${c.lang}/${c.theme}/${c.device}: shortcut labels`, push && push.items.map((i) => i.label),
-            ['anattā', 'kacchapa', 'dukkha']);
+            ['kacchapa', 'dukkha', 'satipaṭṭhāna']);
         check(`${c.lang}/${c.theme}/${c.device}: shortcut routes`, push && push.items.map((i) => i.route),
-            ['anatt%C4%81', 'kacchapa', 'dukkha'].map((w) => base + w + suffix));
-        check(`${c.lang}/${c.theme}/${c.device}: programmed set hidden while history is on`, push && push.programmed, false);
+            ['kacchapa', 'dukkha', 'satipa%E1%B9%AD%E1%B9%ADh%C4%81na'].map((w) => base + w + suffix));
+        check(`${c.lang}/${c.theme}/${c.device}: nothing is disabled on the native side`,
+            push && 'programmed' in push, false);
 
         // Open the panel for the screenshot, scrolled to the end — the new rows are the last thing
         // in a panel taller than the viewport, so a screenshot without this shows none of them.
@@ -198,20 +196,28 @@ function check(name, actual, expected) {
                 last: window.__dgCalls.shortcuts[window.__dgCalls.shortcuts.length - 1],
             }));
             check('a lookup pushes the launcher menu immediately', after.count > before, true);
-            check('the new word takes the next slot after the favourites',
-                after.last && after.last.items.map((i) => i.label), ['anattā', 'satimā', 'kacchapa']);
+            check('the new word leads the three slots',
+                after.last && after.last.items.map((i) => i.label), ['satimā', 'kacchapa', 'dukkha']);
         }
 
-        // The switch: off -> programmed set back, history cleared from the launcher.
+        // The switch: off -> the three programmed entries take the dynamic slots instead, and the
+        // row stops talking about a count of words.
         if (c.device === 'mobile' && c.theme === 'light') {
             await page.uncheck('#dg-shortcuts-toggle');
             const off = await page.evaluate(() => ({
                 flag: localStorage.getItem('dgDynamicShortcuts'),
                 last: window.__dgCalls.shortcuts[window.__dgCalls.shortcuts.length - 1],
+                note: document.getElementById('dg-shortcuts-note').textContent,
             }));
             check('switch off: flag stored', off.flag, 'off');
-            check('switch off: history shortcuts cleared', off.last && off.last.items, []);
-            check('switch off: programmed set restored', off.last && off.last.programmed, true);
+            check('switch off: the programmed three take the slots',
+                off.last && off.last.items.map((i) => i.label),
+                ['Table of Contents', 'Dharmamitra.org', 'Aksharamukha.com']);
+            check('switch off: their routes are the ones the statics used',
+                off.last && off.last.items.map((i) => i.route),
+                ['https://dhamma.gift/toc', 'https://dharmamitra.org/', 'https://www.aksharamukha.com/converter']);
+            check('switch off: the note stops counting words',
+                /Сейчас|Right now/.test(off.note), false);
             await page.locator('#p-menu').screenshot({ path: path.join(SHOTS, 'dict-bridge-switch-off.png') });
         }
 

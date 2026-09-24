@@ -2,7 +2,6 @@ package gift.dhamma.pali;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ShortcutManager;
 import android.os.Build;
 
 import androidx.core.content.pm.ShortcutInfoCompat;
@@ -19,7 +18,6 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -102,40 +100,17 @@ public class DgShortcutsPlugin extends Plugin {
 
         try {
             ShortcutManagerCompat.setDynamicShortcuts(context, shortcuts);
-            // The other half of the setting: the four programmed shortcuts live in
-            // res/xml/shortcuts.xml. The launcher's long-press menu holds four entries, so when
-            // the reader wants recent words instead, the three beyond Favorites & History are
-            // hidden rather than deleted — a static shortcut can be disabled and enabled again at
-            // runtime, and that is the only way to keep them declared (so they exist in the
-            // launcher the moment the app is installed, before it has ever run) while showing one
-            // set or the other. Four programmed OR one programmed + three recent, never a mixture.
-            setProgrammedVisible(context, call.getBoolean("programmed", false));
+            // No enable/disable of static shortcuts here any more. The plugin used to hide the three
+            // programmed ones while "recent words" were on, exactly as the reader app does — and
+            // that is the shape that showed the owner two words out of three: the launcher counts
+            // the shortcuts DECLARED in res/xml/shortcuts.xml against its four-entry menu even when
+            // they are disabled. One static entry is declared there now (Favorites & History) and
+            // the rest of the menu is this list, whichever set the page decided on.
             JSObject result = new JSObject();
             result.put("count", shortcuts.size());
             call.resolve(result);
         } catch (Exception e) {
             call.reject("DgShortcuts.set failed: " + e.getMessage());
-        }
-    }
-
-    // The programmed shortcuts that step aside when "recent words" take their slots. Favorites &
-    // History is not here: it is the one that stays in both sets.
-    private static final List<String> PROGRAMMED_IDS =
-            Arrays.asList("toc", "dharmamitra", "aksharamukha");
-
-    // ShortcutManager itself, not the Compat class: enableShortcuts/disableShortcuts exist there
-    // since API 25 and take ids, which is exactly what a static shortcut is addressed by. Fails
-    // silently on older releases and on any error — a shortcut the launcher refused must never
-    // turn into a failed search.
-    private void setProgrammedVisible(Context context, boolean visible) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N_MR1) return;
-        try {
-            ShortcutManager manager = context.getSystemService(ShortcutManager.class);
-            if (manager == null) return;
-            if (visible) manager.enableShortcuts(PROGRAMMED_IDS);
-            else manager.disableShortcuts(PROGRAMMED_IDS);
-        } catch (Exception e) {
-            // Nothing to report: the menu keeps whatever it had.
         }
     }
 
