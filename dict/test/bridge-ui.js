@@ -108,13 +108,29 @@ function check(name, actual, expected) {
                 versionTitle: q('#dg-version-row .lb'),
                 rateTitle: q('#dg-rate-row .lb'),
                 inPanel: !!document.querySelector('#p-menu .pb #dg-app-grp'),
-                isLastInPanel: document.querySelector('#p-menu .pb').lastElementChild.id === 'dg-rate-row',
+                // The three rows close the panel, in the owner's order: shortcuts, Rate Us, and the
+                // version last ("версия же обычно последний пункт").
+                lastThree: Array.from(document.querySelectorAll('#p-menu .pb > *')).slice(-3).map((e) => e.id),
+                starClass: document.getElementById('dg-rate-star').getAttribute('class'),
+                starColor: getComputedStyle(document.getElementById('dg-rate-star')).color,
+                starMask: getComputedStyle(document.getElementById('dg-rate-star')).maskImage,
             };
         });
 
         check(`${c.lang}/${c.theme}/${c.device}: panel group`, rows.group, t.group);
         check(`${c.lang}/${c.theme}/${c.device}: rows are inside the burger panel`, rows.inPanel, true);
-        check(`${c.lang}/${c.theme}/${c.device}: rows sit at the end of the panel`, rows.isLastInPanel, true);
+        check(`${c.lang}/${c.theme}/${c.device}: last three rows, in order`,
+            rows.lastThree, ['dg-shortcuts-row', 'dg-rate-row', 'dg-version-row']);
+        // The owner asked for a filled yellow star so the row stands out. The site's own star.svg
+        // is the OUTLINE glyph, so the filled one is inlined as a mask — hence the check for the
+        // solid path itself, not merely a mask being present.
+        check(`${c.lang}/${c.theme}/${c.device}: Rate Us carries the site's mask-icon plumbing`,
+            rows.starClass, 'gi');
+        check(`${c.lang}/${c.theme}/${c.device}: the star is yellow`,
+            rows.starColor, 'rgb(245, 197, 24)');
+        check(`${c.lang}/${c.theme}/${c.device}: the star is a filled glyph, not the outline one`,
+            /data:image\/svg\+xml/.test(rows.starMask) && rows.starMask.includes('M316.9') && !rows.starMask.includes('zm0%2079'),
+            true);
         check(`${c.lang}/${c.theme}/${c.device}: shortcuts title`, rows.shortcuts, t.shortcuts);
         check(`${c.lang}/${c.theme}/${c.device}: version title`, rows.versionTitle, t.version);
         check(`${c.lang}/${c.theme}/${c.device}: rate title`, rows.rateTitle, t.rate);

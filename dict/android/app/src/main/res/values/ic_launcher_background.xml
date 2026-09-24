@@ -6,7 +6,8 @@
     <!-- The strip behind the status bar / navigation bar. Android 15 enforces edge-to-edge and
          IGNORES android:statusBarColor (targetSdk is 36), so this is mostly the window background
          the page paints over — but it is also the first frame the splash leaves behind. The
-         dictionary's own dark navbar, #00131B, taken from ddg-ui/public/static/manifest.json's
-         theme_color. -->
-    <color name="dg_navbar">#00131B</color>
+         dictionary's own dark page, #111111: the same value the launcher plate above and the WebView
+         background use, so a strip that does show is the page's own colour rather than a band of a
+         slightly different black (the manifest's theme_color, #00131B, was that band). -->
+    <color name="dg_navbar">#111111</color>
 </resources>

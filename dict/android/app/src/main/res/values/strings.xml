@@ -8,13 +8,19 @@
          shade, so it repeats it rather than inventing a second one. -->
     <string name="launcher_name">Dict.Dhamma.Gift</string>
 
-    <!-- Static App Shortcut labels (res/xml/shortcuts.xml). Same wording the web manifest and the
-         Trusted Web Activity used, so a reader's launcher entry does not change name during the
-         migration. Android caps the long label at 25 characters and shows the short one when the
-         menu is tight. -->
-    <string name="shortcut_fav_short">Favorites</string>
-    <string name="shortcut_fav_long">Favorites &amp; History</string>
-    <string name="shortcut_toc_short">Contents</string>
+    <!-- Static App Shortcut labels (res/xml/shortcuts.xml).
+         Both labels of the first two carry the FULL wording on purpose (owner, 2026-09-24: "в
+         словаре ты напиши DG favorites & history и table of contents а не просто contents"). The
+         launcher's long-press menu renders the SHORT label, so an abbreviated one — "Contents",
+         "Favorites" — is all a reader ever sees of the other. Android's own 10-character guidance
+         for the short label is a display hint, not a hard cap: the system ellipsizes, which is
+         still better than a second name that never meant anything on its own.
+         "DG " on Favourites & History because the reader app declares a shortcut with exactly that
+         name — both apps can sit on one phone and both open dhamma.gift/4as, so the prefix is the
+         only thing telling them apart. -->
+    <string name="shortcut_fav_short">DG Favorites &amp; History</string>
+    <string name="shortcut_fav_long">DG Favorites &amp; History</string>
+    <string name="shortcut_toc_short">Table of Contents</string>
     <string name="shortcut_toc_long">Table of Contents</string>
     <string name="shortcut_dharmamitra_short">Dharmamitra</string>
     <string name="shortcut_dharmamitra_long">Dharmamitra.org</string>

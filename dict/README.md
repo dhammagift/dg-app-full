@@ -65,6 +65,22 @@ programmed OR one plus three recent, never a mixture.
 The history the plugin gets is the site's own `history-list` in localStorage, routed through the
 site's `dictUrl()` so a shortcut opens exactly the address the history entry does.
 
+Both labels of the first two shortcuts carry the full wording — "DG Favorites & History" and
+"Table of Contents" — because the launcher's long-press menu renders the SHORT label, and an
+abbreviated one ("Favorites", "Contents") is all a reader would ever see. `DG ` is on Favorites &
+History only: the reader app declares a shortcut with exactly that name, both can sit on one phone
+and both open dhamma.gift/4as.
+
+## The system bars
+
+`capacitor.config.json` sets `plugins.SystemBars.style = "DARK"` — dark bars, therefore LIGHT icons,
+in both themes. Capacitor's default (`DEFAULT`) takes the icon colour from the SYSTEM night mode,
+which is the bug this answers (owner, 2026-09-24: "часы батарейка не видны. темный фон на темном"):
+on a phone in light mode the clock and battery were drawn dark on the site's dark header and were
+invisible — the same failure dg-app-full hit with the old StatusBar plugin. The strip itself is
+`@color/dg_navbar` (#111111), the dictionary's own dark page colour, so a strip that does show reads
+as part of the page rather than as a band of a slightly different black.
+
 ## Building
 
 Needs JDK 21 (Capacitor 8 / AGP 8.13) and the Android SDK.

@@ -26,6 +26,20 @@
   // so Android opens the Play app when it is installed and a browser when it is not, while a
   // market:// intent fails outright on a device without Play.
   var STORE_URL = 'https://play.google.com/store/apps/details?id=gift.dhamma.pali';
+  // The one coloured glyph in the menu, on the owner's request: the Rate Us row should read as a
+  // different kind of thing from the switches around it. A plain amber yellow, legible on both the
+  // dark (--dg-page #111111) and the light (#ffffff) page.
+  var RATE_STAR_COLOR = '#f5c518';
+  // The FILLED star. The site's own icons/star.svg is the outline glyph (it carries the inner
+  // cut-out subpath), and the owner asked for "жёлтую звёздочку с полной заливкой" — a solid one.
+  // This is Font Awesome Free 6's solid star, the same artwork as dg-node's
+  // overrides/svg/solid-star.svg, inlined as a mask here: on dict.dhamma.gift that file sits on a
+  // path this script cannot count on, and one inline path is not worth a second request.
+  // Font Awesome Free 6 — Icons: CC BY 4.0, https://fontawesome.com/license/free
+  var STAR_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>';
+  // The site's .gi class paints currentColor through whatever --u holds, so setting --u on the
+  // element reuses that plumbing instead of duplicating the mask properties.
+  var RATE_STAR_MASK = 'url("data:image/svg+xml,' + encodeURIComponent(STAR_SVG) + '")';
 
   function isRu() { return document.documentElement.lang === 'ru'; }
 
@@ -137,25 +151,31 @@
     sc.appendChild(box);
     out.push(sc);
 
-    // Filled from the value MainActivity prepends to this script (versionName + versionCode), so
-    // the row never depends on the site knowing anything about the app.
-    var ver = row('dg-version-row', t.version, window.__DG_APP_VERSION__ || '');
-    out.push(ver);
-
+    // Rate Us sits ABOVE the version, and the version closes the menu — the owner's own rule
+    // (2026-09-24): "версия же обычно последний пункт".
     var rate = row('dg-rate-row', t.rate, t.rateNote);
     var btn = document.createElement('button');
     btn.className = 'rb act';
     btn.type = 'button';
     btn.id = 'dg-rate-btn';
-    // Same shape as the site's own action buttons (a glyph, then the label) so the row does not
-    // look bolted on.
+    // A filled star, painted yellow instead of inheriting the button's grey: the owner asked for
+    // this one row to stand out from the rest of the menu (see RATE_STAR_MASK above for why the
+    // glyph is inlined rather than the site's own i-star).
     var glyph = document.createElement('i');
-    glyph.className = 'gi i-fa-arrow-up-right-from-square';
+    glyph.className = 'gi';
+    glyph.id = 'dg-rate-star';
+    glyph.style.color = RATE_STAR_COLOR;
+    glyph.style.setProperty('--u', RATE_STAR_MASK);
     btn.appendChild(glyph);
     btn.appendChild(document.createTextNode(t.rateBtn));
     btn.addEventListener('click', function () { openExternal(STORE_URL); });
     rate.appendChild(btn);
     out.push(rate);
+
+    // Filled from the value MainActivity prepends to this script (versionName + versionCode), so
+    // the row never depends on the site knowing anything about the app. Last row on purpose.
+    var ver = row('dg-version-row', t.version, window.__DG_APP_VERSION__ || '');
+    out.push(ver);
 
     return out;
   }
