@@ -75,6 +75,11 @@ So everything else is dynamic, and `DgShortcutsPlugin` pushes whichever set the 
 
 Four entries either way, and the plugin no longer disables anything — there is nothing to disable.
 
+Icons: a dynamic shortcut must be handed a drawable, so the page names one per entry — `shortcut_0`,
+`_2`, `_3` for the three programmed entries, which is the artwork they had while they were static,
+resolved by `DgShortcutsPlugin.iconFor()` at runtime. A recent word names none and gets the app's
+own mark.
+
 History **only**: the dictionary has no favourites in this set (owner: "не нужно брать избранное. в
 словаре только история слов"). Each route comes from the site's `dictUrl()`, so a shortcut opens
 exactly the address the history entry does.
