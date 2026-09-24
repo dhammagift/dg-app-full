@@ -139,6 +139,13 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             build 2>&1 | tee ios-build.log | tail -30
 
+      # The step above pipes through tail -30, so the job log would show only the last lines of a
+      # failed compile; this prints every compiler error from the full log instead, which is what
+      # makes a failure readable through the API without downloading the artifact.
+      - name: Print the compiler errors
+        if: failure()
+        run: grep -E "error:" ios-build.log | sort -u || true
+
       # Job log downloads need admin rights on this repo, so an artifact is the only way to read a
       # failed xcodebuild's output.
       - name: Upload the xcodebuild log on failure

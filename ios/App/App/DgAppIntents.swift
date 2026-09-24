@@ -116,10 +116,10 @@ enum DgAppSection: String, AppEnum {
 // "Open Dhamma.gift": the home page, no parameter, no dialog.
 struct DgOpenAppIntent: AppIntent {
     static let title: LocalizedStringResource = "Open Dhamma.gift"
-    static let description = IntentDescription(
-        "Opens Dhamma.gift.",
-        categoryName: "Navigation"
-    )
+    // No categoryName/resultValueName: the IntentDescription overload that takes them is iOS 17+,
+    // and this app still ships to 16.4 (project.pbxproj). They only group and label the action
+    // inside the Shortcuts app, so dropping them costs presentation, not behavior.
+    static let description = IntentDescription("Opens Dhamma.gift.")
     static let openAppWhenRun = true
 
     @MainActor
@@ -135,9 +135,7 @@ struct DgOpenAppIntent: AppIntent {
 struct DgOpenSectionIntent: AppIntent {
     static let title: LocalizedStringResource = "Open Section"
     static let description = IntentDescription(
-        "Opens a section of Dhamma.gift: the reader, favorites, the table of contents, memo or the dictionary.",
-        categoryName: "Navigation",
-        resultValueName: "Section"
+        "Opens a section of Dhamma.gift: the reader, favorites, the table of contents, memo or the dictionary."
     )
     static let openAppWhenRun = true
 
@@ -160,13 +158,12 @@ struct DgOpenSectionIntent: AppIntent {
 // uses (dhammagift://search?q=…), so the offline library answers the moment it is downloaded.
 struct DgSearchIntent: AppIntent {
     static let title: LocalizedStringResource = "Search Dhamma.gift"
-    static let description = IntentDescription(
-        "Searches the offline Pāli canon library.",
-        categoryName: "Search"
-    )
+    static let description = IntentDescription("Searches the offline Pāli canon library.")
     static let openAppWhenRun = true
 
-    @Parameter(title: "Query", requestValueDialog: "What should I search for?", inputBehavior: .drop)
+    // No inputBehavior: that parameter belongs to an iOS 17+ overload of the @Parameter
+    // initializer, and leaving it out only changes how the field accepts dropped text.
+    @Parameter(title: "Query", requestValueDialog: "What should I search for?")
     var query: String
 
     static var parameterSummary: some ParameterSummary {
