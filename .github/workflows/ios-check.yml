@@ -17,7 +17,16 @@ name: iOS check only
 # THE WEB BUNDLE IS THEREFORE NOT FROM THIS COMMIT (see android-apk-only.yml's note): a change under
 # src/ will not be visible here, and the Swift/Capacitor wiring is what this run is about.
 
+# Triggered by a PUSH that touches ios/ rather than by workflow_dispatch alone: GitHub only accepts
+# a dispatch for a workflow file that exists on the default branch, and a run meant to prove a
+# native change before it is merged is needed on the branch that has the change (dispatching this
+# file from a branch returned 404). A push-gated trigger is evaluated from the pushed commit, so it
+# works on any branch; workflow_dispatch stays for the day this file is on main.
 on:
+  push:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-check.yml'
   workflow_dispatch:
     inputs:
       www_run:
