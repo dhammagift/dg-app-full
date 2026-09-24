@@ -113,7 +113,9 @@ function check(name, actual, expected) {
                 lastThree: Array.from(document.querySelectorAll('#p-menu .pb > *')).slice(-3).map((e) => e.id),
                 starClass: document.getElementById('dg-rate-star').getAttribute('class'),
                 starColor: getComputedStyle(document.getElementById('dg-rate-star')).color,
+                starFontSize: getComputedStyle(document.getElementById('dg-rate-star')).fontSize,
                 starMask: getComputedStyle(document.getElementById('dg-rate-star')).maskImage,
+                note: document.getElementById('dg-shortcuts-note').textContent,
             };
         });
 
@@ -131,6 +133,13 @@ function check(name, actual, expected) {
         check(`${c.lang}/${c.theme}/${c.device}: the star is a filled glyph, not the outline one`,
             /data:image\/svg\+xml/.test(rows.starMask) && rows.starMask.includes('M316.9') && !rows.starMask.includes('zm0%2079'),
             true);
+        // The switch beside it is 22px tall (dg.css), and the first cut inherited the button font.
+        check(`${c.lang}/${c.theme}/${c.device}: the star matches the switch's size`,
+            rows.starFontSize, '22px');
+        // The note carries the live count, so "the history has two words" and "the launcher dropped
+        // one" stop looking like the same screenshot.
+        check(`${c.lang}/${c.theme}/${c.device}: the row note states how many are in the launcher`,
+            rows.note.includes(c.lang === 'ru' ? 'Сейчас: 3.' : 'Right now: 3.'), true);
         check(`${c.lang}/${c.theme}/${c.device}: shortcuts title`, rows.shortcuts, t.shortcuts);
         check(`${c.lang}/${c.theme}/${c.device}: version title`, rows.versionTitle, t.version);
         check(`${c.lang}/${c.theme}/${c.device}: rate title`, rows.rateTitle, t.rate);

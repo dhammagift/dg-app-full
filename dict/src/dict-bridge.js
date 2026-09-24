@@ -30,6 +30,9 @@
   // different kind of thing from the switches around it. A plain amber yellow, legible on both the
   // dark (--dg-page #111111) and the light (#ffffff) page.
   var RATE_STAR_COLOR = '#f5c518';
+  // The site's switch is 22px tall (dg.css: input.sw), and the owner wanted the star beside it to
+  // read at the same weight rather than as a speck.
+  var RATE_STAR_SIZE = '22px';
   // The FILLED star. The site's own icons/star.svg is the outline glyph (it carries the inner
   // cut-out subpath), and the owner asked for "жёлтую звёздочку с полной заливкой" — a solid one.
   // This is Font Awesome Free 6's solid star, the same artwork as dg-node's
@@ -47,7 +50,6 @@
     en: {
       group: 'App',
       shortcuts: 'Recent words in app shortcuts',
-      shortcutsNote: 'Up to ' + SHORTCUTS_MAX + ' words in the long-press menu of the app icon.',
       version: 'App version',
       rate: 'Rate Us',
       rateNote: 'Open the store page and leave a review.',
@@ -56,7 +58,6 @@
     ru: {
       group: 'Приложение',
       shortcuts: 'Недавние слова в ярлыках',
-      shortcutsNote: 'До ' + SHORTCUTS_MAX + ' слов в меню долгого нажатия на значок приложения.',
       version: 'Версия приложения',
       rate: 'Оценить приложение',
       rateNote: 'Открыть страницу в магазине и оставить отзыв.',
@@ -88,22 +89,40 @@
     return '/' + encodeURIComponent(word);
   }
 
+  // The words that make it into the launcher, in order, capped at SHORTCUTS_MAX. One function so
+  // the menu row's own note and the list handed to the plugin can never disagree.
+  function collectShortcuts() {
+    var items = [];
+    if (!shortcutsOn()) return items;
+    var seen = {};
+    readHistory().forEach(function (word) {
+      if (items.length >= SHORTCUTS_MAX) return;
+      if (typeof word !== 'string' || !word) return;
+      var route = routeFor(word);
+      if (!route || seen[route]) return;
+      seen[route] = 1;
+      items.push({ id: 'dg-dict-' + items.length, label: word, route: route, rank: 10 + items.length });
+    });
+    return items;
+  }
+
+  // The row's note carries the CURRENT number, not just the cap. The owner installed a build,
+  // long-pressed the icon and counted two entries where the set holds three; without this the
+  // difference between "the history has two words" and "the launcher dropped one" is invisible from
+  // the outside, and both look like the same bug from a screenshot.
+  function shortcutsNote(count) {
+    return isRu()
+      ? 'До ' + SHORTCUTS_MAX + ' слов в меню долгого нажатия на значок приложения. Сейчас: ' + count + '.'
+      : 'Up to ' + SHORTCUTS_MAX + ' words in the long-press menu of the app icon. Right now: ' + count + '.';
+  }
+
   function pushShortcuts() {
+    var on = shortcutsOn();
+    var items = collectShortcuts();
+    var note = document.getElementById('dg-shortcuts-note');
+    if (note) note.textContent = shortcutsNote(items.length);
     var plugin = Cap.Plugins && Cap.Plugins.DgShortcuts;
     if (!plugin || typeof plugin.set !== 'function') return; // plugin missing: nothing to do
-    var on = shortcutsOn();
-    var items = [];
-    if (on) {
-      var seen = {};
-      readHistory().forEach(function (word) {
-        if (items.length >= SHORTCUTS_MAX) return;
-        if (typeof word !== 'string' || !word) return;
-        var route = routeFor(word);
-        if (!route || seen[route]) return;
-        seen[route] = 1;
-        items.push({ id: 'dg-dict-' + items.length, label: word, route: route, rank: 10 + items.length });
-      });
-    }
     // Pushed even when empty ON PURPOSE: that is what clears the entries an earlier run left in
     // the launcher (dg-app-full learned this the hard way).
     Promise.resolve(plugin.set({ items: items, programmed: !on })).catch(function (e) {
@@ -113,7 +132,7 @@
 
   // ---- burger menu rows ------------------------------------------------------------------
 
-  function row(id, title, note) {
+  function row(id, title, note, noteId) {
     var el = document.createElement('div');
     el.className = 'set';
     el.id = id;
@@ -122,6 +141,7 @@
     lb.textContent = title;
     if (note) {
       var em = document.createElement('em');
+      if (noteId) em.id = noteId;
       em.textContent = note;
       lb.appendChild(em);
     }
@@ -138,7 +158,7 @@
     grp.textContent = t.group;
     out.push(grp);
 
-    var sc = row('dg-shortcuts-row', t.shortcuts, t.shortcutsNote);
+    var sc = row('dg-shortcuts-row', t.shortcuts, shortcutsNote(collectShortcuts().length), 'dg-shortcuts-note');
     var box = document.createElement('input');
     box.className = 'sw';
     box.type = 'checkbox';
@@ -160,11 +180,14 @@
     btn.id = 'dg-rate-btn';
     // A filled star, painted yellow instead of inheriting the button's grey: the owner asked for
     // this one row to stand out from the rest of the menu (see RATE_STAR_MASK above for why the
-    // glyph is inlined rather than the site's own i-star).
+    // glyph is inlined rather than the site's own i-star). RATE_STAR_SIZE is the switch's own
+    // height (dg.css: input.sw is 22px tall), because the first cut inherited the 14.5px button
+    // font and read as a speck next to the toggle it sits above ("слишком маленькая").
     var glyph = document.createElement('i');
     glyph.className = 'gi';
     glyph.id = 'dg-rate-star';
     glyph.style.color = RATE_STAR_COLOR;
+    glyph.style.fontSize = RATE_STAR_SIZE;
     glyph.style.setProperty('--u', RATE_STAR_MASK);
     btn.appendChild(glyph);
     btn.appendChild(document.createTextNode(t.rateBtn));
