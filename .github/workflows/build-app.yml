@@ -71,6 +71,11 @@ on:
         required: false
         type: boolean
         default: false
+      dict_only:
+        description: 'Run ONLY the dictionary app jobs and skip the reader app entirely. For checking a change under dict/ without building the offline library: minutes instead of the better part of an hour. A tag ignores it — a release builds everything.'
+        required: false
+        type: boolean
+        default: false
 
 # One build per branch. A new push supersedes the one still running on the same ref rather than
 # queueing behind it: the older run was going to produce an APK nobody would install anyway, and
@@ -92,6 +97,11 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # The dict_only dispatch input skips this job and everything that needs it (android-release,
+    # the three iOS jobs, ios-release): a change under dict/ has nothing to do with the offline
+    # library this job builds, and waiting an hour to find out would be the wrong price. A tag push
+    # has no inputs at all, so it always builds.
+    if: ${{ !inputs.dict_only }}
     # The default GITHUB_TOKEN is read-only on this org; action-gh-release below needs
     # contents: write to create a release on a tag push, and fails with a 403 without it (never
     # caught before because every prior CI run here was workflow_dispatch, which the Create
