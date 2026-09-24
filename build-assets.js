@@ -371,9 +371,11 @@ function injectAppVersionRow() {
     fs.writeFileSync(dest, html, 'utf8');
 }
 
-// One more patched row in the same "Данные"/"Data" section, right under the version: the app's
-// only way to ask a reader for a review (owner, 2026-09-24). No row-control button — like the
-// version row, native-bridge.js makes the whole row the control and retitles it for Russian.
+// One more patched row in the same "Данные"/"Data" section, right under the version: the app's only
+// way to reach its store listing (owner, 2026-09-24). The row carries its own button rather than
+// making the whole row the control, the same shape the dictionary app's Rate Us row has — owner:
+// "такой же пункт Меню... с таким же поведением с таким же дизайном". native-bridge.js fills the
+// button's label (the three emoji, one size) and retitles the row for Russian.
 // Anchored on the row injectAppVersionRow() writes, so that function has to run first.
 function injectRateUsRow() {
     const dest = path.join(WWW, 'settings', 'index.html');
@@ -382,8 +384,9 @@ function injectRateUsRow() {
         <div><p class="row-title" id="dgAppVersionTitle">App version</p><p class="row-desc" id="dgAppVersionDesc">&nbsp;</p></div>
       </div>
 `;
-    const row = `      <div class="row" id="dgRateUsRow" style="cursor:pointer">
+    const row = `      <div class="row" id="dgRateUsRow">
         <div><p class="row-title" id="dgRateUsTitle">Rate Us</p><p class="row-desc" id="dgRateUsDesc">Open the store page and leave a review.</p></div>
+        <div class="row-control"><button class="btn" type="button" id="dgRateUsBtn">5️⃣⭐️🙏</button></div>
       </div>
 `;
     if (!html.includes('id="dgRateUsRow"')) {

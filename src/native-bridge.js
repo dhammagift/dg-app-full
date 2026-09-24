@@ -1138,6 +1138,18 @@
     var DG_PLAY_PACKAGE = 'gift.dhamma.twa';
     var DG_IOS_APP_ID = '';
 
+    // The invite itself: three emoji at one size, the same label the dictionary app's Rate Us row
+    // wears (owner: "такой же пункт Меню... с таким же дизайном"). 16px, not the 19px this page's
+    // icon buttons use: emoji render taller than their font size, and at 22px the dictionary's
+    // first cut read as larger than the switch beside it (owner: "нужно чтобы они были помельче").
+    var RATE_LABEL = '5️⃣⭐️🙏';
+    var RATE_LABEL_SIZE = '16px';
+    // Set when the reader taps the button — NOT what hides the row, which stays where it is
+    // (owner: "пункт Меню остаётся не исчезает"). It is what the "please rate us five stars"
+    // invitation will read when it exists; the dictionary app writes the same key for the same
+    // reason (dict/src/dict-bridge.js).
+    var RATE_FLAG = 'dgRateUsTapped';
+
     function rateUsUrl() {
         var plat = (window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform()) || 'web';
         if (plat === 'ios') {
@@ -1156,7 +1168,16 @@
         document.getElementById('dgRateUsDesc').textContent = ru
             ? 'Открыть страницу в магазине и оставить отзыв.'
             : 'Open the store page and leave a review.';
-        row.addEventListener('click', function () { openExternal(rateUsUrl()); });
+        var btn = document.getElementById('dgRateUsBtn');
+        if (!btn) return;
+        // Set from here rather than left to the injected markup: the label is the same three emoji
+        // the dictionary app builds, and one place that decides what it says is one place to change.
+        btn.textContent = RATE_LABEL;
+        btn.style.fontSize = RATE_LABEL_SIZE;
+        btn.addEventListener('click', function () {
+            try { localStorage.setItem(RATE_FLAG, '1'); } catch (e) { /* private mode: the prompt asks later */ }
+            openExternal(rateUsUrl());
+        });
     }
 
     function onReady() { fillVersionRow(); wireShortcutsToggle(); wireRateUsRow(); }

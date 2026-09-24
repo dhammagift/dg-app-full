@@ -65,12 +65,17 @@ function initScript({ platform, lang }) {
 
                 const row = await page.evaluate(() => {
                     const el = document.getElementById('dgRateUsRow');
+                    const btn = document.getElementById('dgRateUsBtn');
                     return {
                         exists: !!el,
                         title: document.getElementById('dgRateUsTitle').textContent.trim(),
                         note: document.getElementById('dgRateUsDesc').textContent.trim(),
                         inDataSection: !!el && el.parentElement.classList.contains('rows'),
                         afterVersionRow: !!el && el.previousElementSibling && el.previousElementSibling.id === 'dgAppVersionRow',
+                        // The dictionary app's own Rate Us shape: a button, not a clickable row.
+                        hasButton: !!btn,
+                        label: btn && btn.textContent,
+                        size: btn && getComputedStyle(btn).fontSize,
                     };
                 });
 
@@ -78,13 +83,26 @@ function initScript({ platform, lang }) {
                 check(`${platform}/${lang}: title`, row.title, t.title);
                 check(`${platform}/${lang}: description`, row.note, t.note);
                 check(`${platform}/${lang}: sits right after the version row`, row.afterVersionRow, true);
+                check(`${platform}/${lang}: the row carries its own button`, row.hasButton, true);
+                // The same three emoji the dictionary app shows, at that app's size.
+                check(`${platform}/${lang}: the invite is the dictionary's three emoji`,
+                    row.label, String.fromCodePoint(0x35, 0xFE0F, 0x20E3, 0x2B50, 0xFE0F, 0x1F64F));
+                check(`${platform}/${lang}: the invite is 16px`, row.size, '16px');
 
-                await page.click('#dgRateUsRow');
+                await page.click('#dgRateUsBtn');
                 await page.waitForTimeout(200);
                 const opened = await page.evaluate(() => window.__dgCalls.browsers[0] || null);
                 check(`${platform}/${lang}: opens a store page`,
                     opened && opened.url,
                     platform === 'android' ? ANDROID_URL : IOS_URL);
+                // Tapping is remembered for the invitation that does not exist yet, and the row
+                // itself stays put (owner: "пункт Меню остаётся не исчезает").
+                const afterTap = await page.evaluate(() => ({
+                    flag: localStorage.getItem('dgRateUsTapped'),
+                    stillThere: !!document.getElementById('dgRateUsRow'),
+                }));
+                check(`${platform}/${lang}: the tap is recorded for the future invitation`, afterTap.flag, '1');
+                check(`${platform}/${lang}: the row itself stays`, afterTap.stillThere, true);
 
                 const shot = path.join(SHOTS, `dg-app-full-rate-us-${platform}-${lang}.png`);
                 await page.locator('#dgRateUsRow').screenshot({ path: shot });
