@@ -26,25 +26,25 @@
   // so Android opens the Play app when it is installed and a browser when it is not, while a
   // market:// intent fails outright on a device without Play.
   var STORE_URL = 'https://play.google.com/store/apps/details?id=gift.dhamma.pali';
-  // Once the reader has tapped Rate Us, the row is gone for good (owner, 2026-09-24: "его по этой
-  // нажато то потом уже не выдаём приглашение поставить рейтинг. Считаем это как уже поставили").
-  // Tapping counts as having rated: a store page opened is as far as an app can see, and asking
-  // again next launch is how a nudge turns into nagging.
-  var RATE_FLAG = 'dgRateUsDone';
+  // Set when the reader taps Rate Us. This is NOT what hides the row — the row is permanent (owner:
+  // "пункт никуда не нужно скрывать он остаётся на месте"), and tapping a store link is not proof
+  // that a review was written. What it is for is the invitation we have not built yet, in this app
+  // or in the reader one ("приглашение поставить нам 5 звёзд"): whoever already tapped it should
+  // never be asked by that prompt. Kept as a flag now so the prompt has an answer ready on the day
+  // it exists.
+  var RATE_FLAG = 'dgRateUsTapped';
   // The invite itself, as three emoji at one size: the owner asked for "5⃣⭐🙏" and then for all of
   // it to be emoji and the same size, because a masked glyph next to the 🙏 rendered visibly
   // smaller (emoji are drawn with their own metrics, so mixing the two cannot be made to match).
   // Emoji need no colour or artwork of ours, which is why this replaced the inlined solid star.
   var RATE_LABEL = '5️⃣⭐️🙏';
-  // The site's switch is 22px tall (dg.css: input.sw); the invite reads at that same weight
-  // instead of the 11.5px the site's own action buttons use.
-  var RATE_LABEL_SIZE = '22px';
+  // Smaller than the site's own action buttons at 11.5px would be unreadable and larger reads as a
+  // second toggle: the owner's second pass was "нужно чтобы они были помельче, сейчас это крупнее
+  // чем переключатели даже" (the switch is 22px tall). Emoji render taller than their font size, so
+  // this sits visibly below the switch rather than beside it.
+  var RATE_LABEL_SIZE = '16px';
 
   function isRu() { return document.documentElement.lang === 'ru'; }
-
-  function rateUsDone() {
-    try { return localStorage.getItem(RATE_FLAG) === '1'; } catch (e) { return false; }
-  }
 
   var T = {
     en: {
@@ -208,31 +208,27 @@
     out.push(sc);
 
     // Rate Us sits ABOVE the version, and the version closes the menu — the owner's own rule
-    // (2026-09-24): "версия же обычно последний пункт". The row is only built while the reader has
-    // not tapped it yet; once tapped it never comes back (RATE_FLAG above).
-    if (!rateUsDone()) {
-      var rate = row('dg-rate-row', t.rate, t.rateNote);
-      var btn = document.createElement('button');
-      btn.className = 'rb act';
-      btn.type = 'button';
-      btn.id = 'dg-rate-btn';
-      // "5️⃣⭐️🙏", not the word "rate" (owner: "может вместо ⭐rate? А то там rate итак написано в
-      // rate us"), and all three emoji at one size (owner: "сделай [их] в виде эмодзи и чтобы они
-      // были одного размера, сейчас руки как будто больше" — a masked star next to an emoji cannot
-      // be made to match, emoji carry their own metrics). The size is the switch's own height
-      // (dg.css: input.sw is 22px), not the 11.5px the site's action buttons use.
-      btn.style.fontSize = RATE_LABEL_SIZE;
-      btn.appendChild(document.createTextNode(RATE_LABEL));
-      btn.addEventListener('click', function () {
-        // Tapping counts as having rated, so the invite is not shown again — and the row goes away
-        // right there, rather than sitting in the menu until the next launch.
-        try { localStorage.setItem(RATE_FLAG, '1'); } catch (e) { /* private mode: it returns next launch */ }
-        openExternal(STORE_URL);
-        rate.remove();
-      });
-      rate.appendChild(btn);
-      out.push(rate);
-    }
+    // (2026-09-24): "версия же обычно последний пункт". The row itself is PERMANENT: it stays after
+    // a tap (owner: "пункт никуда не нужно скрывать он остаётся на месте").
+    var rate = row('dg-rate-row', t.rate, t.rateNote);
+    var btn = document.createElement('button');
+    btn.className = 'rb act';
+    btn.type = 'button';
+    btn.id = 'dg-rate-btn';
+    // "5️⃣⭐️🙏", not the word "rate" (owner: "может вместо ⭐rate? А то там rate итак написано в
+    // rate us"), and all three emoji at one size (owner: "сделай [их] в виде эмодзи и чтобы они
+    // были одного размера, сейчас руки как будто больше" — a masked star next to an emoji cannot
+    // be made to match, emoji carry their own metrics).
+    btn.style.fontSize = RATE_LABEL_SIZE;
+    btn.appendChild(document.createTextNode(RATE_LABEL));
+    btn.addEventListener('click', function () {
+      // Only a note for the future invitation (RATE_FLAG above) — the row stays where it is, and
+      // the store page opens as before.
+      try { localStorage.setItem(RATE_FLAG, '1'); } catch (e) { /* private mode: the prompt asks later */ }
+      openExternal(STORE_URL);
+    });
+    rate.appendChild(btn);
+    out.push(rate);
 
     // Filled from the value MainActivity prepends to this script (versionName + versionCode), so
     // the row never depends on the site knowing anything about the app. Last row on purpose.

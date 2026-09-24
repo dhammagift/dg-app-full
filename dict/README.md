@@ -52,11 +52,14 @@ site's own classes so they do not look bolted on:
   recent words. Off by default, like the reader app's equivalent.
 - **App version** — `versionName (versionCode)`, prepended to the injected script by `MainActivity`
   (the site has no way to know it).
-- **Rate Us** — opens the Play listing, and is the one row that is not permanent: tapping it counts
-  as having rated (`dgRateUsDone` in localStorage), so the invite disappears at once and is never
-  built again. A store page opened is as far as an app can see, and asking again next launch is how
-  a nudge turns into nagging. Its button is `5️⃣⭐️🙏` — three emoji at one size, the switch's own
-  22px, because a masked glyph beside an emoji cannot be made to match it.
+- **Rate Us** — opens the Play listing. Its button is `5️⃣⭐️🙏` — three emoji at one size, smaller
+  than the 22px switch beside it (emoji render taller than their font size, so 16px sits below it):
+  a masked glyph next to an emoji cannot be made to match, and 11.5px, the site's own action-button
+  size, was reported first as too small and then as too large at 22px.
+  Tapping it sets `dgRateUsTapped` in localStorage but **does not hide the row** — the row is
+  permanent. The flag is for the "please rate us five stars" invitation, which does not exist yet in
+  this app or in the reader one; it is written now so that prompt has an answer ready, and it must
+  be the thing that decides, not a second flag invented later.
 
 ## Launcher shortcuts
 

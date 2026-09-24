@@ -135,8 +135,8 @@ function check(name, actual, expected) {
         // that the emoji hands rendered bigger than the glyph next to them.
         check(`${c.lang}/${c.theme}/${c.device}: the invite is the three emoji, not "rate"`,
             rows.rateLabel, String.fromCodePoint(0x35, 0xFE0F, 0x20E3, 0x2B50, 0xFE0F, 0x1F64F));
-        check(`${c.lang}/${c.theme}/${c.device}: all three read at the switch's size`,
-            rows.rateFontSize, '22px');
+        check(`${c.lang}/${c.theme}/${c.device}: the invite is smaller than the switch (16px)`,
+            rows.rateFontSize, '16px');
 
         // The note carries the live count, so "the history has two words" and "the launcher dropped
         // one" stop looking like the same screenshot.
@@ -256,28 +256,16 @@ function check(name, actual, expected) {
             await page.locator('#p-menu').screenshot({ path: path.join(SHOTS, 'dict-bridge-switch-off.png') });
         }
 
-        // Tapping counts as having rated (owner: "его по этой нажато то потом уже не выдаём
-        // приглашение поставить рейтинг"): the invite goes away at once, and a later start does not
-        // bring it back.
+        // A tap is remembered for the invitation we have not built yet — it does NOT hide the row
+        // (owner: "пункт никуда не нужно скрывать он остаётся на месте... он должен повлиять в
+        // будущем на то что ему не показывать Это приглашение").
         if (c.device === 'mobile' && c.theme === 'light') {
             const afterTap = await page.evaluate(() => ({
-                flag: localStorage.getItem('dgRateUsDone'),
-                gone: !document.getElementById('dg-rate-row'),
+                flag: localStorage.getItem('dgRateUsTapped'),
+                stillThere: !!document.getElementById('dg-rate-row'),
             }));
-            check('Rate Us: the tap is recorded as a rating', afterTap.flag, '1');
-            check('Rate Us: the row leaves the menu straight away', afterTap.gone, true);
-
-            await page.reload({ waitUntil: 'domcontentloaded' });
-            await page.waitForTimeout(500);
-            await page.evaluate(BRIDGE);
-            await page.waitForTimeout(300);
-            const next = await page.evaluate(() => ({
-                row: !!document.getElementById('dg-rate-row'),
-                version: !!document.getElementById('dg-version-row'),
-                group: !!document.getElementById('dg-app-grp'),
-            }));
-            check('Rate Us: a later start does not ask again', next.row, false);
-            check('Rate Us: the rest of the App section is still there', [next.group, next.version], [true, true]);
+            check('Rate Us: the tap is recorded for the future invitation', afterTap.flag, '1');
+            check('Rate Us: the row itself stays in the menu', afterTap.stillThere, true);
         }
 
         await context.close();
