@@ -2,6 +2,7 @@ package gift.dhamma.mobile;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;
 
@@ -26,8 +27,16 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(DgTtsPlugin.class);
         // OS-level search: the offline library's metadata into Android's own AppSearch, so a sutta
         // is findable from the phone's search. Platform API only, so it adds no dependency and no
-        // APK weight; below Android 12 every call resolves with available=false.
-        registerPlugin(DgSearchPlugin.class);
+        // APK weight. Registered only from Android 12 (where android.app.appsearch exists at all)
+        // and inside a guard: a plugin that cannot load is not worth a reader losing the app over
+        // (it did once — see DgSearchPlugin.load()).
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            try {
+                registerPlugin(DgSearchPlugin.class);
+            } catch (Throwable t) {
+                android.util.Log.w("DgSearch", "plugin not registered: " + t);
+            }
+        }
         super.onCreate(savedInstanceState);
         // Deliberately no handleIntent() here — see handledIntent above.
 

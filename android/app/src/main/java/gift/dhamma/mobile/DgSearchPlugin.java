@@ -115,6 +115,17 @@ public class DgSearchPlugin extends Plugin {
 
     @Override
     public void load() {
+        // Nothing in here may take the app down. This runs while the bridge is still coming up, and
+        // an exception thrown from it aborts that: the app closed before the page ever appeared
+        // (reported on a device, 2026-09). A failed seed is a log line, never a crash.
+        try {
+            seedSpike();
+        } catch (Throwable t) {
+            android.util.Log.w("DgSearch", "spike seed skipped: " + t);
+        }
+    }
+
+    private void seedSpike() {
         if (!SPIKE_SEED || !supported()) return;
         String[][] seed = {
                 {"mn1", "Mūlapariyāyasutta"},
@@ -155,33 +166,42 @@ public class DgSearchPlugin extends Plugin {
 
     private void indexItems(JSArray items, IndexResult out) {
         final List<GenericDocument> documents = new ArrayList<>();
-        for (int i = 0; i < items.length(); i++) {
-            JSONObject item;
-            try {
-                item = items.getJSONObject(i);
-            } catch (Exception e) {
-                continue;
+        try {
+            for (int i = 0; i < items.length(); i++) {
+                JSONObject item;
+                try {
+                    item = items.getJSONObject(i);
+                } catch (Exception e) {
+                    continue;
+                }
+                String id = item.optString("id", "");
+                if (id.isEmpty()) continue;
+                GenericDocument.Builder<?> doc = new GenericDocument.Builder<>(NAMESPACE, id, SCHEMA_TYPE)
+                        .setPropertyString("id", id)
+                        .setPropertyString("title", item.optString("title", id))
+                        .setPropertyString("snippet", item.optString("snippet", ""))
+                        .setPropertyString("category", item.optString("category", ""))
+                        .setPropertyString("url", item.optString("url", "https://dhamma.gift/" + id));
+                String folded = item.optString("titleFolded", "");
+                if (!folded.isEmpty()) doc.setPropertyString("titleFolded", folded);
+                documents.add(doc.build());
             }
-            String id = item.optString("id", "");
-            if (id.isEmpty()) continue;
-            GenericDocument.Builder<?> doc = new GenericDocument.Builder<>(NAMESPACE, id, SCHEMA_TYPE)
-                    .setPropertyString("id", id)
-                    .setPropertyString("title", item.optString("title", id))
-                    .setPropertyString("snippet", item.optString("snippet", ""))
-                    .setPropertyString("category", item.optString("category", ""))
-                    .setPropertyString("url", item.optString("url", "https://dhamma.gift/" + id));
-            String folded = item.optString("titleFolded", "");
-            if (!folded.isEmpty()) doc.setPropertyString("titleFolded", folded);
-            documents.add(doc.build());
+        } catch (Throwable t) {
+            out.fail("index items: " + t);
+            return;
         }
 
         withSession(out::fail, session -> session.setSchema(schemaRequest(), getExecutor(), getExecutor(),
                 schemaResult -> {
-                    if (!schemaResult.isSuccess()) {
-                        out.fail("setSchema failed: " + schemaResult.getErrorMessage());
-                        return;
+                    try {
+                        if (!schemaResult.isSuccess()) {
+                            out.fail("setSchema failed: " + schemaResult.getErrorMessage());
+                            return;
+                        }
+                        putBatch(out, session, documents, 0, 0);
+                    } catch (Throwable t) {
+                        out.fail("setSchema callback: " + t);
                     }
-                    putBatch(out, session, documents, 0, 0);
                 }));
     }
 
@@ -221,26 +241,30 @@ public class DgSearchPlugin extends Plugin {
         withSession(message -> call.reject(message), session -> {
             SearchResults results = session.search(term, spec);
             results.getNextPage(getExecutor(), page -> {
-                if (!page.isSuccess()) {
-                    call.reject("search failed: " + page.getErrorMessage());
-                    return;
+                try {
+                    if (!page.isSuccess()) {
+                        call.reject("search failed: " + page.getErrorMessage());
+                        return;
+                    }
+                    JSArray out = new JSArray();
+                    for (SearchResult r : page.getResultValue()) {
+                        GenericDocument doc = r.getGenericDocument();
+                        JSObject item = new JSObject();
+                        item.put("id", doc.getPropertyString("id"));
+                        item.put("title", doc.getPropertyString("title"));
+                        item.put("category", doc.getPropertyString("category"));
+                        item.put("url", doc.getPropertyString("url"));
+                        String snippet = doc.getPropertyString("snippet");
+                        if (snippet != null && !snippet.isEmpty()) item.put("snippet", snippet);
+                        out.put(item);
+                    }
+                    JSObject result = new JSObject();
+                    result.put("available", true);
+                    result.put("items", out);
+                    call.resolve(result);
+                } catch (Throwable t) {
+                    call.reject("search callback: " + t);
                 }
-                JSArray out = new JSArray();
-                for (SearchResult r : page.getResultValue()) {
-                    GenericDocument doc = r.getGenericDocument();
-                    JSObject item = new JSObject();
-                    item.put("id", doc.getPropertyString("id"));
-                    item.put("title", doc.getPropertyString("title"));
-                    item.put("category", doc.getPropertyString("category"));
-                    item.put("url", doc.getPropertyString("url"));
-                    String snippet = doc.getPropertyString("snippet");
-                    if (snippet != null && !snippet.isEmpty()) item.put("snippet", snippet);
-                    out.put(item);
-                }
-                JSObject result = new JSObject();
-                result.put("available", true);
-                result.put("items", out);
-                call.resolve(result);
             });
         });
     }
@@ -255,13 +279,17 @@ public class DgSearchPlugin extends Plugin {
         withSession(message -> call.reject(message), session -> {
             SearchSpec all = new SearchSpec.Builder().addFilterSchemas(SCHEMA_TYPE).build();
             session.remove("", all, getExecutor(), result -> {
-                if (!result.isSuccess()) {
-                    call.reject("clear failed: " + result.getErrorMessage());
-                    return;
+                try {
+                    if (!result.isSuccess()) {
+                        call.reject("clear failed: " + result.getErrorMessage());
+                        return;
+                    }
+                    JSObject out = new JSObject();
+                    out.put("cleared", true);
+                    call.resolve(out);
+                } catch (Throwable t) {
+                    call.reject("clear callback: " + t);
                 }
-                JSObject out = new JSObject();
-                out.put("cleared", true);
-                call.resolve(out);
             });
         });
     }
@@ -275,21 +303,31 @@ public class DgSearchPlugin extends Plugin {
     }
 
     private void withSession(java.util.function.Consumer<String> onFail, SessionUser user) {
-        AppSearchManager manager = getContext().getSystemService(AppSearchManager.class);
-        if (manager == null) {
-            onFail.accept("AppSearch is not available on this device");
-            return;
+        // AppSearch is platform API from Android 12 and a vendor build can still ship without it.
+        // Every failure here is a message to the caller, never an exception into the bridge.
+        try {
+            AppSearchManager manager = getContext().getSystemService(AppSearchManager.class);
+            if (manager == null) {
+                onFail.accept("AppSearch is not available on this device");
+                return;
+            }
+            AppSearchManager.SearchContext context =
+                    new AppSearchManager.SearchContext.Builder(DB_NAME).build();
+            manager.createSearchSession(context, getExecutor(),
+                    result -> {
+                        try {
+                            if (!result.isSuccess()) {
+                                onFail.accept("createSearchSession failed: " + result.getErrorMessage());
+                                return;
+                            }
+                            user.use(result.getResultValue());
+                        } catch (Throwable t) {
+                            onFail.accept("AppSearch session: " + t);
+                        }
+                    });
+        } catch (Throwable t) {
+            onFail.accept("AppSearch unavailable: " + t);
         }
-        AppSearchManager.SearchContext context =
-                new AppSearchManager.SearchContext.Builder(DB_NAME).build();
-        manager.createSearchSession(context, getExecutor(),
-                result -> {
-                    if (!result.isSuccess()) {
-                        onFail.accept("createSearchSession failed: " + result.getErrorMessage());
-                        return;
-                    }
-                    user.use(result.getResultValue());
-                });
     }
 
     private SetSchemaRequest schemaRequest() {
@@ -315,7 +353,12 @@ public class DgSearchPlugin extends Plugin {
                 .setIndexingType(indexed
                         ? AppSearchSchema.StringPropertyConfig.INDEXING_TYPE_PREFIXES
                         : AppSearchSchema.StringPropertyConfig.INDEXING_TYPE_NONE)
-                .setTokenizerType(AppSearchSchema.StringPropertyConfig.TOKENIZER_TYPE_PLAIN)
+                // A property that is not indexed may not carry a tokenizer: AppSearch rejects
+                // NONE + PLAIN outright, and that rejection used to happen inside a main-thread
+                // callback, where nothing caught it.
+                .setTokenizerType(indexed
+                        ? AppSearchSchema.StringPropertyConfig.TOKENIZER_TYPE_PLAIN
+                        : AppSearchSchema.StringPropertyConfig.TOKENIZER_TYPE_NONE)
                 .build();
     }
 
@@ -330,13 +373,17 @@ public class DgSearchPlugin extends Plugin {
                 .addGenericDocuments(documents.subList(from, to))
                 .build();
         session.put(request, getExecutor(), batch -> {
-            int ok = batch.getSuccesses() == null ? 0 : batch.getSuccesses().size();
-            if (batch.getFailures() != null && !batch.getFailures().isEmpty()) {
-                AppSearchResult<Void> first = batch.getFailures().values().iterator().next();
-                out.fail("put failed: " + first.getErrorMessage());
-                return;
+            try {
+                int ok = batch.getSuccesses() == null ? 0 : batch.getSuccesses().size();
+                if (batch.getFailures() != null && !batch.getFailures().isEmpty()) {
+                    AppSearchResult<Void> first = batch.getFailures().values().iterator().next();
+                    out.fail("put failed: " + first.getErrorMessage());
+                    return;
+                }
+                putBatch(out, session, documents, to, stored + ok);
+            } catch (Throwable t) {
+                out.fail("put callback: " + t);
             }
-            putBatch(out, session, documents, to, stored + ok);
         });
     }
 
