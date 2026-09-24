@@ -34,6 +34,12 @@ on:
         required: false
         type: string
 
+# One iOS check per branch: a new push supersedes the one still running on the same ref, the same
+# rule build-app.yml applies to its own runs.
+concurrency:
+  group: ios-check-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   ios-check:
     name: iOS simulator build

@@ -49,3 +49,19 @@ struct DgLibraryControl: ControlWidget {
         .description("Opens the offline Pāli canon library.")
     }
 }
+
+// The extension's entry point, and the reason the control above is reachable at all: WidgetKit
+// discovers widgets and controls through the @main WidgetBundle of the extension, never by scanning
+// the binary for ControlWidget conformances. A control that is defined but not listed here builds
+// fine and stays invisible in Control Center (WWDC24 10157, "add the Control to your existing Widget
+// Bundle").
+//
+// No #available guard: this target's deployment target is 18.0 (project.pbxproj), so the type it
+// lists exists on every OS this extension can run on. Nothing else is in the bundle — Home Screen
+// widgets, if any ever appear, belong here next to the control.
+@main
+struct DgControlsBundle: WidgetBundle {
+    var body: some Widget {
+        DgLibraryControl()
+    }
+}
