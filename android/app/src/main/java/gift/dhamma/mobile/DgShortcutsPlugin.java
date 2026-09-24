@@ -2,6 +2,7 @@ package gift.dhamma.mobile;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ShortcutManager;
 import android.os.Build;
 
 import androidx.core.content.pm.ShortcutInfoCompat;
@@ -18,6 +19,7 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -103,11 +105,40 @@ public class DgShortcutsPlugin extends Plugin {
 
         try {
             ShortcutManagerCompat.setDynamicShortcuts(context, shortcuts);
+            // The other half of the setting: the four programmed shortcuts live in
+            // res/xml/shortcuts.xml, and when the reader wants "recently read" instead, the three
+            // beyond Favourites & History are hidden rather than deleted — a static shortcut can be
+            // disabled and enabled again at runtime, and that is the only way to keep them
+            // declared (so they exist in the launcher the moment the app is installed, before it
+            // has ever run) while showing one set or the other. The launcher's menu holds four
+            // entries, so it is four programmed OR one programmed + three recent, never a mixture.
+            setProgrammedVisible(context, call.getBoolean("programmed", false));
             JSObject result = new JSObject();
             result.put("count", shortcuts.size());
             call.resolve(result);
         } catch (Exception e) {
             call.reject("DgShortcuts.set failed: " + e.getMessage());
+        }
+    }
+
+    // The programmed shortcuts that step aside when "recently read" takes their slots. Favourites &
+    // History is not here: it is the one that stays in both sets.
+    private static final List<String> PROGRAMMED_IDS =
+            Arrays.asList("toc", "memo", "dictionary");
+
+    // ShortcutManager itself, not the Compat class: enableShortcuts/disableShortcuts exist there
+    // since API 25 and take ids, which is exactly what a static shortcut is addressed by. Fails
+    // silently on older releases and on any error — a shortcut the launcher refused must never
+    // turn into a failed search.
+    private void setProgrammedVisible(Context context, boolean visible) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N_MR1) return;
+        try {
+            ShortcutManager manager = context.getSystemService(ShortcutManager.class);
+            if (manager == null) return;
+            if (visible) manager.enableShortcuts(PROGRAMMED_IDS);
+            else manager.disableShortcuts(PROGRAMMED_IDS);
+        } catch (Exception e) {
+            // Nothing to report: the menu keeps whatever it had.
         }
     }
 

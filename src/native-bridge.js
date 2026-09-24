@@ -493,7 +493,14 @@
         // until setDynamicShortcuts() replaces the list, so skipping the call when there is nothing
         // new left the owner staring at "toc / bupm / история / запись1" forever.
         var items = collectRecent();
-        Promise.resolve(plugin.set({ items: items })).catch(function (e) {
+        // The other half of the setting (owner, 2026-09-24): with "recent texts" OFF the menu shows
+        // the four programmed shortcuts from res/xml/shortcuts.xml, and three of them have to be
+        // hidden while it is ON — the launcher's menu holds four entries, so it is four programmed
+        // OR one programmed + three recent, never a mixture with a slot left empty. Android only in
+        // effect: on iOS the four statics are Info.plist quick actions and dynamic ones never reach
+        // the screen anyway (see the comment above).
+        var programmed = localStorage.getItem(SHORTCUTS_FLAG) === 'off';
+        Promise.resolve(plugin.set({ items: items, programmed: programmed })).catch(function (e) {
             console.log('[dg-shortcuts] set failed:', (e && e.message) || e);
         });
     }

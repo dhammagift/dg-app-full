@@ -4,14 +4,19 @@
      Icons come from dg-twa (owner: "шорткаты и иконки неактуальные возьми из dg-twa там последняя
      версия") — drawable-*/shortcut_N.png, mirrored here.
 
-     ONE static shortcut, deliberately (owner, 2026-09-24). The launcher's long-press menu shows
-     four entries in total on the owner's phones, and the interesting ones are the "recently read"
-     texts that native-bridge.js donates (DgShortcutsPlugin, SHORTCUTS_MAX = 3). With four statics
-     there was room for two of them, not three — the third was simply cut by the launcher
-     ("должны быть 3 пункта под историю... почему-то всё ещё два"). Favourites & History is the
-     one errand a reader returns to, so it keeps the slot; Contents stays a route inside the app
-     (/toc, reachable from the toolbar), and Memo/Dictionary were never bundled anyway (see
-     EXTERNAL_ROUTES in native-bridge.js).
+     FOUR static shortcuts, and a setting decides which set the reader sees (owner, 2026-09-24:
+     "должно быть либо четыре запрограммированных, либо один запрограмменный и три истории").
+     The launcher's long-press menu shows four entries in total, so:
+
+       "Recent texts in app shortcuts" OFF → all four of these (the programmed set);
+       ON  → Favourites & History (static) + three "recently read" (dynamic, native-bridge.js).
+
+     Exactly one set at a time, never a mixture that leaves a slot empty: when the setting is on,
+     DgShortcutsPlugin.set({programmed:false}) DISABLES toc/memo/dictionary through
+     ShortcutManager.disableShortcuts() — a static shortcut can be hidden and shown again at
+     runtime, and that is the only way to take it out of the menu without deleting it from the
+     manifest. They stay static on purpose: a shortcut declared here exists in the launcher the
+     moment the app is installed, before it has ever run, which a dynamic one cannot do.
 
      It has to be STATIC — the first attempt kept Contents/Favorites as dynamic shortcuts with
      rank 0/1, on the assumption that Android lists dynamic ones above static ones. On the owner's
@@ -20,8 +25,9 @@
 
      Each shortcut launches MainActivity with a "route" extra; MainActivity turns it into
      https://localhost/?_nativeRoute=..., and the page rewrites the visible URL before its own
-     bootstrap reads it. Dynamic "recently read" shortcuts (DgShortcutsPlugin) fill the remaining
-     slots — three of them now. -->
+     bootstrap reads it. Two of the four are routed to the real browser by native-bridge.js
+     (see EXTERNAL_ROUTES there): /dict is a server-rendered page of dict.dhamma.gift, /memo is
+     deliberately not bundled. -->
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
     <shortcut
         android:shortcutId="favorites_history"
@@ -34,6 +40,45 @@
             android:targetPackage="gift.dhamma.mobile"
             android:targetClass="gift.dhamma.mobile.MainActivity">
             <extra android:name="route" android:value="/4as" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="toc"
+        android:enabled="true"
+        android:icon="@drawable/shortcut_2"
+        android:shortcutShortLabel="@string/shortcut_toc_short"
+        android:shortcutLongLabel="@string/shortcut_toc_long">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="gift.dhamma.mobile"
+            android:targetClass="gift.dhamma.mobile.MainActivity">
+            <extra android:name="route" android:value="/toc" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="memo"
+        android:enabled="true"
+        android:icon="@drawable/shortcut_3"
+        android:shortcutShortLabel="@string/shortcut_memo_short"
+        android:shortcutLongLabel="@string/shortcut_memo_long">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="gift.dhamma.mobile"
+            android:targetClass="gift.dhamma.mobile.MainActivity">
+            <extra android:name="route" android:value="/memo" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="dictionary"
+        android:enabled="true"
+        android:icon="@drawable/shortcut_1"
+        android:shortcutShortLabel="@string/shortcut_dict_short"
+        android:shortcutLongLabel="@string/shortcut_dict_long">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="gift.dhamma.mobile"
+            android:targetClass="gift.dhamma.mobile.MainActivity">
+            <extra android:name="route" android:value="/dict" />
         </intent>
     </shortcut>
     <!-- No <capability> here, and that is a decision, not an omission.
