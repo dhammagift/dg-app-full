@@ -94,7 +94,7 @@ Loads the real site with a mocked Capacitor runtime (recording what `DgShortcuts
 `Browser.open` are called with), injects the real `dict-bridge.js`, and asserts the rows, their
 wording in both languages, their position at the end of the panel, the routed history handed to the
 plugin, the switch's effect on it, and the store URL Rate Us opens. Screenshots land in
-`/var/www/dg-twa/docs/dict-capacitor` unless `DG_SHOTS` says otherwise. It cannot run a WebView or a
+`/var/www/html/dict-app` (served at http://old.dhamma.gift/dict-app/) unless `DG_SHOTS` says otherwise. It cannot run a WebView or a
 launcher, so the APK itself still needs a real device.
 
 ## Continuous integration

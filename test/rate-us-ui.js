@@ -12,7 +12,7 @@ const { spawn } = require('child_process');
 const { chromium } = require('/usr/lib/node_modules/@playwright/cli/node_modules/playwright');
 
 const ROOT = process.env.DG_APP_FULL || path.join(__dirname, '..');
-const SHOTS = process.env.DG_SHOTS || '/var/www/dg-twa/docs/dict-capacitor';
+const SHOTS = process.env.DG_SHOTS || '/var/www/html/dict-app';
 const PORT = +(process.env.DG_PORT || 8098);
 const URL = `http://127.0.0.1:${PORT}/settings/index.html`;
 
