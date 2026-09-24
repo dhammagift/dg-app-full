@@ -42,7 +42,7 @@ struct DgLibraryControl: ControlWidget {
                 // real app icons, and a generic "book" there could be anyone's reader. The image
                 // set lives in THIS target's own catalog (DgGlyph.imageset) — an app extension
                 // does not see the app's Assets.xcassets.
-                Label("Dhamma.gift", image: Image("DgGlyph"))
+                Label("Dhamma.gift", image: "DgGlyph")
             }
         }
         .displayName("Dhamma.gift")
