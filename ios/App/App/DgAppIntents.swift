@@ -103,11 +103,11 @@ enum DgAppSection: String, AppEnum {
 
     static var caseDisplayRepresentations: [DgAppSection: DisplayRepresentation] {
         [
-            .reader: DisplayRepresentation(title: "Dhamma.gift Reader", image: DisplayRepresentation.Icon(systemName: "book")),
-            .favorites: DisplayRepresentation(title: "Dhamma.gift Favorites", image: DisplayRepresentation.Icon(systemName: "heart")),
-            .tableOfContents: DisplayRepresentation(title: "Dhamma.gift Table of Contents", image: DisplayRepresentation.Icon(systemName: "list.bullet")),
-            .memo: DisplayRepresentation(title: "Dhamma.gift Memo", image: DisplayRepresentation.Icon(systemName: "square.and.pencil")),
-            .dictionary: DisplayRepresentation(title: "Dhamma.gift Dictionary", image: DisplayRepresentation.Icon(systemName: "character.book.closed")),
+            .reader: DisplayRepresentation(title: "Dhamma.gift Reader", image: DisplayRepresentation.Image(systemName: "book")),
+            .favorites: DisplayRepresentation(title: "Dhamma.gift Favorites", image: DisplayRepresentation.Image(systemName: "heart")),
+            .tableOfContents: DisplayRepresentation(title: "Dhamma.gift Table of Contents", image: DisplayRepresentation.Image(systemName: "list.bullet")),
+            .memo: DisplayRepresentation(title: "Dhamma.gift Memo", image: DisplayRepresentation.Image(systemName: "square.and.pencil")),
+            .dictionary: DisplayRepresentation(title: "Dhamma.gift Dictionary", image: DisplayRepresentation.Image(systemName: "character.book.closed")),
         ]
     }
 
