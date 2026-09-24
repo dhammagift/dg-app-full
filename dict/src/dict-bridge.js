@@ -26,25 +26,25 @@
   // so Android opens the Play app when it is installed and a browser when it is not, while a
   // market:// intent fails outright on a device without Play.
   var STORE_URL = 'https://play.google.com/store/apps/details?id=gift.dhamma.pali';
-  // The one coloured glyph in the menu, on the owner's request: the Rate Us row should read as a
-  // different kind of thing from the switches around it. A plain amber yellow, legible on both the
-  // dark (--dg-page #111111) and the light (#ffffff) page.
-  var RATE_STAR_COLOR = '#f5c518';
-  // The site's switch is 22px tall (dg.css: input.sw), and the owner wanted the star beside it to
-  // read at the same weight rather than as a speck.
-  var RATE_STAR_SIZE = '22px';
-  // The FILLED star. The site's own icons/star.svg is the outline glyph (it carries the inner
-  // cut-out subpath), and the owner asked for "жёлтую звёздочку с полной заливкой" — a solid one.
-  // This is Font Awesome Free 6's solid star, the same artwork as dg-node's
-  // overrides/svg/solid-star.svg, inlined as a mask here: on dict.dhamma.gift that file sits on a
-  // path this script cannot count on, and one inline path is not worth a second request.
-  // Font Awesome Free 6 — Icons: CC BY 4.0, https://fontawesome.com/license/free
-  var STAR_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>';
-  // The site's .gi class paints currentColor through whatever --u holds, so setting --u on the
-  // element reuses that plumbing instead of duplicating the mask properties.
-  var RATE_STAR_MASK = 'url("data:image/svg+xml,' + encodeURIComponent(STAR_SVG) + '")';
+  // Once the reader has tapped Rate Us, the row is gone for good (owner, 2026-09-24: "его по этой
+  // нажато то потом уже не выдаём приглашение поставить рейтинг. Считаем это как уже поставили").
+  // Tapping counts as having rated: a store page opened is as far as an app can see, and asking
+  // again next launch is how a nudge turns into nagging.
+  var RATE_FLAG = 'dgRateUsDone';
+  // The invite itself, as three emoji at one size: the owner asked for "5⃣⭐🙏" and then for all of
+  // it to be emoji and the same size, because a masked glyph next to the 🙏 rendered visibly
+  // smaller (emoji are drawn with their own metrics, so mixing the two cannot be made to match).
+  // Emoji need no colour or artwork of ours, which is why this replaced the inlined solid star.
+  var RATE_LABEL = '5️⃣⭐️🙏';
+  // The site's switch is 22px tall (dg.css: input.sw); the invite reads at that same weight
+  // instead of the 11.5px the site's own action buttons use.
+  var RATE_LABEL_SIZE = '22px';
 
   function isRu() { return document.documentElement.lang === 'ru'; }
+
+  function rateUsDone() {
+    try { return localStorage.getItem(RATE_FLAG) === '1'; } catch (e) { return false; }
+  }
 
   var T = {
     en: {
@@ -208,46 +208,31 @@
     out.push(sc);
 
     // Rate Us sits ABOVE the version, and the version closes the menu — the owner's own rule
-    // (2026-09-24): "версия же обычно последний пункт".
-    var rate = row('dg-rate-row', t.rate, t.rateNote);
-    var btn = document.createElement('button');
-    btn.className = 'rb act';
-    btn.type = 'button';
-    btn.id = 'dg-rate-btn';
-    // A filled star, painted yellow instead of inheriting the button's grey: the owner asked for
-    // this one row to stand out from the rest of the menu (see RATE_STAR_MASK above for why the
-    // glyph is inlined rather than the site's own i-star). RATE_STAR_SIZE is the switch's own
-    // height (dg.css: input.sw is 22px tall), because the first cut inherited the 14.5px button
-    // font and read as a speck next to the toggle it sits above ("слишком маленькая").
-    var glyph = document.createElement('i');
-    glyph.className = 'gi';
-    glyph.id = 'dg-rate-star';
-    glyph.style.color = RATE_STAR_COLOR;
-    glyph.style.fontSize = RATE_STAR_SIZE;
-    glyph.style.setProperty('--u', RATE_STAR_MASK);
-    // "5★🙏", not the word "rate" (owner, 2026-09-24: "может вместо ⭐rate? А то там rate итак
-    // написано в rate us"): the row is already titled Rate Us, so the label only repeated it, and
-    // what the tap is for is a five-star nudge. The middle star stays the app's own yellow mask
-    // glyph rather than the emoji one — its colour and its 22px size (the switch's own height,
-    // dg.css input.sw) were both asked for in earlier rounds and an emoji would give up control of
-    // both.
-    //
-    // The whole button is set to that same 22px: the site's own action buttons are 11.5px
-    // (dg.css .rb.act), and the owner's next question was exactly that — "а что там с 5? она даже
-    // меньше чем напечатана" — a 5 that small beside a 22px star reads as a typo rather than as the
-    // number. The 5 is painted the star's yellow so "5★" is one unit; the 🙏 is an emoji and keeps
-    // its own colours (Android has the font for it, and so does the Chromium these checks run in).
-    btn.style.fontSize = RATE_STAR_SIZE;
-    var five = document.createElement('span');
-    five.id = 'dg-rate-five';
-    five.textContent = '5';
-    five.style.color = RATE_STAR_COLOR;
-    btn.appendChild(five);
-    btn.appendChild(glyph);
-    btn.appendChild(document.createTextNode('🙏'));
-    btn.addEventListener('click', function () { openExternal(STORE_URL); });
-    rate.appendChild(btn);
-    out.push(rate);
+    // (2026-09-24): "версия же обычно последний пункт". The row is only built while the reader has
+    // not tapped it yet; once tapped it never comes back (RATE_FLAG above).
+    if (!rateUsDone()) {
+      var rate = row('dg-rate-row', t.rate, t.rateNote);
+      var btn = document.createElement('button');
+      btn.className = 'rb act';
+      btn.type = 'button';
+      btn.id = 'dg-rate-btn';
+      // "5️⃣⭐️🙏", not the word "rate" (owner: "может вместо ⭐rate? А то там rate итак написано в
+      // rate us"), and all three emoji at one size (owner: "сделай [их] в виде эмодзи и чтобы они
+      // были одного размера, сейчас руки как будто больше" — a masked star next to an emoji cannot
+      // be made to match, emoji carry their own metrics). The size is the switch's own height
+      // (dg.css: input.sw is 22px), not the 11.5px the site's action buttons use.
+      btn.style.fontSize = RATE_LABEL_SIZE;
+      btn.appendChild(document.createTextNode(RATE_LABEL));
+      btn.addEventListener('click', function () {
+        // Tapping counts as having rated, so the invite is not shown again — and the row goes away
+        // right there, rather than sitting in the menu until the next launch.
+        try { localStorage.setItem(RATE_FLAG, '1'); } catch (e) { /* private mode: it returns next launch */ }
+        openExternal(STORE_URL);
+        rate.remove();
+      });
+      rate.appendChild(btn);
+      out.push(rate);
+    }
 
     // Filled from the value MainActivity prepends to this script (versionName + versionCode), so
     // the row never depends on the site knowing anything about the app. Last row on purpose.

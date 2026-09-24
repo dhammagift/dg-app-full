@@ -117,16 +117,11 @@ function check(name, actual, expected) {
                 // The three rows close the panel, in the owner's order: shortcuts, Rate Us, and the
                 // version last ("версия же обычно последний пункт").
                 lastThree: Array.from(document.querySelectorAll('#p-menu .pb > *')).slice(-3).map((e) => e.id),
-                starClass: document.getElementById('dg-rate-star').getAttribute('class'),
-                starColor: getComputedStyle(document.getElementById('dg-rate-star')).color,
-                starFontSize: getComputedStyle(document.getElementById('dg-rate-star')).fontSize,
-                starMask: getComputedStyle(document.getElementById('dg-rate-star')).maskImage,
-                // The star is a mask <i>, so it has no text of its own: the button's text is the 5
-                // and the 🙏, and the glyph sits between them.
+                // The invite is three emoji in one text node, so the button's own font-size is
+                // the only size there is — and it has to be the switch's 22px, not the 11.5px the
+                // site's action buttons use.
                 rateLabel: document.getElementById('dg-rate-btn').textContent,
-                rateParts: Array.from(document.getElementById('dg-rate-btn').childNodes).map((n) => n.nodeType === 3 ? n.textContent : '#' + n.id),
-                fiveSize: getComputedStyle(document.getElementById('dg-rate-five')).fontSize,
-                fiveColor: getComputedStyle(document.getElementById('dg-rate-five')).color,
+                rateFontSize: getComputedStyle(document.getElementById('dg-rate-btn')).fontSize,
                 note: document.getElementById('dg-shortcuts-note').textContent,
             };
         });
@@ -135,27 +130,14 @@ function check(name, actual, expected) {
         check(`${c.lang}/${c.theme}/${c.device}: rows are inside the burger panel`, rows.inPanel, true);
         check(`${c.lang}/${c.theme}/${c.device}: last three rows, in order`,
             rows.lastThree, ['dg-shortcuts-row', 'dg-rate-row', 'dg-version-row']);
-        // The owner asked for a filled yellow star so the row stands out. The site's own star.svg
-        // is the OUTLINE glyph, so the filled one is inlined as a mask — hence the check for the
-        // solid path itself, not merely a mask being present.
-        check(`${c.lang}/${c.theme}/${c.device}: Rate Us carries the site's mask-icon plumbing`,
-            rows.starClass, 'gi');
-        check(`${c.lang}/${c.theme}/${c.device}: the star is yellow`,
-            rows.starColor, 'rgb(245, 197, 24)');
-        check(`${c.lang}/${c.theme}/${c.device}: the star is a filled glyph, not the outline one`,
-            /data:image\/svg\+xml/.test(rows.starMask) && rows.starMask.includes('M316.9') && !rows.starMask.includes('zm0%2079'),
-            true);
-        // The switch beside it is 22px tall (dg.css), and the first cut inherited the button font.
-        check(`${c.lang}/${c.theme}/${c.device}: the star matches the switch's size`,
-            rows.starFontSize, '22px');
-        // "5★🙏", not "rate": the row is already titled Rate Us.
-        check(`${c.lang}/${c.theme}/${c.device}: the button says five stars, not "rate"`,
-            rows.rateParts, ['#dg-rate-five', '#dg-rate-star', '🙏']);
-        // The site's action buttons are 11.5px; beside a 22px star that read as a typo.
-        check(`${c.lang}/${c.theme}/${c.device}: the 5 is the star's own size`,
-            rows.fiveSize, '22px');
-        check(`${c.lang}/${c.theme}/${c.device}: the 5 is the star's own colour`,
-            rows.fiveColor, 'rgb(245, 197, 24)');
+        // "5⃣⭐️🙏": three emoji at one size, not the word "rate" (the row is
+        // already titled Rate Us) and not a masked star beside an emoji — the owner's report was
+        // that the emoji hands rendered bigger than the glyph next to them.
+        check(`${c.lang}/${c.theme}/${c.device}: the invite is the three emoji, not "rate"`,
+            rows.rateLabel, String.fromCodePoint(0x35, 0xFE0F, 0x20E3, 0x2B50, 0xFE0F, 0x1F64F));
+        check(`${c.lang}/${c.theme}/${c.device}: all three read at the switch's size`,
+            rows.rateFontSize, '22px');
+
         // The note carries the live count, so "the history has two words" and "the launcher dropped
         // one" stop looking like the same screenshot.
         check(`${c.lang}/${c.theme}/${c.device}: the row note states how many are in the launcher`,
@@ -272,6 +254,30 @@ function check(name, actual, expected) {
             check('switch off: the note stops counting words',
                 /Сейчас|Right now/.test(off.note), false);
             await page.locator('#p-menu').screenshot({ path: path.join(SHOTS, 'dict-bridge-switch-off.png') });
+        }
+
+        // Tapping counts as having rated (owner: "его по этой нажато то потом уже не выдаём
+        // приглашение поставить рейтинг"): the invite goes away at once, and a later start does not
+        // bring it back.
+        if (c.device === 'mobile' && c.theme === 'light') {
+            const afterTap = await page.evaluate(() => ({
+                flag: localStorage.getItem('dgRateUsDone'),
+                gone: !document.getElementById('dg-rate-row'),
+            }));
+            check('Rate Us: the tap is recorded as a rating', afterTap.flag, '1');
+            check('Rate Us: the row leaves the menu straight away', afterTap.gone, true);
+
+            await page.reload({ waitUntil: 'domcontentloaded' });
+            await page.waitForTimeout(500);
+            await page.evaluate(BRIDGE);
+            await page.waitForTimeout(300);
+            const next = await page.evaluate(() => ({
+                row: !!document.getElementById('dg-rate-row'),
+                version: !!document.getElementById('dg-version-row'),
+                group: !!document.getElementById('dg-app-grp'),
+            }));
+            check('Rate Us: a later start does not ask again', next.row, false);
+            check('Rate Us: the rest of the App section is still there', [next.group, next.version], [true, true]);
         }
 
         await context.close();

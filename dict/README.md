@@ -52,7 +52,11 @@ site's own classes so they do not look bolted on:
   recent words. Off by default, like the reader app's equivalent.
 - **App version** — `versionName (versionCode)`, prepended to the injected script by `MainActivity`
   (the site has no way to know it).
-- **Rate Us** — opens the Play listing.
+- **Rate Us** — opens the Play listing, and is the one row that is not permanent: tapping it counts
+  as having rated (`dgRateUsDone` in localStorage), so the invite disappears at once and is never
+  built again. A store page opened is as far as an app can see, and asking again next launch is how
+  a nudge turns into nagging. Its button is `5️⃣⭐️🙏` — three emoji at one size, the switch's own
+  22px, because a masked glyph beside an emoji cannot be made to match it.
 
 ## Launcher shortcuts
 
