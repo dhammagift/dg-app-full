@@ -11,9 +11,11 @@ import Foundation
 // second implementation.
 //
 // Localization: the phrases live in AppShortcuts.strings (en, ru — variant groups in the Xcode
-// project); their keys repeat the phrase with ${applicationName}/${section}/${query} placeholders,
-// and every key MUST contain ${applicationName} — that is the App Intents compiler's rule, not a
-// style preference. Intent titles, parameter titles and the section names below are translated in
+// project); their keys repeat the phrase with ${applicationName}/${section} placeholders, and every
+// key MUST contain ${applicationName} — that is the App Intents compiler's rule, not a style
+// preference. A phrase may interpolate NOTHING but those two: an AppEntity or an AppEnum parameter
+// is the only other thing the compiler accepts, which is why the search phrase carries no
+// parameter (see DgSearchIntent below). Intent titles, parameter titles and the section names below are translated in
 // Localizable.strings of the same two variant groups.
 //
 // The Control Center control is a different surface and lives in the DgControls extension target
@@ -51,8 +53,15 @@ struct DgAppShortcuts: AppShortcutsProvider {
         )
         AppShortcut(
             intent: DgSearchIntent(),
+            // NO parameter in the phrase, deliberately. The App Intents compiler refuses a phrase
+            // that interpolates anything but an AppEntity or an AppEnum:
+            //   AppShortcuts.strings:12:1: error: Invalid parameter type. AppEntity and AppEnum are
+            //   the only allowed types for query
+            // — which is why "Search \(.applicationName) for \(\.$query)" never built. Dropping the
+            // parameter does not lose the query: the app shortcut still runs, and Siri asks for it
+            // with the intent's own requestValueDialog ("What should I search for?").
             phrases: [
-                "Search \(.applicationName) for \(\.$query)"
+                "Search \(.applicationName)"
             ],
             shortTitle: "Search the library",
             systemImageName: "DgGlyph"

@@ -9,4 +9,4 @@
 
 "Open ${applicationName} ${section}" = "Открыть ${section} в ${applicationName}";
 
-"Search ${applicationName} for ${query}" = "Искать ${query} в ${applicationName}";
+"Search ${applicationName}" = "Искать в ${applicationName}";
