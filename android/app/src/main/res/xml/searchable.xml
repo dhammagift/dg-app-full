@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Makes the app a searchable TARGET of the system's own search — the "Search in apps" panel on
+     Motorola, and the equivalent lists on other skins ("Search Google / Search Play Store" is that
+     same panel with its own entries). includeInGlobalSearch is the attribute that actually puts us
+     in those lists; the resource itself is referenced from MainActivity's
+     <meta-data android:name="android.app.searchable"> and the ACTION_SEARCH intent-filter there.
+
+     This is a DIFFERENT surface from the donated shortcuts (androidx.core:core-google-shortcuts in
+     DgShortcutsPlugin):
+       - the Google app's on-device search lists our donated shortcuts as their own rows;
+       - this panel lists the APP once and hands the typed query over as ACTION_SEARCH, which
+         MainActivity turns into the app's own search (?q=…).
+     One does not duplicate the other: neither surface shows the other's entries. docs/
+     ANDROID_CHECKS.md has the device steps for both.
+
+     No searchSuggestAuthority on purpose: suggestions would need a ContentProvider plus a
+     cursor contract, and the feature asked for is "tap the app in the system search and land on
+     the result", which the query handoff above already does. -->
+<searchable xmlns:android="http://schemas.android.com/apk/res/android"
+    android:label="@string/app_name"
+    android:includeInGlobalSearch="true"
+    android:searchSettingsDescription="@string/search_settings_description" />

@@ -1,5 +1,6 @@
 package gift.dhamma.mobile;
 
+import android.app.SearchManager;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.net.Uri;
@@ -123,7 +124,15 @@ public class MainActivity extends BridgeActivity {
     private void handleIntent(Intent intent) {
         if (intent == null) return;
         String url = null;
-        if (Intent.ACTION_SEND.equals(intent.getAction()) && "text/plain".equals(intent.getType())) {
+        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
+            // The system's own search ("Search in apps", the panels res/xml/searchable.xml puts us
+            // in) dispatched a query to this app. Same ?q= path a shared text takes, so the site's
+            // own cleaning and the reader's search stay the one implementation.
+            String query = intent.getStringExtra(SearchManager.QUERY);
+            if (query != null && !query.isEmpty()) {
+                url = "https://localhost/?q=" + Uri.encode(query);
+            }
+        } else if (Intent.ACTION_SEND.equals(intent.getAction()) && "text/plain".equals(intent.getType())) {
             String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
             if (sharedText != null && !sharedText.isEmpty()) {
                 // RAW text, deliberately: the shared payload ("<text>" plus the source page's URL,

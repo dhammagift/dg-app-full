@@ -404,18 +404,12 @@
     // docs/PWA_SHORTCUTS.md): a web manifest's shortcuts are static and a TWA/PWA cannot reach
     // ShortcutManager at all. Native cannot read localStorage, so the page reads its own history
     // and hands over a ready list — one small bridge (android/.../DgShortcutsPlugin.java).
-    // Four: two pinned (Contents, Favorites — owner's order: "toc, fav+history, dyn, dyn") and two
-    // that are actually "recently read". Android shows dynamic shortcuts above the static ones and
-    // a launcher shows four, so the pinned pair has to live here rather than in the manifest XML —
-    // the XML keeps Dictionary and Memo, which is what appears on launchers showing more.
-    // (Before, this list was everything the history held: "toc", "bupm", "история", "запись1/2" —
-    // bare commands and memo recordings, none of them a text — and the designed shortcuts were
-    // pushed out of the menu entirely.)
-    // Three, not two (owner, 2026-09-20). The four static entries are ordered so the two a reader
-    // returns to sit on top, which makes the tail of the menu the natural place for history — so
-    // the settings switch below now governs three slots instead of two. Android only in practice:
-    // iOS shows four quick actions IN TOTAL and all four static ones are declared in Info.plist,
-    // so nothing dynamic reaches the screen there however many we push.
+    // Three slots (owner, 2026-09-24). The launcher's long-press menu shows four entries in total,
+    // and res/xml/shortcuts.xml now declares exactly ONE static one (Favorites & History) so three
+    // "recently read" texts fit — with four statics only two did, which is the report this answers
+    // ("должны быть 3 пункта под историю... почему-то всё ещё два"). Android only in practice: iOS
+    // shows four quick actions IN TOTAL and all four static ones are declared in Info.plist, so
+    // nothing dynamic reaches the screen there however many we push.
     var SHORTCUTS_MAX = 3;
     // Settings switch "Recent texts in app shortcuts" (dg-app-full#4). 'off' disables them; any
     // other value (including none) keeps the default, on. Static shortcuts are unaffected.
@@ -471,7 +465,7 @@
         // assumption that Android lists dynamic shortcuts above static ones — on the owner's launcher
         // it is the other way round, so the pinned pair ended up below Dictionary/Memo instead of
         // above them. They are static shortcuts now (res/xml/shortcuts.xml, in the owner's order);
-        // this list adds at most two texts the reader actually opened, after them.
+        // this list adds the texts the reader actually opened, up to SHORTCUTS_MAX, after them.
         readJson('dg_favorites').forEach(function (fav) {
             if (!fav) return;
             var route = (fav.path && fav.search) ? (fav.path + fav.search) : ('/' + (fav.slug || ''));

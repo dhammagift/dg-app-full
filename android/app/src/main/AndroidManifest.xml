@@ -59,6 +59,20 @@
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />
 
+            <!-- Searchable target of the system's search: this is what makes the app appear in the
+                 "Search in apps" panels (Motorola and friends). The system sends the typed query as
+                 ACTION_SEARCH, and MainActivity.handleIntent opens the app's own search with it —
+                 the same ?q= path a shared text takes. Separate from the donated shortcuts, which
+                 the Google app lists as their own rows; neither surface shows the other's entries
+                 (docs/ANDROID_CHECKS.md has the device steps for both). -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
+
             <!-- Deep links: a dhamma.gift URL tapped anywhere on the device (browser, chat app,
                  email) opens straight into the app instead of the browser, at the same path —
                  MainActivity.handleIntent turns the URL's path+query into the SPA's own
