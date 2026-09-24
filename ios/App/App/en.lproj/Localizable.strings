@@ -1,0 +1,16 @@
+// App Intents strings, English: intent and parameter titles, the section names Siri reads, and
+// the Control Center control's label. The phrase utterances live in AppShortcuts.strings — these
+// are the strings shown in the Shortcuts app UI.
+"Dhamma.gift section" = "Dhamma.gift section";
+
+"Dhamma.gift Reader" = "Dhamma.gift Reader";
+"Dhamma.gift Favorites" = "Dhamma.gift Favorites";
+"Dhamma.gift Table of Contents" = "Dhamma.gift Table of Contents";
+"Dhamma.gift Memo" = "Dhamma.gift Memo";
+"Dhamma.gift Dictionary" = "Dhamma.gift Dictionary";
+
+"Open Dhamma.gift" = "Open Dhamma.gift";
+"Open Section" = "Open Section";
+"Search Dhamma.gift" = "Search Dhamma.gift";
+"Section" = "Section";
+"Query" = "Query";

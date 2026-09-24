@@ -1,0 +1,12 @@
+// The App Shortcuts phrases Siri matches, Russian.
+//
+// Same rules as en.lproj/AppShortcuts.strings: the KEY repeats the phrase from Swift (the Russian
+// phrase "Открыть ${applicationName}" is declared next to the English one in DgAppIntents.swift),
+// every key carries ${applicationName}, and only the VALUE is translated. The app name stays in
+// the nominative — for this name it is also the correct accusative, so no declension is needed.
+"Open ${applicationName}" = "Открыть ${applicationName}";
+"Открыть ${applicationName}" = "Открыть ${applicationName}";
+
+"Open ${applicationName} ${section}" = "Открыть ${section} в ${applicationName}";
+
+"Search ${applicationName} for ${query}" = "Искать ${query} в ${applicationName}";
