@@ -40,7 +40,9 @@ import java.util.List;
  * shortcuts are a convenience, and a reader must never see a failed search because the launcher
  * refused one item.
  *
- * Adapted from dg-app-full's DgShortcutsPlugin; only the package and PROGRAMMED_IDS differ.
+ * Adapted from the main application's DgShortcutsPlugin (android/app/src/main/java/gift/dhamma/
+ * mobile/): the two are the same code apart from the package name, the intent action and the
+ * comments — whoever changes one should look at the other.
  */
 @CapacitorPlugin(name = "DgShortcuts")
 public class DgShortcutsPlugin extends Plugin {
