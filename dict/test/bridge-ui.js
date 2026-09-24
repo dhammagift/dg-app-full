@@ -167,6 +167,10 @@ function check(name, actual, expected) {
             ['kacchapa', 'dukkha', 'satipa%E1%B9%AD%E1%B9%ADh%C4%81na'].map((w) => base + w + suffix));
         check(`${c.lang}/${c.theme}/${c.device}: nothing is disabled on the native side`,
             push && 'programmed' in push, false);
+        // A recent word has no artwork of its own, so it carries no icon and the plugin falls back
+        // to the app's mark; only the programmed entries have their own drawables.
+        check(`${c.lang}/${c.theme}/${c.device}: recent words ask for no icon`,
+            push && push.items.map((i) => i.icon), [undefined, undefined, undefined]);
 
         // Open the panel for the screenshot, scrolled to the end — the new rows are the last thing
         // in a panel taller than the viewport, so a screenshot without this shows none of them.
@@ -246,6 +250,11 @@ function check(name, actual, expected) {
             check('switch off: their routes are the ones the statics used',
                 off.last && off.last.items.map((i) => i.route),
                 ['https://dhamma.gift/toc', 'https://dharmamitra.org/', 'https://www.aksharamukha.com/converter']);
+            // ...and the drawables they had while they were static, instead of the app's own mark
+            // that a dynamic shortcut gets by default.
+            check('switch off: each carries the icon it had as a static entry',
+                off.last && off.last.items.map((i) => i.icon),
+                ['shortcut_0', 'shortcut_2', 'shortcut_3']);
             check('switch off: the note stops counting words',
                 /Сейчас|Right now/.test(off.note), false);
             await page.locator('#p-menu').screenshot({ path: path.join(SHOTS, 'dict-bridge-switch-off.png') });

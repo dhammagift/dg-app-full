@@ -86,10 +86,7 @@ public class DgShortcutsPlugin extends Plugin {
                         .setShortLabel(clamp(label, SHORT_LABEL_MAX))
                         .setLongLabel(clamp(label, LONG_LABEL_MAX))
                         .setRank(rank)
-                        // The launcher icon rather than a per-item drawable: recent words have no
-                        // icon of their own, and the app's own mark reads better than a generic
-                        // glyph repeated down the menu.
-                        .setIcon(IconCompat.createWithResource(context, R.mipmap.ic_launcher))
+                        .setIcon(iconFor(context, item.optString("icon", "")))
                         .setLongLived(true)
                         .setIntent(intent)
                         .build());
@@ -112,6 +109,27 @@ public class DgShortcutsPlugin extends Plugin {
         } catch (Exception e) {
             call.reject("DgShortcuts.set failed: " + e.getMessage());
         }
+    }
+
+    /**
+     * The icon a page asked for, by drawable name — or the app's own mark when it asked for none.
+     *
+     * A dynamic shortcut must be given a drawable, so every entry used to get R.mipmap.ic_launcher:
+     * the three programmed entries lost the icons they had while they were declared in
+     * res/xml/shortcuts.xml (drawable/shortcut_0, _2, _3), and the owner's report was exactly that
+     * — they showed the same mark as the recent words ("иконки при статических шорткатах...
+     * показываются те же, что и для слов"). The name is resolved at runtime rather than switched
+     * on, so the page stays the one place that decides which entry gets which artwork.
+     *
+     * An unknown or missing name falls back to the launcher mark instead of failing the item:
+     * shortcuts are a convenience, and one bad icon must not cost a reader the entry.
+     */
+    private static IconCompat iconFor(Context context, String name) {
+        if (name != null && !name.isEmpty()) {
+            int res = context.getResources().getIdentifier(name, "drawable", context.getPackageName());
+            if (res != 0) return IconCompat.createWithResource(context, res);
+        }
+        return IconCompat.createWithResource(context, R.mipmap.ic_launcher);
     }
 
     private static String clamp(String text, int max) {

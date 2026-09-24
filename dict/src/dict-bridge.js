@@ -96,10 +96,14 @@
   // launcher counts DECLARED shortcuts against its four-entry menu even when they are disabled at
   // runtime, which is why the reader app shows three "recently read" entries and this app showed
   // two. One static (Favorites & History) plus these three as dynamic is four either way.
+  // Each carries the drawable it had while it was static (res/drawable-*/shortcut_N.png, the same
+  // files the TWA used — see the plugin's iconFor): a dynamic shortcut must be handed an icon, and
+  // without this every entry got the app's own mark, which is the owner's report that the
+  // programmed entries looked exactly like the recent words.
   var PROGRAMMED = [
-    { id: 'toc', label: 'Table of Contents', route: 'https://dhamma.gift/toc' },
-    { id: 'dharmamitra', label: 'Dharmamitra.org', route: 'https://dharmamitra.org/' },
-    { id: 'aksharamukha', label: 'Aksharamukha.com', route: 'https://www.aksharamukha.com/converter' }
+    { id: 'toc', label: 'Table of Contents', route: 'https://dhamma.gift/toc', icon: 'shortcut_0' },
+    { id: 'dharmamitra', label: 'Dharmamitra.org', route: 'https://dharmamitra.org/', icon: 'shortcut_2' },
+    { id: 'aksharamukha', label: 'Aksharamukha.com', route: 'https://www.aksharamukha.com/converter', icon: 'shortcut_3' }
   ];
 
   // The words that make it into the launcher. One function so the menu row's own note and the list
@@ -112,7 +116,7 @@
   function collectShortcuts() {
     if (!shortcutsOn()) {
       return PROGRAMMED.map(function (p, i) {
-        return { id: 'dg-dict-programmed-' + p.id, label: p.label, route: p.route, rank: i };
+        return { id: 'dg-dict-programmed-' + p.id, label: p.label, route: p.route, icon: p.icon, rank: i };
       });
     }
     var items = [];
