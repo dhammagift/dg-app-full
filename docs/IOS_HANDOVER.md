@@ -119,7 +119,7 @@ Safari — Books вообще отдаёт данные только своим.
   показывают английский интерфейс.
 - **Прод dg-node**: после каждого коммита в dg-node main владелец делает
   `git -C /var/www/html/nodejs pull --ff-only origin main` (песочница агента это блокирует).
-- **Рабочая папка**: в `/var/www/dg-app-full` параллельно работает другая сессия на ветке
+- **Рабочая папка**: в `/var/www/dg-apps` параллельно работает другая сессия на ветке
   `claude/dg-ios-apple-preview-screenshots-f6f478`; на её локальной ветке лежит незапушенный дубликат
   `b568769` (то же содержимое, что `dd564fe` в main) — безвреден. Коммиты этой смены делались
   plumbing-ом (`read-tree`/`commit-tree`), не переключая её checkout.
@@ -307,7 +307,7 @@ curl -s https://dhamma.gift/.well-known/apple-app-site-association
 ## 9. Как работать с CI
 
 ```bash
-cd /var/www/dg-app-full
+cd /var/www/dg-apps
 TOKEN=$(tr -d '\n\r' < /root/.secrets/github-token)     # fine-grained PAT, Issues: RW, только для API
 
 # запустить полный прогон (в нём будет и ios-release) — только workflow_dispatch, push его не запускает
