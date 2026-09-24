@@ -230,8 +230,19 @@
     // what the tap is for is a five-star nudge. The middle star stays the app's own yellow mask
     // glyph rather than the emoji one — its colour and its 22px size (the switch's own height,
     // dg.css input.sw) were both asked for in earlier rounds and an emoji would give up control of
-    // both. The 5 and the 🙏 are plain text, so the row still reads in either language.
-    btn.appendChild(document.createTextNode('5'));
+    // both.
+    //
+    // The whole button is set to that same 22px: the site's own action buttons are 11.5px
+    // (dg.css .rb.act), and the owner's next question was exactly that — "а что там с 5? она даже
+    // меньше чем напечатана" — a 5 that small beside a 22px star reads as a typo rather than as the
+    // number. The 5 is painted the star's yellow so "5★" is one unit; the 🙏 is an emoji and keeps
+    // its own colours (Android has the font for it, and so does the Chromium these checks run in).
+    btn.style.fontSize = RATE_STAR_SIZE;
+    var five = document.createElement('span');
+    five.id = 'dg-rate-five';
+    five.textContent = '5';
+    five.style.color = RATE_STAR_COLOR;
+    btn.appendChild(five);
     btn.appendChild(glyph);
     btn.appendChild(document.createTextNode('🙏'));
     btn.addEventListener('click', function () { openExternal(STORE_URL); });
