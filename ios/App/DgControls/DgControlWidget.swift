@@ -38,7 +38,11 @@ struct DgLibraryControl: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(kind: "gift.dhamma.mobile.DgLibraryControl") {
             ControlWidgetButton(action: DgOpenLibraryControlIntent()) {
-                Label("Dhamma.gift", systemImage: "book")
+                // The brand mark, not a system glyph: the control sits in Control Center next to
+                // real app icons, and a generic "book" there could be anyone's reader. The image
+                // set lives in THIS target's own catalog (DgGlyph.imageset) — an app extension
+                // does not see the app's Assets.xcassets.
+                Label("Dhamma.gift", image: Image("DgGlyph"))
             }
         }
         .displayName("Dhamma.gift")

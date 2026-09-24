@@ -23,7 +23,9 @@ import Foundation
 
 // The App Shortcuts Siri offers out of the box. Every phrase carries \(.applicationName) (the
 // compiler requires it) and the parameterized ones project their parameter so Siri enumerates the
-// values ("open Dhamma.gift dictionary").
+// values ("open Dhamma.gift dictionary"). The icon is the app's own brand mark (DgGlyph in
+// Assets.xcassets), not a system glyph — these tiles appear in Siri suggestions and the Shortcuts
+// app next to the app's icon, and "book" could be any reader.
 struct DgAppShortcuts: AppShortcutsProvider {
     @AppShortcutsBuilder
     var appShortcuts: [AppShortcut] {
@@ -34,7 +36,7 @@ struct DgAppShortcuts: AppShortcutsProvider {
                 "Открыть \(.applicationName)"
             ],
             shortTitle: "Open Dhamma.gift",
-            systemImageName: "book"
+            systemImageName: "DgGlyph"
         )
         AppShortcut(
             intent: DgOpenSectionIntent(),
@@ -42,7 +44,7 @@ struct DgAppShortcuts: AppShortcutsProvider {
                 "Open \(.applicationName) \(\.$section)"
             ],
             shortTitle: "Open a section",
-            systemImageName: "book"
+            systemImageName: "DgGlyph"
         )
         AppShortcut(
             intent: DgSearchIntent(),
@@ -50,7 +52,7 @@ struct DgAppShortcuts: AppShortcutsProvider {
                 "Search \(.applicationName) for \(\.$query)"
             ],
             shortTitle: "Search the library",
-            systemImageName: "magnifyingglass"
+            systemImageName: "DgGlyph"
         )
     }
 }
