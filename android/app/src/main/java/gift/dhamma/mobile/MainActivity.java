@@ -1,8 +1,10 @@
 package gift.dhamma.mobile;
 
+import android.app.SearchManager;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.core.view.WindowInsetsControllerCompat;
@@ -28,6 +30,18 @@ public class MainActivity extends BridgeActivity {
         // transfer (the page keeps reporting it; this only mirrors it natively).
         registerPlugin(DgProgressPlugin.class);
         registerPlugin(DgTtsPlugin.class);
+        // OS-level search: the offline library's metadata into Android's own AppSearch, so a sutta
+        // is findable from the phone's search. Platform API only, so it adds no dependency and no
+        // APK weight. Registered only from Android 12 (where android.app.appsearch exists at all)
+        // and inside a guard: a plugin that cannot load is not worth a reader losing the app over
+        // (it did once — see DgSearchPlugin.load()).
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            try {
+                registerPlugin(DgSearchPlugin.class);
+            } catch (Throwable t) {
+                android.util.Log.w("DgSearch", "plugin not registered: " + t);
+            }
+        }
         super.onCreate(savedInstanceState);
         // Deliberately no handleIntent() here — see handledIntent above.
 
@@ -110,7 +124,15 @@ public class MainActivity extends BridgeActivity {
     private void handleIntent(Intent intent) {
         if (intent == null) return;
         String url = null;
-        if (Intent.ACTION_SEND.equals(intent.getAction()) && "text/plain".equals(intent.getType())) {
+        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
+            // The system's own search ("Search in apps", the panels res/xml/searchable.xml puts us
+            // in) dispatched a query to this app. Same ?q= path a shared text takes, so the site's
+            // own cleaning and the reader's search stay the one implementation.
+            String query = intent.getStringExtra(SearchManager.QUERY);
+            if (query != null && !query.isEmpty()) {
+                url = "https://localhost/?q=" + Uri.encode(query);
+            }
+        } else if (Intent.ACTION_SEND.equals(intent.getAction()) && "text/plain".equals(intent.getType())) {
             String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
             if (sharedText != null && !sharedText.isEmpty()) {
                 // RAW text, deliberately: the shared payload ("<text>" plus the source page's URL,
@@ -122,6 +144,17 @@ public class MainActivity extends BridgeActivity {
                 // used to live in this file was removed for exactly that reason. Nothing about
                 // incoming shares belongs in a wrapper.
                 url = "https://localhost/?q=" + Uri.encode(sharedText);
+            }
+        } else if (Intent.ACTION_PROCESS_TEXT.equals(intent.getAction())) {
+            // Text-selection menu (see the PROCESS_TEXT intent-filter in AndroidManifest.xml): the
+            // reader selected a passage and tapped Dhamma.gift directly, so no share chooser ever
+            // opened. Same ?q= handoff as a share — the site owns the cleaning either way.
+            // getCharSequenceExtra, not getStringExtra: a selection arrives as a Spannable. Nothing
+            // is returned to the app that offered the selection; the text is the query, not a
+            // replacement for it.
+            CharSequence selected = intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT);
+            if (selected != null && selected.length() > 0) {
+                url = "https://localhost/?q=" + Uri.encode(selected.toString());
             }
         } else if (Intent.ACTION_VIEW.equals(intent.getAction()) && intent.getData() != null
                 && "dhammagift".equals(intent.getData().getScheme())) {

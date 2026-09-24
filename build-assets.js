@@ -371,6 +371,40 @@ function injectAppVersionRow() {
     fs.writeFileSync(dest, html, 'utf8');
 }
 
+// One more patched row in the same "Данные"/"Data" section, ABOVE the version: the app's only way to
+// reach its store listing (owner, 2026-09-24). The row carries its own button rather than making the
+// whole row the control, the same shape the dictionary app's Rate Us row has — owner: "такой же
+// пункт Меню... с таким же поведением с таким же дизайном". native-bridge.js fills the button's
+// label (the three emoji, one size) and retitles the row for Russian.
+//
+// Above the version on purpose: the version closes the menu (owner: "версия последний пункт меню
+// должен быть", the same rule the dictionary app already follows). The first cut inserted this row
+// after the version, which put Rate Us last instead.
+// Anchored on the row injectAppVersionRow() writes, so that function has to run first.
+function injectRateUsRow() {
+    const dest = path.join(WWW, 'settings', 'index.html');
+    let html = fs.readFileSync(dest, 'utf8');
+    const anchor = `      <div class="row" id="dgAppVersionRow" style="cursor:pointer">
+        <div><p class="row-title" id="dgAppVersionTitle">App version</p><p class="row-desc" id="dgAppVersionDesc">&nbsp;</p></div>
+      </div>
+`;
+    const row = `      <div class="row" id="dgRateUsRow">
+        <div><p class="row-title" id="dgRateUsTitle">Rate Us</p><p class="row-desc" id="dgRateUsDesc">Open the store page and leave a review.</p></div>
+        <div class="row-control"><button class="btn" type="button" id="dgRateUsBtn">5️⃣⭐️🙏</button></div>
+      </div>
+`;
+    if (!html.includes('id="dgRateUsRow"')) {
+        if (!html.includes(anchor)) {
+            throw new Error(
+                'injectRateUsRow: the app-version row is not in settings/index.html.\n' +
+                'injectAppVersionRow() must run first; if its markup changed, update `anchor` here too.'
+            );
+        }
+        html = html.replace(anchor, row + anchor);
+    }
+    fs.writeFileSync(dest, html, 'utf8');
+}
+
 // dg-docs (Help/Docs portal): deliberately NOT bundled. First cut baked the ~23MB Docusaurus
 // build (en+ru) into the APK, but owner (weighing APK size vs. offline benefit): docs are read
 // occasionally, not offline-critical the way search/reader are — the DB download at first launch
@@ -904,6 +938,7 @@ function main() {
     injectNativeBridge();
     injectOfflineLibraryRow();
     injectAppVersionRow();
+    injectRateUsRow();
     verifyPageAssets();
     verifyReferencedAssets();
     verifyTocSnapshot();

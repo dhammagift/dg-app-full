@@ -1,0 +1,21 @@
+{
+  "appId": "gift.dhamma.pali",
+  "appName": "Dict.Dhamma.Gift",
+  "webDir": "www",
+  "server": {
+    "url": "https://dict.dhamma.gift/",
+    "allowNavigation": [
+      "dict.dhamma.gift",
+      "*.dhamma.gift",
+      "dhamma.gift"
+    ]
+  },
+  "android": {
+    "backgroundColor": "#111111"
+  },
+  "plugins": {
+    "SystemBars": {
+      "style": "DARK"
+    }
+  }
+}

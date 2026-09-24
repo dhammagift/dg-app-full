@@ -93,6 +93,16 @@ App Group и показывает локальное уведомление «И
 чтение при старте в `native-bridge.js` через плагин). Это надёжно, но с лишним тапом.
 Источники: developer.apple.com/forums/thread/764570, /763568, /776488.
 
+**Apple Books: расширения там не будет, и это не наш баг.** Шторку «Поделиться» в Books обслуживает
+закрытый список приложений — сторонний Share Extension туда не попадает ни с каким
+`NSExtensionActivationRule`, хоть `TRUEPREDICATE`: «There are a predefined set of apps allowed to
+receive data from Books… not achievable with our presently shipped configurations» (Apple, radar
+FB15013575). Поэтому в Books пункта Dhamma.gift нет, и целей для шаринга там заметно меньше, чем в
+Safari — Books вообще отдаёт данные только своим. В Safari всё штатно: правило расширения принимает
+текст, web-URL и веб-страницу, поэтому оно и висит в шторке (иконкой в верхнем ряду и строкой в
+списке действий).
+Источники: developer.apple.com/forums/thread/762784, stackoverflow.com/q/78895358.
+
 ### Остальные нюансы перед подачей
 
 - **Проверки на телефоне** (§6): тап по слову → словарь (починен в коде, на телефоне не видели),
@@ -109,7 +119,7 @@ App Group и показывает локальное уведомление «И
   показывают английский интерфейс.
 - **Прод dg-node**: после каждого коммита в dg-node main владелец делает
   `git -C /var/www/html/nodejs pull --ff-only origin main` (песочница агента это блокирует).
-- **Рабочая папка**: в `/var/www/dg-app-full` параллельно работает другая сессия на ветке
+- **Рабочая папка**: в `/var/www/dg-apps` параллельно работает другая сессия на ветке
   `claude/dg-ios-apple-preview-screenshots-f6f478`; на её локальной ветке лежит незапушенный дубликат
   `b568769` (то же содержимое, что `dd564fe` в main) — безвреден. Коммиты этой смены делались
   plumbing-ом (`read-tree`/`commit-tree`), не переключая её checkout.
@@ -297,7 +307,7 @@ curl -s https://dhamma.gift/.well-known/apple-app-site-association
 ## 9. Как работать с CI
 
 ```bash
-cd /var/www/dg-app-full
+cd /var/www/dg-apps
 TOKEN=$(tr -d '\n\r' < /root/.secrets/github-token)     # fine-grained PAT, Issues: RW, только для API
 
 # запустить полный прогон (в нём будет и ios-release) — только workflow_dispatch, push его не запускает

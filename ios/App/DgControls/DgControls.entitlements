@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- The same App Group as the app and the share extension (App.entitlements,
+	     ShareExtension.entitlements). The control itself reads nothing from it today, but the
+	     entitlement costs nothing, matches the other targets, and is already required on the App
+	     ID — a control that one day shows download progress will need exactly this container.
+	     Like every entitlement, it only matters for a SIGNED build; the simulator build in CI
+	     (CODE_SIGNING_ALLOWED=NO) neither needs nor checks it. -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.gift.dhamma.mobile</string>
+	</array>
+</dict>
+</plist>

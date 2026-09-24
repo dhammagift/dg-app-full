@@ -404,18 +404,12 @@
     // docs/PWA_SHORTCUTS.md): a web manifest's shortcuts are static and a TWA/PWA cannot reach
     // ShortcutManager at all. Native cannot read localStorage, so the page reads its own history
     // and hands over a ready list — one small bridge (android/.../DgShortcutsPlugin.java).
-    // Four: two pinned (Contents, Favorites — owner's order: "toc, fav+history, dyn, dyn") and two
-    // that are actually "recently read". Android shows dynamic shortcuts above the static ones and
-    // a launcher shows four, so the pinned pair has to live here rather than in the manifest XML —
-    // the XML keeps Dictionary and Memo, which is what appears on launchers showing more.
-    // (Before, this list was everything the history held: "toc", "bupm", "история", "запись1/2" —
-    // bare commands and memo recordings, none of them a text — and the designed shortcuts were
-    // pushed out of the menu entirely.)
-    // Three, not two (owner, 2026-09-20). The four static entries are ordered so the two a reader
-    // returns to sit on top, which makes the tail of the menu the natural place for history — so
-    // the settings switch below now governs three slots instead of two. Android only in practice:
-    // iOS shows four quick actions IN TOTAL and all four static ones are declared in Info.plist,
-    // so nothing dynamic reaches the screen there however many we push.
+    // Three slots (owner, 2026-09-24). The launcher's long-press menu shows four entries in total,
+    // and res/xml/shortcuts.xml now declares exactly ONE static one (Favorites & History) so three
+    // "recently read" texts fit — with four statics only two did, which is the report this answers
+    // ("должны быть 3 пункта под историю... почему-то всё ещё два"). Android only in practice: iOS
+    // shows four quick actions IN TOTAL and all four static ones are declared in Info.plist, so
+    // nothing dynamic reaches the screen there however many we push.
     var SHORTCUTS_MAX = 3;
     // Settings switch "Recent texts in app shortcuts" (dg-app-full#4). 'off' disables them; any
     // other value (including none) keeps the default, on. Static shortcuts are unaffected.
@@ -471,7 +465,7 @@
         // assumption that Android lists dynamic shortcuts above static ones — on the owner's launcher
         // it is the other way round, so the pinned pair ended up below Dictionary/Memo instead of
         // above them. They are static shortcuts now (res/xml/shortcuts.xml, in the owner's order);
-        // this list adds at most two texts the reader actually opened, after them.
+        // this list adds the texts the reader actually opened, up to SHORTCUTS_MAX, after them.
         readJson('dg_favorites').forEach(function (fav) {
             if (!fav) return;
             var route = (fav.path && fav.search) ? (fav.path + fav.search) : ('/' + (fav.slug || ''));
@@ -499,7 +493,14 @@
         // until setDynamicShortcuts() replaces the list, so skipping the call when there is nothing
         // new left the owner staring at "toc / bupm / история / запись1" forever.
         var items = collectRecent();
-        Promise.resolve(plugin.set({ items: items })).catch(function (e) {
+        // The other half of the setting (owner, 2026-09-24): with "recent texts" OFF the menu shows
+        // the four programmed shortcuts from res/xml/shortcuts.xml, and three of them have to be
+        // hidden while it is ON — the launcher's menu holds four entries, so it is four programmed
+        // OR one programmed + three recent, never a mixture with a slot left empty. Android only in
+        // effect: on iOS the four statics are Info.plist quick actions and dynamic ones never reach
+        // the screen anyway (see the comment above).
+        var programmed = localStorage.getItem(SHORTCUTS_FLAG) === 'off';
+        Promise.resolve(plugin.set({ items: items, programmed: programmed })).catch(function (e) {
             console.log('[dg-shortcuts] set failed:', (e && e.message) || e);
         });
     }
@@ -1118,7 +1119,68 @@
         });
     }
 
-    function onReady() { fillVersionRow(); wireShortcutsToggle(); }
+    // ---------------------------------------------------------------------------------------
+    // Rate Us row (settings → "Rate Us", injected by build-assets.js)
+    // ---------------------------------------------------------------------------------------
+
+    // Owner (2026-09-24): the app had no way to ask for a review, and a reader no way to find the
+    // listing. One row, one tap, the store page.
+    //
+    // Android: the Play listing is gift.dhamma.twa — the package the store already knows, which
+    // this Capacitor app replaced. The test/sideload build installs as gift.dhamma.mobile and has
+    // no listing of its own, so the id is a constant here and NOT App.getInfo().id. The https URL
+    // rather than market://: play.google.com is an App Link, so Android opens the Play app when it
+    // is installed and a browser when it is not, while a market:// intent fails outright on a
+    // device without Play.
+    // iOS: the numeric App Store id, which exists only once the app is on the store — hence the
+    // constant. Until it is filled in, the row opens the App Store search for the app's name
+    // rather than a dead id (the iOS build is not live yet).
+    var DG_PLAY_PACKAGE = 'gift.dhamma.twa';
+    var DG_IOS_APP_ID = '';
+
+    // The invite itself: three emoji at one size, the same label the dictionary app's Rate Us row
+    // wears (owner: "такой же пункт Меню... с таким же дизайном"). 16px, not the 19px this page's
+    // icon buttons use: emoji render taller than their font size, and at 22px the dictionary's
+    // first cut read as larger than the switch beside it (owner: "нужно чтобы они были помельче").
+    var RATE_LABEL = '5️⃣⭐️🙏';
+    var RATE_LABEL_SIZE = '16px';
+    // Set when the reader taps the button — NOT what hides the row, which stays where it is
+    // (owner: "пункт Меню остаётся не исчезает"). It is what the "please rate us five stars"
+    // invitation will read when it exists; the dictionary app writes the same key for the same
+    // reason (dict/src/dict-bridge.js).
+    var RATE_FLAG = 'dgRateUsTapped';
+
+    function rateUsUrl() {
+        var plat = (window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform()) || 'web';
+        if (plat === 'ios') {
+            return DG_IOS_APP_ID
+                ? 'https://apps.apple.com/app/id' + DG_IOS_APP_ID + '?action=write-review'
+                : 'https://apps.apple.com/search?term=' + encodeURIComponent('Dhamma.gift');
+        }
+        return 'https://play.google.com/store/apps/details?id=' + DG_PLAY_PACKAGE;
+    }
+
+    function wireRateUsRow() {
+        var row = document.getElementById('dgRateUsRow');
+        if (!row) return;
+        var ru = isRu();
+        document.getElementById('dgRateUsTitle').textContent = ru ? 'Оценить приложение' : 'Rate Us';
+        document.getElementById('dgRateUsDesc').textContent = ru
+            ? 'Открыть страницу в магазине и оставить отзыв.'
+            : 'Open the store page and leave a review.';
+        var btn = document.getElementById('dgRateUsBtn');
+        if (!btn) return;
+        // Set from here rather than left to the injected markup: the label is the same three emoji
+        // the dictionary app builds, and one place that decides what it says is one place to change.
+        btn.textContent = RATE_LABEL;
+        btn.style.fontSize = RATE_LABEL_SIZE;
+        btn.addEventListener('click', function () {
+            try { localStorage.setItem(RATE_FLAG, '1'); } catch (e) { /* private mode: the prompt asks later */ }
+            openExternal(rateUsUrl());
+        });
+    }
+
+    function onReady() { fillVersionRow(); wireShortcutsToggle(); wireRateUsRow(); }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onReady);
     else onReady();
 })();

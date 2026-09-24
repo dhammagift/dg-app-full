@@ -1,0 +1,18 @@
+{
+  "name": "dg-dict-app",
+  "private": true,
+  "description": "Dict.Dhamma.Gift as a Capacitor Android app. A thin shell around https://dict.dhamma.gift (capacitor.config.json -> server.url): the UI stays the site's, and the app adds only what native can do — launcher shortcuts built from the lookup history, the app version and the store link. This replaces the Bubblewrap TWA that used to live in dg-twa/dict-app: standalone display and the burger panel were broken there because a Trusted Web Activity runs inside Chrome's Custom Tab, not in a WebView this app owns.",
+  "scripts": {
+    "build": "node --check src/dict-bridge.js && node build.js",
+    "sync-android": "npm run build && cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/browser": "^8.0.4",
+    "@capacitor/core": "^8.5.2"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2"
+  }
+}

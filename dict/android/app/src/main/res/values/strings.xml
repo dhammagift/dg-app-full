@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Dict.Dhamma.Gift</string>
+    <string name="title_activity_main">Dict.Dhamma.Gift</string>
+    <string name="package_name">gift.dhamma.pali</string>
+    <string name="custom_url_scheme">gift.dhamma.pali</string>
+    <!-- Quick Settings tile label (AndroidManifest.xml). The tile sits under the app's name in the
+         shade, so it repeats it rather than inventing a second one. -->
+    <string name="launcher_name">Dict.Dhamma.Gift</string>
+
+    <!-- Static App Shortcut labels (res/xml/shortcuts.xml — the ONE static shortcut left there).
+         Both labels carry the FULL wording on purpose (owner, 2026-09-24: "в словаре ты напиши DG
+         favorites & history и table of contents а не просто contents"). The launcher's long-press
+         menu renders the SHORT label, so an abbreviated one is all a reader ever sees of the other.
+         Android's own 10-character guidance for the short label is a display hint, not a hard cap:
+         the system ellipsizes, which is still better than a second name that never meant anything
+         on its own.
+         "DG " because the reader app declares a shortcut with exactly this name — both apps can sit
+         on one phone and both open dhamma.gift/4as, so the prefix is the only thing telling them
+         apart. The other three entries are dynamic now and their labels live in src/dict-bridge.js,
+         next to the routes they open. -->
+    <string name="shortcut_fav_short">DG Favorites &amp; History</string>
+    <string name="shortcut_fav_long">DG Favorites &amp; History</string>
+</resources>

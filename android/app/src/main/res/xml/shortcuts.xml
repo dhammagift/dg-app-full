@@ -4,27 +4,30 @@
      Icons come from dg-twa (owner: "шорткаты и иконки неактуальные возьми из dg-twa там последняя
      версия") — drawable-*/shortcut_N.png, mirrored here.
 
-     The order below is the owner's (2026-09-20): Favorites & History, Table of Contents, Memo,
-     Dictionary. Favourites and history come first because that is what a reader returns to —
-     the contents are for finding something new, and that is the rarer errand. It used to lead
-     with Contents, inherited from dg-twa's list. It has to be STATIC — the first attempt kept
-     Contents/Favorites as dynamic shortcuts with rank 0/1, on the assumption that Android lists
-     dynamic ones above static ones. On the owner's launcher the opposite happens: the static pair
-     (Dictionary, Memo) came first and the pinned two fell to the bottom, which is exactly the
-     screenshot that reopened this. Dynamic shortcuts are now only what they are good for —
-     "recently read" (native-bridge.js, filtered to real texts, at most two).
+     FOUR static shortcuts, and a setting decides which set the reader sees (owner, 2026-09-24:
+     "должно быть либо четыре запрограммированных, либо один запрограмменный и три истории").
+     The launcher's long-press menu shows four entries in total, so:
 
-     Two of the four cannot run inside this app and are routed to the real browser by
-     native-bridge.js (see EXTERNAL_ROUTES there):
-       - Dictionary (/dict): a server-rendered page of dict.dhamma.gift, not part of the SPA;
-       - Memo (/memo): deliberately not bundled (owner: the APK should not carry occasionally-read
-         sections — see native-bridge.js).
-     TOC (/toc) and Favorites (/4as) are SPA routes and open in place.
+       "Recent texts in app shortcuts" OFF → all four of these (the programmed set);
+       ON  → Favourites & History (static) + three "recently read" (dynamic, native-bridge.js).
+
+     Exactly one set at a time, never a mixture that leaves a slot empty: when the setting is on,
+     DgShortcutsPlugin.set({programmed:false}) DISABLES toc/memo/dictionary through
+     ShortcutManager.disableShortcuts() — a static shortcut can be hidden and shown again at
+     runtime, and that is the only way to take it out of the menu without deleting it from the
+     manifest. They stay static on purpose: a shortcut declared here exists in the launcher the
+     moment the app is installed, before it has ever run, which a dynamic one cannot do.
+
+     It has to be STATIC — the first attempt kept Contents/Favorites as dynamic shortcuts with
+     rank 0/1, on the assumption that Android lists dynamic ones above static ones. On the owner's
+     launcher the opposite happens: the static pair (Dictionary, Memo) came first and the pinned
+     two fell to the bottom, which is exactly the screenshot that reopened this.
 
      Each shortcut launches MainActivity with a "route" extra; MainActivity turns it into
      https://localhost/?_nativeRoute=..., and the page rewrites the visible URL before its own
-     bootstrap reads it. Dynamic "recently read" shortcuts (DgShortcutsPlugin) fill whatever slots
-     the launcher has left. -->
+     bootstrap reads it. Two of the four are routed to the real browser by native-bridge.js
+     (see EXTERNAL_ROUTES there): /dict is a server-rendered page of dict.dhamma.gift, /memo is
+     deliberately not bundled. -->
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
     <shortcut
         android:shortcutId="favorites_history"

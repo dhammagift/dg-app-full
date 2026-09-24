@@ -61,11 +61,21 @@ on:
         required: false
         type: string
       release:
-        description: 'Which store gets this build. Play goes to the INTERNAL track (testers only; production still needs a promote in the console). Default none: a manual run is usually about trying something, not about shipping, and an unasked-for build in App Store Connect or a burnt versionCode is the cost of getting that wrong. A tag always releases to both.'
+        description: 'Which store gets this build. Play goes to the INTERNAL track (testers only; production still needs a promote in the console) and covers BOTH Android apps — the reader (gift.dhamma.twa) and the dictionary (gift.dhamma.pali), each on its own package. Default none: a manual run is usually about trying something, not about shipping, and an unasked-for build in App Store Connect or a burnt versionCode is the cost of getting that wrong. A tag always releases to both.'
         required: false
         type: choice
         default: none
         options: [none, play, testflight, both]
+      ios_checks:
+        description: 'Also run the three iOS check jobs (simulator build, UI checks, screenshots). Off by default: a manual run is usually about the Android half, and those three only add ~17 minutes of waiting after it. A tag always runs them.'
+        required: false
+        type: boolean
+        default: false
+      dict_only:
+        description: 'Run ONLY the dictionary app jobs and skip the reader app entirely. For checking a change under dict/ without building the offline library: minutes instead of the better part of an hour. A tag ignores it — a release builds everything.'
+        required: false
+        type: boolean
+        default: false
 
 # One build per branch. A new push supersedes the one still running on the same ref rather than
 # queueing behind it: the older run was going to produce an APK nobody would install anyway, and
@@ -87,6 +97,11 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # The dict_only dispatch input skips this job and everything that needs it (android-release,
+    # the three iOS jobs, ios-release): a change under dict/ has nothing to do with the offline
+    # library this job builds, and waiting an hour to find out would be the wrong price. A tag push
+    # has no inputs at all, so it always builds.
+    if: ${{ !inputs.dict_only }}
     # The default GITHUB_TOKEN is read-only on this org; action-gh-release below needs
     # contents: write to create a release on a tag push, and fails with a 403 without it (never
     # caught before because every prior CI run here was workflow_dispatch, which the Create
@@ -727,6 +742,272 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
   # ---------------------------------------------------------------------------------------------
+  # The Android half of the release path: the AAB the `build` job already signed, straight to Play,
+  # so a release stops depending on someone remembering to drag a file into a browser.
+  #
+  # Same shape as ios-release below, and dormant for the same reason: no secret, no upload, and a
+  # job summary that says so, instead of a green tick that reads like a release happened.
+  #
+  # The INTERNAL track on purpose. It is the only track that reaches a device in minutes with no
+  # review, it is limited to the testers listed in the console, and production still costs a
+  # deliberate promote there — so an automated upload can never be the thing that ships to readers
+  # by accident. Promoting internal -> production stays a human decision, which is the one part of
+  # this nobody asked to automate.
+  #
+  # What this needs once, in the Play Console (docs/ANDROID_RELEASE.md):
+  #   Setup -> API access -> link a Google Cloud project -> create a service account -> JSON key;
+  #   Users and permissions -> invite that service account's email -> give it "Release apps to
+  #   testing tracks" on gift.dhamma.twa;
+  #   GitHub -> Settings -> Secrets -> PLAY_SERVICE_ACCOUNT_JSON = the whole JSON file.
+  # Play's "the first upload must be done by hand" rule is already satisfied: the package exists,
+  # it replaced the TWA listing.
+  android-release:
+    name: Android release (Play internal track)
+    needs: build
+    if: (github.event_name == 'workflow_dispatch' && (inputs.release == 'play' || inputs.release == 'both')) || startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Is the service account there?
+        id: play
+        env:
+          PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -n "$PLAY_JSON" ]; then
+            echo "have=yes" >> "$GITHUB_OUTPUT"
+            echo "service account present"
+          else
+            echo "have=no" >> "$GITHUB_OUTPUT"
+            echo "::notice::PLAY_SERVICE_ACCOUNT_JSON is not set - nothing was uploaded to Play."
+            {
+              echo "### Android release: nothing happened"
+              echo ""
+              echo "Missing repository secret: \`PLAY_SERVICE_ACCOUNT_JSON\`."
+              echo ""
+              echo "Nothing was uploaded to Google Play. See docs/ANDROID_RELEASE.md."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      # The artifact the build job uploaded, not a rebuild: the bytes that go to Play are the same
+      # ones the checks ran against and the same ones in dg-app-full-aab-release-<run>.
+      - name: Download the signed AAB
+        if: steps.play.outputs.have == 'yes'
+        uses: actions/download-artifact@v4
+        with:
+          name: dg-app-full-aab-release-${{ github.run_number }}
+          path: aab
+
+      - name: Upload to Google Play
+        if: steps.play.outputs.have == 'yes'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: gift.dhamma.twa
+          releaseFiles: aab/app-release.aab
+          track: internal
+          status: completed
+
+      - name: Say what went to Play
+        if: success() && steps.play.outputs.have == 'yes'
+        run: |
+          {
+            echo "### Android release: uploaded"
+            echo ""
+            echo "versionCode ${{ github.run_number }} is on the **internal** track of \`gift.dhamma.twa\`."
+            echo "Testers get it within minutes. Production needs a promote in the Play Console."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ---------------------------------------------------------------------------------------------
+  # The dictionary app (gift.dhamma.pali) — a Capacitor shell around https://dict.dhamma.gift,
+  # living in dict/ of this repository (dict/README.md). It replaces the Bubblewrap TWA in
+  # dg-twa/dict-app, which shipped under this same package id and is now superseded.
+  #
+  # A job of its own rather than more steps in `build`. That job exists to produce the offline
+  # library — a dg-node checkout, a ~213MB database built on the runner, the TOC snapshot — and the
+  # dictionary app needs none of it: its UI IS the live site (capacitor.config.json's server.url),
+  # so there is no www/ to generate from dg-node and no database to build. Here it is `npm ci` plus
+  # the Gradle tasks, minutes instead of the better part of an hour.
+  #
+  # versionCode comes from the run number, exactly as android-release above does it, and it must
+  # climb past what the TWA last uploaded under this package id (2 — Play refuses a code it has
+  # already seen). build.gradle carries 3 as the next free one for a local build; any CI run number
+  # is already far above both.
+  #
+  # The APKs and the AAB stay workflow artifacts. They are deliberately NOT attached to the reader
+  # app's GitHub release: that release already has two Android files that are easy to confuse, and
+  # a third one from a different application is worse. What ships to readers goes through the Play
+  # job below, which is the only path that needs the artifact anyway.
+  dict-build:
+    name: Dictionary app (Android)
+    runs-on: ubuntu-latest
+    # Artifacts only — nothing here creates or edits a GitHub release.
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout this repo (the app)
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'  # Capacitor 8 (AGP 8.13) needs JDK 21
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
+
+      - name: Install the dictionary app's dependencies
+        working-directory: dict
+        run: npm ci
+
+      # src/ -> www/ -> android/app/src/main/assets/public. Not optional: the asset sync is what
+      # puts dict-bridge.js where MainActivity reads it from, and without it the installed app has
+      # no burger-menu rows at all.
+      - name: Sync Capacitor
+        working-directory: dict
+        run: npm run sync-android
+
+      - name: Grant gradlew permissions
+        run: chmod +x dict/android/gradlew
+
+      - name: Build Debug APK
+        working-directory: dict/android
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Upload debug APK artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dg-dict-apk-${{ github.run_number }}
+          path: dict/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      # Same keystore and the same secret names as the reader app (this repo's ANDROID_* or
+      # dg-twa's KEYSTORE_* — whichever set exists), so one key signs both apps. When no secret is
+      # present the release build is skipped rather than failing: a fork must still be able to run
+      # this workflow.
+      - name: Decode release keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 || secrets.KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "ANDROID_KEYSTORE_BASE64 secret not set — skipping the signed dictionary build this run."
+            echo "skip=true" >> "$GITHUB_ENV"
+          else
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+            echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build Release APK
+        if: env.skip != 'true'
+        working-directory: dict/android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD || secrets.KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || secrets.KEYSTORE_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD || secrets.KEY_PASSWORD }}
+        run: ./gradlew assembleRelease -PdgVersionCode=${{ github.run_number }} --stacktrace
+
+      - name: Upload release APK artifact
+        if: success() && env.skip != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dg-dict-apk-release-${{ github.run_number }}
+          path: dict/android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Build Release AAB (Google Play)
+        if: env.skip != 'true'
+        working-directory: dict/android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD || secrets.KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || secrets.KEYSTORE_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD || secrets.KEY_PASSWORD }}
+        # gift.dhamma.pali, not the reader app's gift.dhamma.twa: this AAB updates the dictionary's
+        # own listing, which is the one the TWA created.
+        run: ./gradlew bundleRelease -PdgVersionCode=${{ github.run_number }} --stacktrace
+
+      - name: Upload release AAB artifact
+        if: success() && env.skip != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dg-dict-aab-release-${{ github.run_number }}
+          path: dict/android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 30
+
+  # ---------------------------------------------------------------------------------------------
+  # The dictionary half of the Play release path, the same shape as android-release above and
+  # gated by the same choice: `release: play` (or `both`, or any tag) uploads BOTH Android apps,
+  # each to its own package on the INTERNAL track. `release: none` — the default — uploads neither.
+  #
+  # Internal on purpose, for the same reason as the reader app: it is the only track that reaches a
+  # device in minutes with no review, it is limited to the testers listed in the console, and
+  # promoting it to production stays a human decision in the Play Console.
+  #
+  # The same PLAY_SERVICE_ACCOUNT_JSON as the reader app, and the same service account: it already
+  # holds "Release apps to testing tracks" on gift.dhamma.pali (dg-twa's workflow uploaded this
+  # package with it). If that permission is ever revoked, the upload fails here with a 401/403 —
+  # which is the point of asking Play rather than assuming.
+  dict-release:
+    name: Dictionary app release (Play internal track)
+    needs: dict-build
+    if: (github.event_name == 'workflow_dispatch' && (inputs.release == 'play' || inputs.release == 'both')) || startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Is the service account there?
+        id: play
+        env:
+          PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -n "$PLAY_JSON" ]; then
+            echo "have=yes" >> "$GITHUB_OUTPUT"
+            echo "service account present"
+          else
+            echo "have=no" >> "$GITHUB_OUTPUT"
+            echo "::notice::PLAY_SERVICE_ACCOUNT_JSON is not set - nothing was uploaded to Play."
+            {
+              echo "### Dictionary release: nothing happened"
+              echo ""
+              echo "Missing repository secret: \`PLAY_SERVICE_ACCOUNT_JSON\`."
+              echo ""
+              echo "Nothing was uploaded to Google Play. See docs/ANDROID_RELEASE.md."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      # The artifact dict-build uploaded, not a rebuild: the bytes that go to Play are the ones
+      # that were just built and signed.
+      - name: Download the signed AAB
+        if: steps.play.outputs.have == 'yes'
+        uses: actions/download-artifact@v4
+        with:
+          name: dg-dict-aab-release-${{ github.run_number }}
+          path: aab
+
+      - name: Upload to Google Play
+        if: steps.play.outputs.have == 'yes'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: gift.dhamma.pali
+          releaseFiles: aab/app-release.aab
+          track: internal
+          status: completed
+
+      - name: Say what went to Play
+        if: success() && steps.play.outputs.have == 'yes'
+        run: |
+          {
+            echo "### Dictionary app uploaded"
+            echo ""
+            echo "versionCode ${{ github.run_number }} is on the **internal** track of \`gift.dhamma.pali\`."
+            echo "Testers get it within minutes. Production needs a promote in the Play Console."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ---------------------------------------------------------------------------------------------
   # iOS: build the Capacitor project for the simulator on a macOS runner.
   #
   # A simulator build is the entire point of this job: it needs no Apple Developer account, no
@@ -749,6 +1030,7 @@ jobs:
   ios-build:
     name: iOS simulator build
     needs: build
+    if: inputs.ios_checks || startsWith(github.ref, 'refs/tags/')
     runs-on: macos-26
     steps:
       - name: Checkout this repo (the app)
@@ -883,6 +1165,7 @@ jobs:
   ios-ui:
     name: iOS simulator checks
     needs: build
+    if: inputs.ios_checks || startsWith(github.ref, 'refs/tags/')
     runs-on: macos-26
     steps:
       - name: Checkout this repo (the app)
@@ -1027,6 +1310,7 @@ jobs:
   ios-screenshots:
     name: iOS screenshots (6.9", online)
     needs: build
+    if: inputs.ios_checks || startsWith(github.ref, 'refs/tags/')
     runs-on: macos-26
     steps:
       - name: Checkout this repo (the app)
@@ -1144,81 +1428,6 @@ jobs:
             ios-tour-build.log
           retention-days: 30
           if-no-files-found: warn
-
-  # ---------------------------------------------------------------------------------------------
-  # The Android half of the release path: the AAB the `build` job already signed, straight to Play,
-  # so a release stops depending on someone remembering to drag a file into a browser.
-  #
-  # Same shape as ios-release below, and dormant for the same reason: no secret, no upload, and a
-  # job summary that says so, instead of a green tick that reads like a release happened.
-  #
-  # The INTERNAL track on purpose. It is the only track that reaches a device in minutes with no
-  # review, it is limited to the testers listed in the console, and production still costs a
-  # deliberate promote there — so an automated upload can never be the thing that ships to readers
-  # by accident. Promoting internal -> production stays a human decision, which is the one part of
-  # this nobody asked to automate.
-  #
-  # What this needs once, in the Play Console (docs/ANDROID_RELEASE.md):
-  #   Setup -> API access -> link a Google Cloud project -> create a service account -> JSON key;
-  #   Users and permissions -> invite that service account's email -> give it "Release apps to
-  #   testing tracks" on gift.dhamma.twa;
-  #   GitHub -> Settings -> Secrets -> PLAY_SERVICE_ACCOUNT_JSON = the whole JSON file.
-  # Play's "the first upload must be done by hand" rule is already satisfied: the package exists,
-  # it replaced the TWA listing.
-  android-release:
-    name: Android release (Play internal track)
-    needs: build
-    if: (github.event_name == 'workflow_dispatch' && (inputs.release == 'play' || inputs.release == 'both')) || startsWith(github.ref, 'refs/tags/')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Is the service account there?
-        id: play
-        env:
-          PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-        run: |
-          if [ -n "$PLAY_JSON" ]; then
-            echo "have=yes" >> "$GITHUB_OUTPUT"
-            echo "service account present"
-          else
-            echo "have=no" >> "$GITHUB_OUTPUT"
-            echo "::notice::PLAY_SERVICE_ACCOUNT_JSON is not set - nothing was uploaded to Play."
-            {
-              echo "### Android release: nothing happened"
-              echo ""
-              echo "Missing repository secret: \`PLAY_SERVICE_ACCOUNT_JSON\`."
-              echo ""
-              echo "Nothing was uploaded to Google Play. See docs/ANDROID_RELEASE.md."
-            } >> "$GITHUB_STEP_SUMMARY"
-          fi
-
-      # The artifact the build job uploaded, not a rebuild: the bytes that go to Play are the same
-      # ones the checks ran against and the same ones in dg-app-full-aab-release-<run>.
-      - name: Download the signed AAB
-        if: steps.play.outputs.have == 'yes'
-        uses: actions/download-artifact@v4
-        with:
-          name: dg-app-full-aab-release-${{ github.run_number }}
-          path: aab
-
-      - name: Upload to Google Play
-        if: steps.play.outputs.have == 'yes'
-        uses: r0adkll/upload-google-play@v1
-        with:
-          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: gift.dhamma.twa
-          releaseFiles: aab/app-release.aab
-          track: internal
-          status: completed
-
-      - name: Say what went to Play
-        if: success() && steps.play.outputs.have == 'yes'
-        run: |
-          {
-            echo "### Android release: uploaded"
-            echo ""
-            echo "versionCode ${{ github.run_number }} is on the **internal** track of \`gift.dhamma.twa\`."
-            echo "Testers get it within minutes. Production needs a promote in the Play Console."
-          } >> "$GITHUB_STEP_SUMMARY"
 
   # The release path: archive, export and upload to TestFlight.
   #

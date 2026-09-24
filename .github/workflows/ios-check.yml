@@ -1,0 +1,194 @@
+name: iOS check only
+
+# The fast path for a change that touches only ios/ — a new App Intent, a widget/control extension,
+# a plugin, a localization. It compiles the app for the Simulator and proves the extensions are
+# embedded, which is what a native change can get wrong; it does NOT run the offline-data checks
+# (ios-ui) or take screenshots (ios-screenshots), and it never archives, signs or uploads anything.
+#
+# No Apple account is involved: CODE_SIGNING_ALLOWED=NO, no secrets, and build-app.yml's TestFlight
+# job is in another workflow triggered only by release=testflight|both. Nothing here can reach App
+# Store Connect.
+#
+# Why not just run build-app.yml with ios_checks=true: that path makes the iOS job wait for the full
+# Android/web build (~1h, most of it the 213MB SQLite database), while the iOS half needs only the
+# www/ bundle the page and assets scripts produce. So this reuses the newest live www-<run> artifact
+# exactly the way android-apk-only.yml does, and finishes in minutes.
+#
+# THE WEB BUNDLE IS THEREFORE NOT FROM THIS COMMIT (see android-apk-only.yml's note): a change under
+# src/ will not be visible here, and the Swift/Capacitor wiring is what this run is about.
+
+# Triggered by a PUSH that touches ios/ rather than by workflow_dispatch alone: GitHub only accepts
+# a dispatch for a workflow file that exists on the default branch, and a run meant to prove a
+# native change before it is merged is needed on the branch that has the change (dispatching this
+# file from a branch returned 404). A push-gated trigger is evaluated from the pushed commit, so it
+# works on any branch; workflow_dispatch stays for the day this file is on main.
+on:
+  push:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-check.yml'
+  workflow_dispatch:
+    inputs:
+      www_run:
+        description: 'Run ID to take the web bundle from (default: the most recent run that has one)'
+        required: false
+        type: string
+
+# One iOS check per branch: a new push supersedes the one still running on the same ref, the same
+# rule build-app.yml applies to its own runs.
+concurrency:
+  group: ios-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ios-check:
+    name: iOS simulator build
+    runs-on: macos-26
+    permissions:
+      contents: read
+      actions: read   # reading another run's artifacts
+
+    steps:
+      - name: Checkout this repo (the app)
+        uses: actions/checkout@v4
+
+      # Same reason and same walk as android-apk-only.yml: download-artifact@v4 reaches another run
+      # only by artifact ID, and the most recent run that HAS a bundle is not necessarily the most
+      # recent successful one.
+      - name: Find the web bundle to reuse
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WWW_RUN: ${{ inputs.www_run }}
+        run: |
+          set -euo pipefail
+          runs="${WWW_RUN:-$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/build-app.yml/runs?per_page=20" --jq '.workflow_runs[].id')}"
+          for id in $runs; do
+            name=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/artifacts" \
+                     --jq '.artifacts[] | select(.expired == false) | select(.name | startswith("www-")) | .name' | head -1)
+            if [ -n "$name" ]; then
+              echo "WWW_RUN_ID=$id"   >> "$GITHUB_ENV"
+              echo "WWW_ARTIFACT=$name" >> "$GITHUB_ENV"
+              echo "Reusing $name from run $id"
+              exit 0
+            fi
+          done
+          echo "::error::No unexpired www-* artifact in the last 20 runs of build-app.yml — run that workflow once."
+          exit 1
+
+      - name: Download the web bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download "$WWW_RUN_ID" -n "$WWW_ARTIFACT" -D www -R "$GITHUB_REPOSITORY"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.20.0'
+
+      # Same caches, same key inputs and same reasoning as build-app.yml's ios-build job: SwiftPM
+      # resolves Capacitor's package graph from GitHub on a cold runner, which is the slow half.
+      - name: Restore npm and SwiftPM caches
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            ~/Library/Caches/org.swift.swiftpm
+            ~/Library/Developer/Xcode/DerivedData
+            ios/DerivedData/SourcePackages
+          key: ${{ runner.os }}-ios-${{ hashFiles('ios/App/CapApp-SPM/Package.swift', 'ios/App/App.xcodeproj/project.pbxproj', 'ios/**/Package.resolved', 'package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-ios-
+
+      - name: Install app dependencies
+        run: npm install --legacy-peer-deps --no-audit
+
+      - name: Select the newest Xcode 26
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)
+          echo "Using $XCODE"
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+
+      # Same check as build-app.yml's ios-build job — kept here too because this is the job that
+      # runs on a branch before it is merged, and an undeclared required-reason API is an App Store
+      # rejection, not a warning.
+      - name: Check for Apple required-reason APIs in our own Swift
+        run: |
+          if grep -nE "attributesOfItem|contentModificationDateKey|creationDateKey|fileModificationDate|resourceValues\(forKeys|UserDefaults\.standard|systemUptime|mach_absolute_time|volumeAvailableCapacity|\bstatfs?\(" ios/App/App/*.swift; then
+            echo "::error::a required-reason API is used in our own Swift — either declare it in a PrivacyInfo.xcprivacy or stop using it"
+            exit 1
+          fi
+          echo "no required-reason APIs in our own Swift"
+
+      - name: Sync Capacitor into ios/
+        run: npx cap sync ios
+
+      # The App scheme builds the app AND every target it depends on (ShareExtension, DgControls),
+      # so this one command is what proves the App Intents file, the ControlWidget extension and
+      # their project wiring compile together.
+      - name: Build for the iOS Simulator
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath ios/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            build 2>&1 | tee ios-build.log | tail -30
+
+      # The step above pipes through tail -30, so the job log would show only the last lines of a
+      # failed compile; this prints every compiler error from the full log instead, which is what
+      # makes a failure readable through the API without downloading the artifact.
+      - name: Print the compiler errors
+        if: failure()
+        run: grep -E "error:|note:" ios-build.log | sort -u || true
+
+      # Job log downloads need admin rights on this repo, so an artifact is the only way to read a
+      # failed xcodebuild's output.
+      - name: Upload the xcodebuild log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-check-log-${{ github.run_number }}
+          path: ios-build.log
+          retention-days: 7
+          if-no-files-found: ignore
+
+      # Both extensions must be inside the app, each pointing at its own extension point: the share
+      # extension is how a shared text arrives, and DgControls is where the Control Center control
+      # lives (a ControlWidget is discovered in an extension, never in the app target). A target
+      # that builds but is not embedded is the exact failure this job exists to catch.
+      - name: Check both extensions are inside the app
+        run: |
+          APP="ios/DerivedData/Build/Products/Debug-iphonesimulator/App.app"
+          SHARE="$APP/PlugIns/ShareExtension.appex"
+          CONTROLS="$APP/PlugIns/DgControls.appex"
+          test -d "$SHARE" || { echo "::error::the share extension is not embedded in the app"; ls "$APP/PlugIns" 2>/dev/null; exit 1; }
+          xcrun plutil -p "$SHARE/Info.plist" | grep -q "com.apple.share-services" \
+            || { echo "::error::the embedded extension is not a share extension"; xcrun plutil -p "$SHARE/Info.plist"; exit 1; }
+          xcrun plutil -p "$SHARE/Info.plist" | grep -q "NSExtensionActivationSupportsText" \
+            || { echo "::error::the share extension no longer accepts text"; exit 1; }
+          test -d "$CONTROLS" || { echo "::error::the DgControls extension is not embedded in the app"; ls "$APP/PlugIns" 2>/dev/null; exit 1; }
+          xcrun plutil -p "$CONTROLS/Info.plist" | grep -q "com.apple.widgetkit-extension" \
+            || { echo "::error::DgControls is not a widget extension"; xcrun plutil -p "$CONTROLS/Info.plist"; exit 1; }
+          ls "$APP/PlugIns"
+          echo "share extension and DgControls embedded and configured"
+
+      - name: Upload the simulator .app
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dg-app-ios-check-${{ github.run_number }}
+          path: ios/DerivedData/Build/Products/Debug-iphonesimulator/App.app
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Say what this checked
+        if: always()
+        run: |
+          echo "### iOS simulator build from web bundle \`$WWW_ARTIFACT\` (run $WWW_RUN_ID)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Native half: \`${GITHUB_SHA:0:7}\`. Web half is NOT from this commit." >> "$GITHUB_STEP_SUMMARY"
+          echo "Nothing was signed, archived or uploaded to Apple." >> "$GITHUB_STEP_SUMMARY"

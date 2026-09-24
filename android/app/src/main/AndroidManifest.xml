@@ -32,9 +32,46 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
 
+            <!-- Text-selection menu: select a passage in any app and "Dhamma.gift" sits right in
+                 the selection toolbar (or its ⋮ overflow) next to Copy/Translate, so the reader
+                 taps it directly instead of going through Share → Dhamma.gift — one chooser less.
+                 The label Android prints there is this activity's own android:label above, which
+                 is the app name, so nothing extra to declare. MainActivity.handleIntent treats
+                 the selected text exactly like a shared one (same ?q= path).
+
+                 android:priority="1000": the platform appends these items in the order
+                 PackageManager.queryIntentActivities hands them over, and for activities that
+                 order is RESOLVE_PRIORITY_SORTER — priority first, then system-before-user, and
+                 only then the package name alphabetically (Editor.ProcessTextIntentActions
+                 Handler.onInitializeMenu). At the default 0 we sorted after every com.* app, at
+                 the bottom of a menu that scrolls; 1000 is the maximum, so we come first.
+
+                 text/* rather than text/plain: the platform's own selection intent is text/plain
+                 and matches either, but rich-text editors send text/html — and those are exactly
+                 the apps (Gmail's composer) where the item never showed up. -->
+            <intent-filter android:priority="1000">
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/*" />
+            </intent-filter>
+
             <meta-data
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />
+
+            <!-- Searchable target of the system's search: this is what makes the app appear in the
+                 "Search in apps" panels (Motorola and friends). The system sends the typed query as
+                 ACTION_SEARCH, and MainActivity.handleIntent opens the app's own search with it —
+                 the same ?q= path a shared text takes. Separate from the donated shortcuts, which
+                 the Google app lists as their own rows; neither surface shows the other's entries
+                 (docs/ANDROID_CHECKS.md has the device steps for both). -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
 
             <!-- Deep links: a dhamma.gift URL tapped anywhere on the device (browser, chat app,
                  email) opens straight into the app instead of the browser, at the same path —
@@ -109,6 +146,21 @@
             android:name=".DgDownloadService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+
+        <!-- The Quick Settings tile (DgTileService): Dhamma.gift in the shade, one tap from
+             anywhere, offline — the Android counterpart of a Control Center button. exported="true"
+             is required because the system's tile host binds this service from outside the app;
+             BIND_QUICK_SETTINGS_TILE is what still keeps every other app out. -->
+        <service
+            android:name=".DgTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_tile"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
     </application>
 
     <!-- Permissions -->

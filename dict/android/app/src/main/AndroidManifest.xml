@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+
+        <activity
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
+            android:name=".MainActivity"
+            android:label="@string/title_activity_main"
+            android:theme="@style/AppTheme.NoActionBarLaunch"
+            android:launchMode="singleTask"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Static App Shortcuts: the long-press menu is built from this file, and a
+                 shortcut's route arrives as an extra (MainActivity.handleIntent). -->
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
+
+            <!-- Share -> Dict.Dhamma.Gift: the Web Share Target the site's manifest declares for the
+                 PWA, done natively (a Capacitor app is not a share target on its own). The shared
+                 text becomes the site's ?q=; MainActivity passes it through RAW and lets the site
+                 clean it, exactly as the TWA's LauncherActivity did. -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+
+            <!-- Text selection: select a word in any app and the dictionary sits in the selection
+                 toolbar (or its overflow) next to Copy/Translate. The label Android prints is this
+                 activity's own (android:label above). android:priority="1000": the platform appends
+                 these items in queryIntentActivities order, which for activities is
+                 RESOLVE_PRIORITY_SORTER — priority first, then system-before-user, and only then
+                 the package name alphabetically; at the default 0 the item sorted below every
+                 com.* app. text/* rather than text/plain: rich-text editors send text/html, and
+                 those are the apps where a text/plain filter never shows up. -->
+            <intent-filter android:priority="1000">
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/*" />
+            </intent-filter>
+
+        </activity>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"></meta-data>
+        </provider>
+
+        <!-- The dictionary in the Quick Settings shade (DgDictTileService), kept from the TWA.
+             exported="true" is required: the system's Quick Settings process binds this service,
+             and without the flag the tile could never be added. BIND_QUICK_SETTINGS_TILE is a
+             signature permission held by the platform, so only the system can bind it. The tile is
+             invisible until the reader drags it into the panel — Android's rule for every app.
+             The icon is the brand mark (@drawable/ic_tile), not @mipmap/ic_launcher: a Quick
+             Settings tile draws a single monochrome drawable, and an adaptive launcher icon shows
+             up there as an empty plate. -->
+        <service
+            android:name=".DgDictTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_tile"
+            android:label="@string/launcher_name"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+    </application>
+
+    <!-- Permissions -->
+
+    <uses-permission android:name="android.permission.INTERNET" />
+</manifest>

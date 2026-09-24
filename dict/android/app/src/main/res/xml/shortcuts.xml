@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Static App Shortcuts (long-press the launcher icon).
+
+     ONE static shortcut, on purpose. The launcher's long-press menu holds FOUR entries on the
+     owner's phones, and it counts the shortcuts DECLARED HERE against that budget even when they
+     are disabled at runtime — which is what the reader app learned the hard way (dg-apps
+     adcd32d: "The launcher's long-press menu shows four entries in total, so four static shortcuts
+     left room for two 'recently read' texts, not three"), and then forgot again when 3b08f69 put
+     the four statics back and hid three with ShortcutManager.disableShortcuts(). The dictionary
+     app had copied that second shape, and the owner counted the same two words out of three
+     (2026-09-24: "он на самом деле пишет три.. но не показывает").
+
+     So the whole other set is dynamic now, and DgShortcutsPlugin pushes whichever set the burger
+     menu's switch asks for — the plugin no longer disables anything:
+
+       switch OFF -> three programmed (Table of Contents, Dharmamitra, Aksharamukha), pushed here;
+       switch ON  -> three recent words from the dictionary's own history;
+       either way -> plus this one, which is the errand a reader returns to.
+
+     Four entries in the menu, one of them declared and always present. Favorites & History is that
+     one because it is the only one that belongs to BOTH sets, and because it is the only entry a
+     reader sees on a freshly installed app, before it has ever run — a dynamic shortcut cannot
+     exist before the app has run.
+
+     Each shortcut starts MainActivity with a "route" extra, which MainActivity loads into the
+     WebView. The dhamma.gift routes are in capacitor.config.json's server.allowNavigation, so they
+     open inside this app exactly as they did inside the TWA; dharmamitra.org and aksharamukha.com
+     are not, so those two open in the system browser (which is what a reader wants from an
+     external tool anyway). -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="favorites"
+        android:enabled="true"
+        android:icon="@drawable/shortcut_1"
+        android:shortcutShortLabel="@string/shortcut_fav_short"
+        android:shortcutLongLabel="@string/shortcut_fav_long">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="gift.dhamma.pali"
+            android:targetClass="gift.dhamma.pali.MainActivity">
+            <extra android:name="route" android:value="https://dhamma.gift/4as" />
+        </intent>
+    </shortcut>
+</shortcuts>
