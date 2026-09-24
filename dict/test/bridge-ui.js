@@ -40,7 +40,7 @@ function initScript({ version, history, theme }) {
         localStorage.setItem('theme', theme);
     } catch (e) { /* first paint of a fresh origin: storage may be unavailable */ }
     window.__DG_APP_VERSION__ = version;
-    window.__dgCalls = { shortcuts: [], browsers: [] };
+    window.__dgCalls = { shortcuts: [], browsers: [], listeners: {}, exits: 0 };
     window.Capacitor = {
         getPlatform: function () { return 'android'; },
         isNativePlatform: function () { return true; },
@@ -51,7 +51,13 @@ function initScript({ version, history, theme }) {
                     return Promise.resolve({ count: (opts.items || []).length });
                 },
             },
-            App: { addListener: function () { return { remove: function () {} }; } },
+            App: {
+                addListener: function (name, cb) {
+                    window.__dgCalls.listeners[name] = cb;
+                    return { remove: function () {} };
+                },
+                exitApp: function () { window.__dgCalls.exits += 1; return Promise.resolve(); },
+            },
             Browser: {
                 open: function (opts) {
                     window.__dgCalls.browsers.push(opts);
@@ -198,6 +204,30 @@ function check(name, actual, expected) {
             check('a lookup pushes the launcher menu immediately', after.count > before, true);
             check('the new word leads the three slots',
                 after.last && after.last.items.map((i) => i.label), ['satimā', 'kacchapa', 'dukkha']);
+        }
+
+        // Back: the panel closes first, and only a reader with nothing left behind him leaves the
+        // app. Capacitor's own default is a bare WebView goBack() and nothing else.
+        if (c.device === 'mobile' && c.theme === 'light') {
+            const back = await page.evaluate(() => {
+                const cb = window.__dgCalls.listeners.backButton;
+                if (!cb) return { wired: false };
+                cb({ canGoBack: false }); // panel is open from the screenshot above
+                const afterPanel = {
+                    open: !!document.querySelector('.panel[data-open="true"]'),
+                    exits: window.__dgCalls.exits,
+                };
+                cb({ canGoBack: false }); // nothing left to close or go back to
+                return { wired: true, afterPanel, exits: window.__dgCalls.exits };
+            });
+            check('back button: the app handles it itself', back.wired, true);
+            check('back button: closes the open panel instead of leaving', back.afterPanel, { open: false, exits: 0 });
+            check('back button: leaves the app only from the home screen', back.exits, 1);
+            // That handler closed the panel, so it has to come back before the switch below can be
+            // touched — which is also the check that closing it left the page usable.
+            await page.click('#menubtn');
+            await page.waitForSelector('#p-menu[data-open="true"]', { timeout: 5000 });
+            await page.waitForTimeout(300);
         }
 
         // The switch: off -> the three programmed entries take the dynamic slots instead, and the

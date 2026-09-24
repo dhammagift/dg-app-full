@@ -100,6 +100,15 @@ invisible — the same failure dg-app-full hit with the old StatusBar plugin. Th
 `@color/dg_navbar` (#111111), the dictionary's own dark page colour, so a strip that does show reads
 as part of the page rather than as a band of a slightly different black.
 
+## The back gesture
+
+Capacitor's own default, with no listener registered, is a bare `WebView.goBack()` and nothing else —
+so from the dictionary's home screen a reader presses Back and the app simply sits there, and with
+the burger panel open it does not close either. `dict-bridge.js` registers a `backButton` listener
+and takes the three steps in order: close an open panel, else `history.back()` when there is anywhere
+to go, else leave the app. The reader app wires the same thing for its own modal
+(`src/native-bridge.js`).
+
 ## Building
 
 Needs JDK 21 (Capacitor 8 / AGP 8.13) and the Android SDK.

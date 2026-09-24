@@ -263,9 +263,26 @@
     window.addToHistory = wrapped;
   }
 
+  // Back (Android's gesture / button). Capacitor's default with NO listener is a bare
+  // WebView.goBack() and nothing else: from the dictionary's home screen a reader presses back and
+  // the app just sits there, and with a panel open it does not close either. The reader app wires
+  // the same three steps for the same reason (src/native-bridge.js, its quick modal).
+  function wireBackButton() {
+    var App = Cap.Plugins && Cap.Plugins.App;
+    if (!App || typeof App.addListener !== 'function') return;
+    App.addListener('backButton', function (ev) {
+      // The burger/history panel is an overlay, so closing it is what "back" means while it is up.
+      var open = document.querySelector('.panel[data-open="true"]');
+      if (open && typeof window.closePanels === 'function') { window.closePanels(); return; }
+      if (ev && ev.canGoBack) { window.history.back(); return; }
+      App.exitApp();
+    });
+  }
+
   function start() {
     inject();
     watchHistory();
+    wireBackButton();
     pushShortcuts();
   }
 
