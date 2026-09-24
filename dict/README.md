@@ -62,8 +62,18 @@ nothing disappears from a reader's launcher during the migration. When the switc
 dynamic "recent word" entries take their slots — the launcher's menu holds four, so it is four
 programmed OR one plus three recent, never a mixture.
 
-The history the plugin gets is the site's own `history-list` in localStorage, routed through the
-site's `dictUrl()` so a shortcut opens exactly the address the history entry does.
+The words the plugin gets are the site's own favourites (`fav-list`) first and then its lookup
+history (`history-list`), deduplicated on the route and capped at three — the reader app's own order
+and reasoning ("favourites and history are what a reader returns to"): `dg-apps/src/native-bridge.js`.
+Each route comes from the site's `dictUrl()`, so a shortcut opens exactly the address the history
+entry does.
+
+Pushes happen on page load, once four seconds later (the reader app's own belt: the first visit of a
+session has nothing in history yet), on every lookup — the bridge wraps the site's `addToHistory()` —
+and when the app is backgrounded (`appStateChange` *and* `visibilitychange`, since either can be the
+only one that fires on a given device). The switch's row states how many entries the app is handing
+over, and adds what Android accepted when the two disagree, so "the history has two words" and "the
+launcher dropped one" are not the same screenshot.
 
 Both labels of the first two shortcuts carry the full wording — "DG Favorites & History" and
 "Table of Contents" — because the launcher's long-press menu renders the SHORT label, and an

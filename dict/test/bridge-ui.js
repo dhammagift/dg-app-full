@@ -24,6 +24,9 @@ const BASE = process.env.DG_DICT_URL || 'http://test.dhamma.gift/dict/';
 const SHOTS = process.env.DG_SHOTS || '/var/www/html/dict-app';
 const BRIDGE = fs.readFileSync(path.join(__dirname, '..', 'src', 'dict-bridge.js'), 'utf8');
 const HISTORY = ['kacchapa', 'dukkha', 'satipaṭṭhāna', 'anattā'];
+// The dict site keeps favourites in their own list (js/ui.js: 'fav-list'), and the reader app's
+// own collection puts favourites ahead of history — the parity this test pins.
+const FAVORITES = ['anattā'];
 
 const CASES = [
     { lang: 'en', url: BASE, theme: 'light', device: 'mobile', width: 390, height: 844, dsf: 3 },
@@ -33,10 +36,11 @@ const CASES = [
     { lang: 'ru', url: BASE + 'ru/', theme: 'light', device: 'desktop', width: 1280, height: 900, dsf: 1 },
 ];
 
-function initScript({ version, history, theme }) {
+function initScript({ version, history, favorites, theme }) {
     // Runs before the page's own scripts, like capacitor.config.json's native runtime would.
     try {
         localStorage.setItem('history-list', JSON.stringify(history));
+        localStorage.setItem('fav-list', JSON.stringify(favorites));
         localStorage.setItem('theme', theme);
     } catch (e) { /* first paint of a fresh origin: storage may be unavailable */ }
     window.__DG_APP_VERSION__ = version;
@@ -81,7 +85,7 @@ function check(name, actual, expected) {
             isMobile: c.device === 'mobile',
             hasTouch: c.device === 'mobile',
         });
-        await context.addInitScript(initScript, { version: '2.0.0 (3)', history: HISTORY, theme: c.theme });
+        await context.addInitScript(initScript, { version: '2.0.0 (3)', history: HISTORY, favorites: FAVORITES, theme: c.theme });
         const page = await context.newPage();
         await page.goto(c.url, { waitUntil: 'domcontentloaded' });
         await page.waitForTimeout(600);
@@ -155,9 +159,9 @@ function check(name, actual, expected) {
         const suffix = c.lang === 'ru' ? '?lang=ru' : '';
         const push = await page.evaluate(() => (window.__dgCalls.shortcuts[0] || null));
         check(`${c.lang}/${c.theme}/${c.device}: shortcut labels`, push && push.items.map((i) => i.label),
-            ['kacchapa', 'dukkha', 'satipaṭṭhāna']);
+            ['anattā', 'kacchapa', 'dukkha']);
         check(`${c.lang}/${c.theme}/${c.device}: shortcut routes`, push && push.items.map((i) => i.route),
-            ['kacchapa', 'dukkha', 'satipa%E1%B9%AD%E1%B9%ADh%C4%81na'].map((w) => base + w + suffix));
+            ['anatt%C4%81', 'kacchapa', 'dukkha'].map((w) => base + w + suffix));
         check(`${c.lang}/${c.theme}/${c.device}: programmed set hidden while history is on`, push && push.programmed, false);
 
         // Open the panel for the screenshot, scrolled to the end — the new rows are the last thing
@@ -194,8 +198,8 @@ function check(name, actual, expected) {
                 last: window.__dgCalls.shortcuts[window.__dgCalls.shortcuts.length - 1],
             }));
             check('a lookup pushes the launcher menu immediately', after.count > before, true);
-            check('the new word leads the three slots',
-                after.last && after.last.items.map((i) => i.label), ['satimā', 'kacchapa', 'dukkha']);
+            check('the new word takes the next slot after the favourites',
+                after.last && after.last.items.map((i) => i.label), ['anattā', 'satimā', 'kacchapa']);
         }
 
         // The switch: off -> programmed set back, history cleared from the launcher.

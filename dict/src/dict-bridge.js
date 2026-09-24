@@ -75,9 +75,12 @@
 
   function shortcutsOn() { return localStorage.getItem(SHORTCUTS_FLAG) !== 'off'; }
 
-  function readHistory() {
-    try { return JSON.parse(localStorage.getItem('history-list')) || []; } catch (e) { return []; }
+  function readJson(key) {
+    try { return JSON.parse(localStorage.getItem(key)) || []; } catch (e) { return []; }
   }
+
+  function readHistory() { return readJson('history-list'); }
+  function readFavorites() { return readJson('fav-list'); }
 
   // The site's own URL builder, so a shortcut opens the same address the history entry does
   // (including the /ru/ prefix and ?lang=ru). Only if it is missing does this fall back to the
@@ -91,29 +94,38 @@
 
   // The words that make it into the launcher, in order, capped at SHORTCUTS_MAX. One function so
   // the menu row's own note and the list handed to the plugin can never disagree.
+  //
+  // Favourites first, then the lookup history — the reader app's own order and its own reasoning
+  // (dg-apps/src/native-bridge.js: "favourites and history are what a reader returns to"), which is
+  // also what this app's first shortcut is called. The two lists are deduplicated on the ROUTE, so
+  // a word that is both favourited and recently looked up takes one slot, not two.
   function collectShortcuts() {
     var items = [];
     if (!shortcutsOn()) return items;
     var seen = {};
-    readHistory().forEach(function (word) {
+    function add(word) {
       if (items.length >= SHORTCUTS_MAX) return;
       if (typeof word !== 'string' || !word) return;
       var route = routeFor(word);
       if (!route || seen[route]) return;
       seen[route] = 1;
       items.push({ id: 'dg-dict-' + items.length, label: word, route: route, rank: 10 + items.length });
-    });
+    }
+    readFavorites().forEach(add);
+    readHistory().forEach(add);
     return items;
   }
 
   // The row's note carries the CURRENT number, not just the cap. The owner installed a build,
   // long-pressed the icon and counted two entries where the set holds three; without this the
   // difference between "the history has two words" and "the launcher dropped one" is invisible from
-  // the outside, and both look like the same bug from a screenshot.
-  function shortcutsNote(count) {
+  // the outside, and both look like the same bug from a screenshot. `accepted` is what the plugin
+  // reports back after Android has taken the list — shown only when it disagrees with what was sent.
+  function shortcutsNote(sent, accepted) {
+    var tail = (accepted == null || accepted === sent) ? '' : (isRu() ? ' (ярлыков ' + accepted + ')' : ' (shortcuts ' + accepted + ')');
     return isRu()
-      ? 'До ' + SHORTCUTS_MAX + ' слов в меню долгого нажатия на значок приложения. Сейчас: ' + count + '.'
-      : 'Up to ' + SHORTCUTS_MAX + ' words in the long-press menu of the app icon. Right now: ' + count + '.';
+      ? 'До ' + SHORTCUTS_MAX + ' слов в меню долгого нажатия на значок приложения. Сейчас: ' + sent + tail + '.'
+      : 'Up to ' + SHORTCUTS_MAX + ' words in the long-press menu of the app icon. Right now: ' + sent + tail + '.';
   }
 
   function pushShortcuts() {
@@ -125,7 +137,13 @@
     if (!plugin || typeof plugin.set !== 'function') return; // plugin missing: nothing to do
     // Pushed even when empty ON PURPOSE: that is what clears the entries an earlier run left in
     // the launcher (dg-app-full learned this the hard way).
-    Promise.resolve(plugin.set({ items: items, programmed: !on })).catch(function (e) {
+    Promise.resolve(plugin.set({ items: items, programmed: !on })).then(function (result) {
+      // DgShortcutsPlugin resolves with the number of shortcuts it actually built. A smaller number
+      // than we sent means Android refused some of them, and that is worth saying out loud rather
+      // than leaving the reader to count entries in the launcher.
+      var accepted = result && typeof result.count === 'number' ? result.count : null;
+      if (note && accepted != null && accepted !== items.length) note.textContent = shortcutsNote(items.length, accepted);
+    }).catch(function (e) {
       console.log('[dg-dict-shortcuts] set failed:', (e && e.message) || e);
     });
   }
@@ -249,4 +267,8 @@
     if (document.visibilityState === 'hidden') pushShortcuts();
   });
   window.addEventListener('pagehide', pushShortcuts);
+  // The reader app's own belt (src/native-bridge.js): the first visit of a session has nothing in
+  // history yet, so an app-state change is the only thing that would ever push — and if that event
+  // never arrives, the launcher stays empty for the whole session. One delayed push costs nothing.
+  setTimeout(pushShortcuts, 4000);
 })();
