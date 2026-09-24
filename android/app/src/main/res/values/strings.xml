@@ -19,4 +19,10 @@
     <string name="shortcut_fav_long">Favorites &amp; History</string>
     <string name="shortcut_memo_short">Memo</string>
     <string name="shortcut_memo_long">Memo</string>
+
+    <!-- Quick Settings tile (DgResumeTileService). Not translated, like the shortcut labels
+         above: the app name is Latin and the site manifest does not translate its shortcuts
+         either. The subtitle line (the text being resumed) comes from the shortcut label the
+         page pushes, which IS the reader's own language. -->
+    <string name="tile_resume">Continue reading</string>
 </resources>

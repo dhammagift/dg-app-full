@@ -132,6 +132,27 @@
             android:name=".DgDownloadService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+
+        <!-- "Продолжить чтение" in the Quick Settings shade (DgResumeTileService): opens the text
+             the reader last had open — the top dynamic shortcut the page already pushes via
+             DgShortcutsPlugin — or the app itself when there is none. The Android counterpart of
+             the iOS Control Center control (branch siri). exported="true" is required: the
+             system's Quick Settings process binds this service, and without the flag it could
+             never be added to the shade. BIND_QUICK_SETTINGS_TILE is a signature permission held
+             by the platform, so only the system can bind it — no other app can reach in.
+             No permission attribute on purpose: the permission is one the CALLER holds; declaring
+             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE" is the documented
+             form and is what actually restricts binding to the system. -->
+        <service
+            android:name=".DgResumeTileService"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/tile_resume"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
     </application>
 
     <!-- Permissions -->
