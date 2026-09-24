@@ -121,6 +121,10 @@ function check(name, actual, expected) {
                 starColor: getComputedStyle(document.getElementById('dg-rate-star')).color,
                 starFontSize: getComputedStyle(document.getElementById('dg-rate-star')).fontSize,
                 starMask: getComputedStyle(document.getElementById('dg-rate-star')).maskImage,
+                // The star is a mask <i>, so it has no text of its own: the button's text is the 5
+                // and the 🙏, and the glyph sits between them.
+                rateLabel: document.getElementById('dg-rate-btn').textContent,
+                rateParts: Array.from(document.getElementById('dg-rate-btn').childNodes).map((n) => n.nodeType === 3 ? n.textContent : '#' + n.id),
                 note: document.getElementById('dg-shortcuts-note').textContent,
             };
         });
@@ -142,6 +146,9 @@ function check(name, actual, expected) {
         // The switch beside it is 22px tall (dg.css), and the first cut inherited the button font.
         check(`${c.lang}/${c.theme}/${c.device}: the star matches the switch's size`,
             rows.starFontSize, '22px');
+        // "5★🙏", not "rate": the row is already titled Rate Us.
+        check(`${c.lang}/${c.theme}/${c.device}: the button says five stars, not "rate"`,
+            rows.rateParts, ['5', '#dg-rate-star', '🙏']);
         // The note carries the live count, so "the history has two words" and "the launcher dropped
         // one" stop looking like the same screenshot.
         check(`${c.lang}/${c.theme}/${c.device}: the row note states how many are in the launcher`,

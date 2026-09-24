@@ -52,16 +52,14 @@
       shortcuts: 'Recent words in app shortcuts',
       version: 'App version',
       rate: 'Rate Us',
-      rateNote: 'Open the store page and leave a review.',
-      rateBtn: 'rate'
+      rateNote: 'Open the store page and leave a review.'
     },
     ru: {
       group: 'Приложение',
       shortcuts: 'Недавние слова в ярлыках',
       version: 'Версия приложения',
       rate: 'Оценить приложение',
-      rateNote: 'Открыть страницу в магазине и оставить отзыв.',
-      rateBtn: 'оценить'
+      rateNote: 'Открыть страницу в магазине и оставить отзыв.'
     }
   };
 
@@ -227,8 +225,15 @@
     glyph.style.color = RATE_STAR_COLOR;
     glyph.style.fontSize = RATE_STAR_SIZE;
     glyph.style.setProperty('--u', RATE_STAR_MASK);
+    // "5★🙏", not the word "rate" (owner, 2026-09-24: "может вместо ⭐rate? А то там rate итак
+    // написано в rate us"): the row is already titled Rate Us, so the label only repeated it, and
+    // what the tap is for is a five-star nudge. The middle star stays the app's own yellow mask
+    // glyph rather than the emoji one — its colour and its 22px size (the switch's own height,
+    // dg.css input.sw) were both asked for in earlier rounds and an emoji would give up control of
+    // both. The 5 and the 🙏 are plain text, so the row still reads in either language.
+    btn.appendChild(document.createTextNode('5'));
     btn.appendChild(glyph);
-    btn.appendChild(document.createTextNode(t.rateBtn));
+    btn.appendChild(document.createTextNode('🙏'));
     btn.addEventListener('click', function () { openExternal(STORE_URL); });
     rate.appendChild(btn);
     out.push(rate);
