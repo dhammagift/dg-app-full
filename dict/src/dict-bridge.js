@@ -189,19 +189,41 @@
     return true;
   }
 
+  // The site records every lookup through this one global (extra.js, loaded after this script, so
+  // this can only be wired from start()). Wrapping it is how the launcher hears about a new word
+  // the moment it is looked up, instead of at whatever app-state change comes next: the owner
+  // looked up words, long-pressed the icon and still saw two entries, which is exactly what a push
+  // that happened once at page load looks like.
+  function watchHistory() {
+    if (typeof window.addToHistory !== 'function' || window.addToHistory.__dgWrapped) return;
+    var original = window.addToHistory;
+    var wrapped = function () {
+      var result = original.apply(this, arguments);
+      pushShortcuts();
+      return result;
+    };
+    wrapped.__dgWrapped = true;
+    window.addToHistory = wrapped;
+  }
+
   function start() {
     inject();
+    watchHistory();
     pushShortcuts();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
   else start();
 
-  // The history is only complete once the reader is done with the app, and pushing on every lookup
-  // would rewrite the launcher menu constantly.
+  // Backgrounding the app. The App plugin's own event when it is there, and the page's visibility
+  // as well: either can be the only one that fires on a given device, and a menu that lags one
+  // lookup behind is what a missed push looks like.
   var App = Cap.Plugins && Cap.Plugins.App;
   if (App && typeof App.addListener === 'function') {
     App.addListener('appStateChange', function (state) { if (!state.isActive) pushShortcuts(); });
   }
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') pushShortcuts();
+  });
   window.addEventListener('pagehide', pushShortcuts);
 })();

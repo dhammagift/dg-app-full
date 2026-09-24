@@ -172,6 +172,23 @@ function check(name, actual, expected) {
         check(`${c.lang}/${c.theme}/${c.device}: Rate Us opens the Play listing`,
             opened && opened.url, 'https://play.google.com/store/apps/details?id=gift.dhamma.pali');
 
+        // A lookup must reach the launcher at once, not at the next app-state change: the site's
+        // own addToHistory() is what the bridge wraps.
+        if (c.device === 'mobile' && c.theme === 'light') {
+            const wrapped = await page.evaluate(() => typeof window.addToHistory === 'function' && window.addToHistory.__dgWrapped === true);
+            check('the site hooks its own addToHistory', wrapped, true);
+            const before = await page.evaluate(() => window.__dgCalls.shortcuts.length);
+            await page.evaluate(() => window.addToHistory('satimā'));
+            await page.waitForTimeout(200);
+            const after = await page.evaluate(() => ({
+                count: window.__dgCalls.shortcuts.length,
+                last: window.__dgCalls.shortcuts[window.__dgCalls.shortcuts.length - 1],
+            }));
+            check('a lookup pushes the launcher menu immediately', after.count > before, true);
+            check('the new word leads the three slots',
+                after.last && after.last.items.map((i) => i.label), ['satimā', 'kacchapa', 'dukkha']);
+        }
+
         // The switch: off -> programmed set back, history cleared from the launcher.
         if (c.device === 'mobile' && c.theme === 'light') {
             await page.uncheck('#dg-shortcuts-toggle');
