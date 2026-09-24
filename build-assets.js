@@ -371,11 +371,15 @@ function injectAppVersionRow() {
     fs.writeFileSync(dest, html, 'utf8');
 }
 
-// One more patched row in the same "Данные"/"Data" section, right under the version: the app's only
-// way to reach its store listing (owner, 2026-09-24). The row carries its own button rather than
-// making the whole row the control, the same shape the dictionary app's Rate Us row has — owner:
-// "такой же пункт Меню... с таким же поведением с таким же дизайном". native-bridge.js fills the
-// button's label (the three emoji, one size) and retitles the row for Russian.
+// One more patched row in the same "Данные"/"Data" section, ABOVE the version: the app's only way to
+// reach its store listing (owner, 2026-09-24). The row carries its own button rather than making the
+// whole row the control, the same shape the dictionary app's Rate Us row has — owner: "такой же
+// пункт Меню... с таким же поведением с таким же дизайном". native-bridge.js fills the button's
+// label (the three emoji, one size) and retitles the row for Russian.
+//
+// Above the version on purpose: the version closes the menu (owner: "версия последний пункт меню
+// должен быть", the same rule the dictionary app already follows). The first cut inserted this row
+// after the version, which put Rate Us last instead.
 // Anchored on the row injectAppVersionRow() writes, so that function has to run first.
 function injectRateUsRow() {
     const dest = path.join(WWW, 'settings', 'index.html');
@@ -396,7 +400,7 @@ function injectRateUsRow() {
                 'injectAppVersionRow() must run first; if its markup changed, update `anchor` here too.'
             );
         }
-        html = html.replace(anchor, anchor + row);
+        html = html.replace(anchor, row + anchor);
     }
     fs.writeFileSync(dest, html, 'utf8');
 }

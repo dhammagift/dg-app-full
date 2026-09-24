@@ -71,7 +71,9 @@ function initScript({ platform, lang }) {
                         title: document.getElementById('dgRateUsTitle').textContent.trim(),
                         note: document.getElementById('dgRateUsDesc').textContent.trim(),
                         inDataSection: !!el && el.parentElement.classList.contains('rows'),
-                        afterVersionRow: !!el && el.previousElementSibling && el.previousElementSibling.id === 'dgAppVersionRow',
+                        // The version closes the menu, so this row must sit immediately
+                        // BEFORE it (owner: "версия последний пункт меню должен быть").
+                        beforeVersionRow: !!el && el.nextElementSibling && el.nextElementSibling.id === 'dgAppVersionRow',
                         // The dictionary app's own Rate Us shape: a button, not a clickable row.
                         hasButton: !!btn,
                         label: btn && btn.textContent,
@@ -82,7 +84,7 @@ function initScript({ platform, lang }) {
                 check(`${platform}/${lang}: row exists`, row.exists, true);
                 check(`${platform}/${lang}: title`, row.title, t.title);
                 check(`${platform}/${lang}: description`, row.note, t.note);
-                check(`${platform}/${lang}: sits right after the version row`, row.afterVersionRow, true);
+                check(`${platform}/${lang}: sits right before the version row`, row.beforeVersionRow, true);
                 check(`${platform}/${lang}: the row carries its own button`, row.hasButton, true);
                 // The same three emoji the dictionary app shows, at that app's size.
                 check(`${platform}/${lang}: the invite is the dictionary's three emoji`,
@@ -117,7 +119,7 @@ function initScript({ platform, lang }) {
         await page.goto(URL, { waitUntil: 'domcontentloaded' });
         await page.waitForTimeout(800);
         const ids = await page.evaluate(() => Array.from(document.querySelectorAll('#dgDynShortcutsRow,#dgAppVersionRow,#dgRateUsRow')).map((e) => e.id));
-        check('all three injected rows are present, in order', ids, ['dgDynShortcutsRow', 'dgAppVersionRow', 'dgRateUsRow']);
+        check('all three injected rows are present, version last', ids, ['dgDynShortcutsRow', 'dgRateUsRow', 'dgAppVersionRow']);
         await page.locator('#dgRateUsRow').scrollIntoViewIfNeeded();
         await page.locator('#dgAppVersionRow,#dgRateUsRow').first().screenshot({ path: path.join(SHOTS, 'dg-app-full-data-section.png') });
         await context.close();
