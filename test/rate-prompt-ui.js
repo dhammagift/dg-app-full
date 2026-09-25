@@ -121,6 +121,14 @@ function initScript({ firstRunDaysAgo, shown, tapped, lang }) {
             await context.close();
         }
 
+        // 3b. The same last chance in Russian — its button is the one the owner renamed by hand.
+        {
+            const { context, page } = await open({ firstRunDaysAgo: 181, shown: '1', lang: 'ru' });
+            const b = await box(page);
+            check('day 181 (ru): the last chance says "не спрашивать"', b && b.ghost, 'Не спрашивать');
+            await context.close();
+        }
+
         // 4. After the last showing: never again, however old the install.
         {
             const { context, page } = await open({ firstRunDaysAgo: 400, shown: '2' });

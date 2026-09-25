@@ -1203,7 +1203,7 @@
                 ? [['Займёт', '30 сек – 2 мин'], ['Где', 'Google Play'], ['Что оставить', 'звёзды и комментарий']]
                 : [['Takes', '30 sec – 2 min'], ['Where', 'Google Play'], ['What to leave', 'stars and a comment']],
             later: ru ? 'Позже' : 'Later',
-            laterLast: ru ? 'Не напоминать' : "Don't ask",
+            laterLast: ru ? 'Не спрашивать' : "Don't ask",
             go: ru ? 'Оценить' : 'Rate',
         };
     }
