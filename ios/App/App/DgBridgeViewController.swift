@@ -59,6 +59,12 @@ class DgBridgeViewController: CAPBridgeViewController {
     }
 
     override func capacitorDidLoad() {
+        // Edge swipe = browser Back. WKWebView leaves it off by default, and Android's system Back
+        // already does this, so on iOS a reader who taps a link by accident had no way back to the
+        // sutta (a tester's report). Uses the WebView's own history, so it only goes back when there
+        // is somewhere to go.
+        webView?.allowsBackForwardNavigationGestures = true
+
         // The page learns that SQL runs natively (DgSharedLibrary.swift). Added here and not in
         // webViewConfiguration(for:), because Capacitor replaces the user content controller after
         // that call.
