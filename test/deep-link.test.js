@@ -19,6 +19,7 @@ const CASES = [
     ['reader: an id keeps its query', 'dhammagift://mn1?langs=ru', '/?_nativeRoute=%2Fmn1%3Flangs%3Dru'],
     ['route: explicit, segments included', 'dhammagift://route/dn22:2.2', '/?_nativeRoute=%2Fdn22%3A2.2'],
     ['route: a TOC book', 'dhammagift://route/toc/pli-tv-bu-pm', '/?_nativeRoute=%2Ftoc%2Fpli-tv-bu-pm'],
+    ['route: the Settings page (a file of its own, handed off by native-bridge.js)', 'dhammagift://route/settings', '/?_nativeRoute=%2Fsettings'],
     ['route: the favourites sheet (a digit after /, so the id rule cannot catch it)', 'dhammagift://route/4as', '/?_nativeRoute=%2F4as'],
     ['route: with a query', 'dhammagift://route/search?q=kacchapa', '/?_nativeRoute=%2Fsearch%3Fq%3Dkacchapa'],
     ['search: explicit', 'dhammagift://search?q=kacchapa', '/?q=kacchapa'],

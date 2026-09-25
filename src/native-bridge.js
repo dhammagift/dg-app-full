@@ -294,9 +294,11 @@
         // real file: Capacitor cannot resolve the /memo/ directory, so the shortcut points at it.
         // Pages of their own (not SPA routes) are loaded as files. replaceState only renamed the address
         // and left the home page on screen: the Memo shortcut and a dhamma.gift/memo link opened search.
-        var page = /^\/(ru\/)?(memo|login)\/?$/.exec(route);
+        // Settings is a page of its own too (settings/index.html, no /ru/ copy): without it,
+        // dhammagift://route/settings reached the router as the search word "settings".
+        var page = /^\/(?:(ru\/)?(memo|login)|(settings))\/?$/.exec(route);
         if (page) {
-            location.replace('/' + (page[1] || '') + page[2] + '/index.html');
+            location.replace(page[3] ? '/settings/index.html' : '/' + (page[1] || '') + page[2] + '/index.html');
             return;
         }
         history.replaceState(null, '', route);
