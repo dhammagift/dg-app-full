@@ -388,9 +388,14 @@ function injectRateUsRow() {
         <div><p class="row-title" id="dgAppVersionTitle">App version</p><p class="row-desc" id="dgAppVersionDesc">&nbsp;</p></div>
       </div>
 `;
+    // A real link (target="_top"), not a button wired to the Browser plugin: the row navigates the
+    // top frame to the store, which is what Capacitor turns into "hand this to Play" — the plugin
+    // call did nothing on the device (owner, 2026-09-25: "не работает кнопка rate us... не
+    // открывается store"). native-bridge.js swaps the href for the platform's own store URL, so
+    // the one written here is only the Android default.
     const row = `      <div class="row" id="dgRateUsRow">
         <div><p class="row-title" id="dgRateUsTitle">Rate Us</p><p class="row-desc" id="dgRateUsDesc">Open the store page and leave a review.</p></div>
-        <div class="row-control"><button class="btn" type="button" id="dgRateUsBtn">5️⃣⭐️🙏</button></div>
+        <div class="row-control"><a class="btn" id="dgRateUsBtn" href="https://play.google.com/store/apps/details?id=gift.dhamma.twa" target="_top" rel="noopener">5️⃣⭐️🙏</a></div>
       </div>
 `;
     if (!html.includes('id="dgRateUsRow"')) {

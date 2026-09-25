@@ -1195,9 +1195,20 @@
         // the dictionary app builds, and one place that decides what it says is one place to change.
         btn.textContent = RATE_LABEL;
         btn.style.fontSize = RATE_LABEL_SIZE;
+        // A real link, and the reason is the owner's report: "не работает кнопка rate us ... не
+        // открывается store". This row used to call the Browser plugin; a top-frame navigation to
+        // the store host is what Capacitor's own shouldOverrideUrlLoading turns into "open this
+        // outside the app" (launchIntent -> ACTION_VIEW), the same path every external link in this
+        // app takes, and it does not depend on a plugin call arriving from whatever frame the
+        // settings page happens to be in. The href in the markup is the Android default, so the
+        // platform's own URL is written here for both platforms.
+        btn.setAttribute('href', rateUsUrl());
+        btn.setAttribute('target', '_top');
+        btn.setAttribute('rel', 'noopener');
         btn.addEventListener('click', function () {
+            // Only a note for the future invitation (RATE_FLAG above) — no preventDefault, the
+            // navigation is what opens the store.
             try { localStorage.setItem(RATE_FLAG, '1'); } catch (e) { /* private mode: the prompt asks later */ }
-            openExternal(rateUsUrl());
         });
     }
 

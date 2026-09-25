@@ -183,11 +183,20 @@ function check(name, actual, expected) {
         await page.locator('#p-menu').screenshot({ path: shot });
         report.push({ ...c, shot });
 
-        // Rate Us must open the store listing through the native browser.
-        await page.click('#dg-rate-btn');
-        const opened = await page.evaluate(() => window.__dgCalls.browsers[0] || null);
-        check(`${c.lang}/${c.theme}/${c.device}: Rate Us opens the Play listing`,
-            opened && opened.url, 'https://play.google.com/store/apps/details?id=gift.dhamma.pali');
+        // Rate Us must reach the store listing.
+        // A real link now, not a plugin call: clicking it navigates the top frame to the store,
+        // which is what the WebView turns into "open Play".
+        const link = await page.evaluate(() => {
+            const a = document.getElementById('dg-rate-btn');
+            const out = { href: a.getAttribute('href'), target: a.getAttribute('target'), tag: a.tagName };
+            a.addEventListener('click', (e) => e.preventDefault(), { once: true });
+            a.click();
+            return out;
+        });
+        check(`${c.lang}/${c.theme}/${c.device}: Rate Us is a link, not a scripted button`, link.tag, 'A');
+        check(`${c.lang}/${c.theme}/${c.device}: pointing at the Play listing`,
+            link.href, 'https://play.google.com/store/apps/details?id=gift.dhamma.pali');
+        check(`${c.lang}/${c.theme}/${c.device}: and it navigates the top frame`, link.target, '_top');
 
         // A lookup must reach the launcher at once, not at the next app-state change: the site's
         // own addToHistory() is what the bridge wraps.

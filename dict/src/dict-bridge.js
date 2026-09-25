@@ -63,12 +63,6 @@
     }
   };
 
-  function openExternal(url) {
-    var Browser = Cap.Plugins && Cap.Plugins.Browser;
-    if (Browser && typeof Browser.open === 'function') { Browser.open({ url: url }); return; }
-    window.open(url, '_blank');
-  }
-
   // ---- launcher shortcuts ----------------------------------------------------------------
 
   function shortcutsOn() { return localStorage.getItem(SHORTCUTS_FLAG) !== 'off'; }
@@ -211,10 +205,16 @@
     // (2026-09-24): "версия же обычно последний пункт". The row itself is PERMANENT: it stays after
     // a tap (owner: "пункт никуда не нужно скрывать он остаётся на месте").
     var rate = row('dg-rate-row', t.rate, t.rateNote);
-    var btn = document.createElement('button');
+    // A real link, not a plugin call: navigating the top frame to the store host is what Capacitor
+    // turns into "hand this to Play" (shouldOverrideUrlLoading -> launchIntent), and a Browser
+    // plugin call is what did nothing in the main application's equivalent row (owner, 2026-09-25:
+    // "не работает кнопка rate us... не открывается store").
+    var btn = document.createElement('a');
     btn.className = 'rb act';
-    btn.type = 'button';
     btn.id = 'dg-rate-btn';
+    btn.href = STORE_URL;
+    btn.target = '_top';
+    btn.rel = 'noopener';
     // "5️⃣⭐️🙏", not the word "rate" (owner: "может вместо ⭐rate? А то там rate итак написано в
     // rate us"), and all three emoji at one size (owner: "сделай [их] в виде эмодзи и чтобы они
     // были одного размера, сейчас руки как будто больше" — a masked star next to an emoji cannot
@@ -222,10 +222,9 @@
     btn.style.fontSize = RATE_LABEL_SIZE;
     btn.appendChild(document.createTextNode(RATE_LABEL));
     btn.addEventListener('click', function () {
-      // Only a note for the future invitation (RATE_FLAG above) — the row stays where it is, and
-      // the store page opens as before.
+      // Only a note for the future invitation (RATE_FLAG above) — no preventDefault, the
+      // navigation is what opens the store. The row itself stays where it is.
       try { localStorage.setItem(RATE_FLAG, '1'); } catch (e) { /* private mode: the prompt asks later */ }
-      openExternal(STORE_URL);
     });
     rate.appendChild(btn);
     out.push(rate);

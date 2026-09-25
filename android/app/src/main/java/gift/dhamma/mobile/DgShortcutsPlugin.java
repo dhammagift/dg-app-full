@@ -45,7 +45,14 @@ import java.util.List;
 public class DgShortcutsPlugin extends Plugin {
 
     private static final int MAX_SHORTCUTS = 15;   // ShortcutManager's own cap for a single app
-    private static final int SHORT_LABEL_MAX = 10; // characters, Android's documented limit
+    // The launcher renders the SHORT label and ellipsizes whatever does not fit its own width, so
+    // these are caps on absurdity, not a layout decision. Android's "10 characters" is the guidance
+    // its docs give, NOT something the platform enforces — ShortcutInfo.Builder.setShortLabel only
+    // rejects an empty label and ShortcutService validates no label length at all — and clamping to
+    // it made every recent text read "mn6 Ākank…" in a menu with room for the whole name (owner,
+    // 2026-09-25: "почему текст обрезается раньше, хотя в статике достаточно места"). The static
+    // entries show full 19-character labels on the same launcher, which is what settled it.
+    private static final int SHORT_LABEL_MAX = 25;
     private static final int LONG_LABEL_MAX = 25;
 
     @PluginMethod

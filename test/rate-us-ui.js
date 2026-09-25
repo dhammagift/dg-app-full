@@ -91,12 +91,20 @@ function initScript({ platform, lang }) {
                     row.label, String.fromCodePoint(0x35, 0xFE0F, 0x20E3, 0x2B50, 0xFE0F, 0x1F64F));
                 check(`${platform}/${lang}: the invite is 16px`, row.size, '16px');
 
-                await page.click('#dgRateUsBtn');
-                await page.waitForTimeout(200);
-                const opened = await page.evaluate(() => window.__dgCalls.browsers[0] || null);
-                check(`${platform}/${lang}: opens a store page`,
-                    opened && opened.url,
-                    platform === 'android' ? ANDROID_URL : IOS_URL);
+                // A real link now, not a plugin call: the click must not be left to a Browser.open()
+                // that did nothing on the device. preventDefault here stands in for the WebView,
+                // which is what actually turns the navigation into "open Play".
+                const link = await page.evaluate(() => {
+                    const a = document.getElementById('dgRateUsBtn');
+                    const out = { href: a.getAttribute('href'), target: a.getAttribute('target'), tag: a.tagName };
+                    a.addEventListener('click', (e) => e.preventDefault(), { once: true });
+                    a.click();
+                    return out;
+                });
+                check(`${platform}/${lang}: the row is a link, not a scripted button`, link.tag, 'A');
+                check(`${platform}/${lang}: pointing at this platform's store page`,
+                    link.href, platform === 'android' ? ANDROID_URL : IOS_URL);
+                check(`${platform}/${lang}: and it navigates the top frame`, link.target, '_top');
                 // Tapping is remembered for the invitation that does not exist yet, and the row
                 // itself stays put (owner: "пункт Меню остаётся не исчезает").
                 const afterTap = await page.evaluate(() => ({
