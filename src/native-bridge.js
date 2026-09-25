@@ -1078,27 +1078,6 @@
     // The build now also writes www/app-version.json (from android/app/build.gradle), so the row
     // always has a real answer — and it still prefers the plugin, which is the authoritative source
     // on a device (it reads the installed package's versionName/versionCode).
-    // Seeing the invitation without waiting sixty days. Owner, 2026-09-25: "я на андроид, где там
-    // отладка?" — there is none: a release WebView cannot be inspected (chrome://inspect lists only
-    // debug builds), and a console is exactly what a phone does not have. So the app carries its own
-    // way in: five taps on the App version row in settings put the first run sixty-one days back and
-    // clear both flags, and the sheet appears the next time the app starts. A single tap on that row
-    // already copies the version string, so five in a row cannot happen by accident.
-    var versionTaps = 0;
-    var versionTapTimer = null;
-    function armRatingPrompt() {
-        try {
-            localStorage.setItem(RATE_FIRST_RUN, String(Date.now() - (RATE_DAY_FIRST + 1) * 86400000));
-            localStorage.removeItem(RATE_SHOWN);
-            localStorage.removeItem(RATE_FLAG);
-        } catch (e) { /* private mode: nowhere to remember it */ }
-        if (typeof window.showBubbleNotification === 'function') {
-            window.showBubbleNotification(isRu()
-                ? 'Приглашение оценки включено — перезапустите приложение'
-                : 'The rating invitation is armed — restart the app', 5000);
-        }
-    }
-
     function fillVersionRow() {
         var row = document.getElementById('dgAppVersionRow');
         if (!row) return;
@@ -1111,14 +1090,6 @@
                 navigator.clipboard.writeText(text).catch(function (e) {
                     console.error('[dg-version] clipboard write failed', e);
                 });
-                // The five-tap way into the rating invitation (see armRatingPrompt above).
-                versionTaps++;
-                clearTimeout(versionTapTimer);
-                versionTapTimer = setTimeout(function () { versionTaps = 0; }, 3000);
-                if (versionTaps >= 5) {
-                    versionTaps = 0;
-                    armRatingPrompt();
-                }
             });
         }
 
@@ -1383,6 +1354,10 @@
         btn.setAttribute('href', rateUsUrl());
         btn.setAttribute('target', '_top');
         btn.setAttribute('rel', 'noopener');
+        // An <a> in this page inherits the site's link underline, and it lands under the emoji:
+        // "в DG app есть подчеркивания под эмодзи" (owner, from a device screenshot). The row is a
+        // button in this menu, so it is styled as one.
+        btn.style.textDecoration = 'none';
         btn.addEventListener('click', function () {
             // Only a note for the future invitation (RATE_FLAG above) — no preventDefault, the
             // navigation is what opens the store.

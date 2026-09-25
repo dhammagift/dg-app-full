@@ -156,30 +156,6 @@ function initScript({ firstRunDaysAgo, shown, tapped, lang }) {
             check('"Rate" ends the asking', after.shown, '2');
             await context.close();
         }
-        // 6b. The way in without a console: five taps on the App version row in settings arm it.
-        {
-            const context = await browser.newContext({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true, colorScheme: 'dark' });
-            await context.addInitScript(initScript, { firstRunDaysAgo: null, lang: 'ru' });
-            const page = await context.newPage();
-            await page.goto(`http://127.0.0.1:${PORT}/settings/index.html`, { waitUntil: 'domcontentloaded' });
-            await page.waitForTimeout(700);
-            await page.evaluate(BRIDGE);
-            await page.waitForTimeout(400);
-            const armed = await page.evaluate(async () => {
-                const row = document.getElementById('dgAppVersionRow');
-                for (let i = 0; i < 5; i++) { row.click(); await new Promise((r) => setTimeout(r, 60)); }
-                const first = parseInt(localStorage.getItem('dgFirstRunAt') || '0', 10);
-                return {
-                    days: Math.round((Date.now() - first) / 86400000),
-                    shown: localStorage.getItem('dgRatePromptShown'),
-                    tapped: localStorage.getItem('dgRateUsTapped'),
-                };
-            });
-            check('five taps on the version row arm it for sixty days back', armed.days, 61);
-            check('arming clears both flags', [armed.shown, armed.tapped], [null, null]);
-            await context.close();
-        }
-
         // 7. The dictionary app has its own bridge and its own copy of the sheet: same rules, its
         //    own package in the store link. Its page is the live site, served here by the test host.
         {

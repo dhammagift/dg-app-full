@@ -215,6 +215,9 @@
     btn.href = STORE_URL;
     btn.target = '_top';
     btn.rel = 'noopener';
+    // An <a> would take the site's link underline, which lands under the emoji (the main app's row
+    // had exactly that, owner, from a device screenshot).
+    btn.style.textDecoration = 'none';
     // "5️⃣⭐️🙏", not the word "rate" (owner: "может вместо ⭐rate? А то там rate итак написано в
     // rate us"), and all three emoji at one size (owner: "сделай [их] в виде эмодзи и чтобы они
     // были одного размера, сейчас руки как будто больше" — a masked star next to an emoji cannot
@@ -230,11 +233,8 @@
     out.push(rate);
 
     // Filled from the value MainActivity prepends to this script (versionName + versionCode), so
-    // the row never depends on the site knowing anything about the app. Last row on purpose, and
-    // the five-tap way into the rating invitation (see countVersionTap).
+    // the row never depends on the site knowing anything about the app. Last row on purpose.
     var ver = row('dg-version-row', t.version, window.__DG_APP_VERSION__ || '');
-    ver.style.cursor = 'pointer';
-    ver.addEventListener('click', countVersionTap);
     out.push(ver);
 
     return out;
@@ -409,35 +409,6 @@
     });
     var primary = overlay.querySelector('.dgr-primary');
     if (primary && primary.focus) primary.focus();
-  }
-
-  // Seeing the invitation without waiting sixty days. Owner, 2026-09-25: "я на андроид, где там
-  // отладка?" — there is none: a release WebView cannot be inspected and a phone has no console.
-  // So the app carries its own way in: five taps on the App version row in the burger panel put the
-  // first run sixty-one days back and clear both flags; the sheet then appears on the next start.
-  var versionTaps = 0;
-  var versionTapTimer = null;
-  function countVersionTap() {
-    versionTaps++;
-    clearTimeout(versionTapTimer);
-    versionTapTimer = setTimeout(function () { versionTaps = 0; }, 3000);
-    if (versionTaps >= 5) {
-      versionTaps = 0;
-      armRatingPrompt();
-    }
-  }
-
-  function armRatingPrompt() {
-    try {
-      localStorage.setItem(RATE_FIRST_RUN, String(Date.now() - (RATE_DAY_FIRST + 1) * 86400000));
-      localStorage.removeItem(RATE_SHOWN);
-      localStorage.removeItem(RATE_FLAG);
-    } catch (e) { /* private mode: nowhere to remember it */ }
-    if (typeof window.showBubbleNotification === 'function') {
-      window.showBubbleNotification(isRu()
-        ? 'Приглашение оценки включено — перезапустите приложение'
-        : 'The rating invitation is armed — restart the app', 5000);
-    }
   }
 
   function maybeAskForRating() {
