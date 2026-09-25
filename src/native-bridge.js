@@ -1141,6 +1141,155 @@
     }
 
     // ---------------------------------------------------------------------------------------
+    // The rating invitation (owner, 2026-09-25 — mockups agreed first: docs/rate-prompt/)
+    // ---------------------------------------------------------------------------------------
+
+    // Shown on the 60th day after the FIRST RUN, once more on the 180th if the reader chose "later",
+    // and never again after that. Never shown at all once Rate Us has been tapped — in settings or
+    // in this sheet, both write dgRateUsTapped.
+    //
+    // Days are counted from the first run rather than from the install: an app cannot read its own
+    // install date, and the sheet can only exist in a process that has already run.
+    //
+    // The sheet is the offline-library download consent's design (same layout, same colours, same
+    // two buttons — the owner asked to reuse it), but its styles travel WITH this file rather than
+    // coming from the offline layer: the dictionary app's pages are the remote site's and have no
+    // such stylesheet, and one prompt that looks right in one app and unstyled in the other is
+    // worse than a few duplicated lines.
+    var RATE_FIRST_RUN = 'dgFirstRunAt';
+    var RATE_SHOWN = 'dgRatePromptShown';   // absent/'0' = never shown, '1' = day-60 done, '2' = done
+    var RATE_DAY_FIRST = 60;
+    var RATE_DAY_LAST = 180;
+
+    var RATE_PROMPT_CSS = [
+        '#dgrAsk{position:fixed;inset:0;z-index:10002;display:flex;align-items:flex-end;justify-content:center;',
+        'background:rgba(8,20,17,.5);opacity:0;transition:opacity .18s ease}',
+        '#dgrAsk.show{opacity:1}',
+        '#dgrAsk .dgr-sheet{--s:#fff;--sunk:#f1f5f4;--rule:#dde5e2;--ink:#141a18;--muted:#5b6b66;--faint:#8a9994;--accent:#136857;',
+        'width:min(420px,calc(100% - 28px));margin:0 0 14px;background:var(--s);color:var(--ink);',
+        'border:1px solid var(--rule);border-radius:20px;padding:20px 18px 16px;box-shadow:0 24px 64px -16px rgba(9,30,25,.45);',
+        'display:flex;flex-direction:column;gap:12px;transform:translateY(14px);transition:transform .2s cubic-bezier(.2,.8,.3,1);',
+        'font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}',
+        '#dgrAsk.show .dgr-sheet{transform:translateY(0)}',
+        '[data-bs-theme="dark"] #dgrAsk .dgr-sheet,body.dark-mode #dgrAsk .dgr-sheet{--s:#171f1d;--sunk:#101816;--rule:#27332f;',
+        '--ink:#e8efec;--muted:#9aaba6;--faint:#6d7f7a;--accent:#3f9d86;box-shadow:0 24px 64px -16px rgba(0,0,0,.7)}',
+        '#dgrAsk .dgr-eyebrow{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:var(--accent)}',
+        '#dgrAsk .dgr-stars{font-size:26px;line-height:1;letter-spacing:3px;color:#f5c518}',
+        '#dgrAsk .dgr-title{margin:0;font-size:17px;font-weight:600;line-height:1.3}',
+        '#dgrAsk .dgr-body{margin:0;font-size:13.5px;line-height:1.45;color:var(--muted)}',
+        '#dgrAsk .dgr-figs{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin:0;background:var(--rule);',
+        'border:1px solid var(--rule);border-radius:14px;overflow:hidden}',
+        '#dgrAsk .dgr-fig{background:var(--sunk);padding:10px 12px}',
+        '#dgrAsk .dgr-fig dt{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin:0 0 2px}',
+        '#dgrAsk .dgr-fig dd{margin:0;font-size:13.5px;font-weight:500;line-height:1.35;color:var(--ink)}',
+        '#dgrAsk .dgr-fig-wide{grid-column:1/-1}',
+        '#dgrAsk .dgr-actions{display:flex;gap:9px;margin-top:2px}',
+        '#dgrAsk .dgr-actions button,#dgrAsk .dgr-actions a{flex:1;font:inherit;font-size:14px;font-weight:600;padding:11px 14px;',
+        'border-radius:13px;cursor:pointer;border:1px solid transparent;text-align:center;text-decoration:none;',
+        'display:flex;align-items:center;justify-content:center;transition:background .16s ease,border-color .16s ease}',
+        '#dgrAsk .dgr-ghost{background:transparent;border-color:var(--rule);color:var(--muted)}',
+        '#dgrAsk .dgr-primary{background:var(--accent);color:#fff}',
+        '#dgrAsk button:focus-visible,#dgrAsk a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}',
+    ].join('');
+
+    function ratePromptCopy(ru) {
+        return {
+            eyebrow: ru ? 'Оценить приложение' : 'Rate this app',
+            title: ru ? 'Как вам Dhamma.Gift?' : 'How is Dhamma.Gift for you?',
+            body: ru
+                ? 'Нам важно ваше мнение: по обратной связи мы понимаем, что вам нравится, а что улучшить. Рейтинг и комментарии помогают приложению.'
+                : 'Your opinion matters to us: feedback tells us what you like and what to improve. Ratings and comments help the app.',
+            figs: ru
+                ? [['Займёт', '30 сек – 2 мин'], ['Где', 'Google Play'], ['Что оставить', 'звёзды и комментарий']]
+                : [['Takes', '30 sec – 2 min'], ['Where', 'Google Play'], ['What to leave', 'stars and a comment']],
+            later: ru ? 'Позже' : 'Later',
+            laterLast: ru ? 'Не напоминать' : "Don't ask",
+            go: ru ? 'Оценить' : 'Rate',
+        };
+    }
+
+    // Which showing, if any, is due. 0 = nothing (either too early or already finished with), 1 =
+    // the day-60 one, 2 = the day-180 one.
+    function ratePromptDue(now) {
+        try {
+            if (localStorage.getItem(RATE_FLAG) === '1') return 0;
+            var first = parseInt(localStorage.getItem(RATE_FIRST_RUN) || '0', 10);
+            if (!first) {
+                localStorage.setItem(RATE_FIRST_RUN, String(now));
+                return 0;
+            }
+            var shown = parseInt(localStorage.getItem(RATE_SHOWN) || '0', 10);
+            var days = (now - first) / 86400000;
+            if (shown === 0 && days >= RATE_DAY_FIRST) return 1;
+            if (shown === 1 && days >= RATE_DAY_LAST) return 2;
+        } catch (e) { /* private mode: no storage, no prompt */ }
+        return 0;
+    }
+
+    function showRatePrompt(showing) {
+        if (document.getElementById('dgrAsk')) return;
+        var t = ratePromptCopy(isRu());
+        var style = document.createElement('style');
+        style.textContent = RATE_PROMPT_CSS;
+        document.head.appendChild(style);
+
+        var figs = t.figs.map(function (f, i) {
+            return '<div class="dgr-fig' + (i === t.figs.length - 1 ? ' dgr-fig-wide' : '') + '">'
+                + '<dt>' + f[0] + '</dt><dd>' + f[1] + '</dd></div>';
+        }).join('');
+        var overlay = document.createElement('div');
+        overlay.id = 'dgrAsk';
+        overlay.innerHTML =
+            '<div class="dgr-sheet" role="alertdialog" aria-modal="true" aria-labelledby="dgrTitle">'
+            + '<div class="dgr-eyebrow">' + t.eyebrow + '</div>'
+            + '<div class="dgr-stars" aria-hidden="true">★★★★★</div>'
+            + '<p class="dgr-title" id="dgrTitle">' + t.title + '</p>'
+            + '<p class="dgr-body">' + t.body + '</p>'
+            + '<dl class="dgr-figs">' + figs + '</dl>'
+            + '<div class="dgr-actions">'
+            + '<button type="button" class="dgr-ghost">' + (showing === 2 ? t.laterLast : t.later) + '</button>'
+            + '<a class="dgr-primary" href="' + rateUsUrl() + '" target="_top" rel="noopener">' + t.go + '</a>'
+            + '</div></div>';
+        document.body.appendChild(overlay);
+        requestAnimationFrame(function () { overlay.classList.add('show'); });
+
+        var settled = false;
+        function close(mark) {
+            if (settled) return;
+            settled = true;
+            document.removeEventListener('keydown', onKey, true);
+            try { localStorage.setItem(RATE_SHOWN, mark); } catch (e) { /* private mode */ }
+            overlay.classList.remove('show');
+            setTimeout(function () { overlay.remove(); }, 200);
+        }
+        function onKey(ev) {
+            if (ev.key === 'Escape') { ev.preventDefault(); close(showing === 2 ? '2' : '1'); }
+        }
+        // Anything that dismisses without choosing counts as "later" — the same rule the download
+        // consent follows, and the day-180 showing marks itself done either way, because that was
+        // the last chance by design.
+        overlay.addEventListener('click', function (ev) { if (ev.target === overlay) close(showing === 2 ? '2' : '1'); });
+        overlay.querySelector('.dgr-ghost').addEventListener('click', function () { close(showing === 2 ? '2' : '1'); });
+        document.addEventListener('keydown', onKey, true);
+        overlay.querySelector('.dgr-primary').addEventListener('click', function () {
+            // No preventDefault: the navigation is what opens the store (see the Rate Us row). This
+            // tap is a rating as far as the app is concerned, so nothing is asked again.
+            try { localStorage.setItem(RATE_FLAG, '1'); } catch (e) { /* private mode */ }
+            close('2');
+        });
+        var primary = overlay.querySelector('.dgr-primary');
+        if (primary && primary.focus) primary.focus();
+    }
+
+    function maybeAskForRating() {
+        // Only on the app's own first screen: a nudge that interrupts a reader mid-text is the
+        // reason these things get a bad name.
+        if (!/\/(index\.html)?$/.test(location.pathname)) return;
+        var showing = ratePromptDue(Date.now());
+        if (showing) setTimeout(function () { showRatePrompt(showing); }, 1500);
+    }
+
+    // ---------------------------------------------------------------------------------------
     // Rate Us row (settings → "Rate Us", injected by build-assets.js)
     // ---------------------------------------------------------------------------------------
 
@@ -1212,7 +1361,7 @@
         });
     }
 
-    function onReady() { fillVersionRow(); wireShortcutsToggle(); wireRateUsRow(); }
+    function onReady() { fillVersionRow(); wireShortcutsToggle(); wireRateUsRow(); maybeAskForRating(); }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onReady);
     else onReady();
 })();

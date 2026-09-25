@@ -21,23 +21,25 @@ const STARS = '★★★★★';
 const COPY = {
     ru: {
         eyebrow: 'Оценить приложение',
-        title: 'Нравится Dhamma.Gift?',
-        body: 'Поставьте пять звёзд в Google Play. Это бесплатно и занимает полминуты, а по рейтингу приложение находят другие.',
-        figs: [['Оценка', STARS], ['Займёт', '~30 сек'], ['Где', 'Google Play']],
+        title: 'Как вам Dhamma.Gift?',
+        body: 'Нам важно ваше мнение: по обратной связи мы понимаем, что вам нравится, а что улучшить. Рейтинг и комментарии помогают приложению.',
+        figs: [['Займёт', '30 сек – 2 мин'], ['Где', 'Google Play'], ['Что оставить', 'звёзды и комментарий']],
         later: 'Позже',
+        laterLast: 'Не напоминать',
         go: 'Оценить',
     },
     en: {
         eyebrow: 'Rate this app',
-        title: 'Enjoying Dhamma.Gift?',
-        body: 'Give it five stars on Google Play. It is free, takes half a minute, and the rating is how other readers find the app.',
-        figs: [['Rating', STARS], ['Takes', '~30 sec'], ['Where', 'Google Play']],
+        title: 'How is Dhamma.Gift for you?',
+        body: 'Your opinion matters to us: feedback tells us what you like and what to improve. Ratings and comments help the app.',
+        figs: [['Takes', '30 sec – 2 min'], ['Where', 'Google Play'], ['What to leave', 'stars and a comment']],
         later: 'Later',
+        laterLast: 'Don\'t ask',
         go: 'Rate',
     },
 };
 
-function sheet(t, variant) {
+function sheet(t, variant, showing) {
     const figs = t.figs.map(function (f, i) {
         const wide = i === t.figs.length - 1 ? ' dgc-fig-wide' : '';
         return '<div class="dgc-fig' + wide + '"><dt>' + f[0] + '</dt><dd>' + f[1] + '</dd></div>';
@@ -54,7 +56,7 @@ function sheet(t, variant) {
         + '<p class="dgc-body">' + t.body + '</p>'
         + '<dl class="dgc-figures">' + figs + '</dl>'
         + '<div class="dgc-actions">'
-        + '<button type="button" class="dgc-ghost">' + t.later + '</button>'
+        + '<button type="button" class="dgc-ghost">' + (showing === 2 ? t.laterLast : t.later) + '</button>'
         + '<button type="button" class="dgc-primary">' + t.go + '</button>'
         + '</div></div></div>';
 }
@@ -66,27 +68,27 @@ function sheet(t, variant) {
     const browser = await chromium.launch({ args: ['--no-sandbox'] });
     const made = [];
     try {
+        // Two showings, not one: day 60 offers "later", day 180 is the last chance and says so.
+        const CASES = [];
         for (const lang of ['ru', 'en']) {
-            for (const theme of ['light', 'dark']) {
-                for (const variant of [1, 2]) {
-                    // Variant 2 only in one theme per language: the two differ by the star row alone.
-                    if (variant === 2 && theme === 'light') continue;
-                    const context = await browser.newContext({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true, colorScheme: theme });
-                    const page = await context.newPage();
-                    await page.goto(`http://127.0.0.1:${PORT}/index.html`, { waitUntil: 'domcontentloaded' });
-                    await page.waitForTimeout(700);
-                    await page.evaluate(([html, th]) => {
-                        document.documentElement.setAttribute('data-bs-theme', th);
-                        document.body.insertAdjacentHTML('beforeend', html);
-                        requestAnimationFrame(() => document.getElementById('dgConsent').classList.add('show'));
-                    }, [sheet(COPY[lang], variant), theme]);
-                    await page.waitForTimeout(500);
-                    const shot = path.join(SHOTS, `rate-prompt-v${variant}-${lang}-${theme}.png`);
-                    await page.screenshot({ path: shot });
-                    made.push(shot);
-                    await context.close();
-                }
-            }
+            for (const theme of ['light', 'dark']) CASES.push({ lang, theme, showing: 1 });
+            CASES.push({ lang, theme: 'dark', showing: 2 });
+        }
+        for (const c of CASES) {
+            const context = await browser.newContext({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true, colorScheme: c.theme });
+            const page = await context.newPage();
+            await page.goto(`http://127.0.0.1:${PORT}/index.html`, { waitUntil: 'domcontentloaded' });
+            await page.waitForTimeout(700);
+            await page.evaluate(([html, th]) => {
+                document.documentElement.setAttribute('data-bs-theme', th);
+                document.body.insertAdjacentHTML('beforeend', html);
+                requestAnimationFrame(() => document.getElementById('dgConsent').classList.add('show'));
+            }, [sheet(COPY[c.lang], 2, c.showing), c.theme]);
+            await page.waitForTimeout(500);
+            const shot = path.join(SHOTS, `rate-prompt-${c.lang}-${c.theme}-${c.showing === 2 ? 'last' : 'first'}.png`);
+            await page.screenshot({ path: shot });
+            made.push(shot);
+            await context.close();
         }
     } finally {
         await browser.close();
