@@ -22,7 +22,7 @@ const { chromium } = require('/usr/lib/node_modules/@playwright/cli/node_modules
 
 const BASE = process.env.DG_DICT_URL || 'http://test.dhamma.gift/dict/';
 const SHOTS = process.env.DG_SHOTS || '/var/www/html/dict-app';
-const BRIDGE = fs.readFileSync(path.join(__dirname, '..', 'src', 'dict-bridge.js'), 'utf8');
+const BRIDGE = require('../build.js').bridgeSource();
 const HISTORY = ['kacchapa', 'dukkha', 'satipaṭṭhāna', 'anattā'];
 
 const CASES = [

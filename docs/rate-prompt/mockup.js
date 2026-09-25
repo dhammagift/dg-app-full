@@ -68,7 +68,7 @@ function sheet(t, variant, showing) {
     const browser = await chromium.launch({ args: ['--no-sandbox'] });
     const made = [];
     try {
-        // Two showings, not one: day 60 offers "later", day 180 is the last chance and says so.
+        // Two showings, not one: day 60 offers "later", the second, 90 days after the first, is the last chance and says so.
         const CASES = [];
         for (const lang of ['ru', 'en']) {
             for (const theme of ['light', 'dark']) CASES.push({ lang, theme, showing: 1 });

@@ -12,9 +12,21 @@ const path = require('path');
 const SRC = path.join(__dirname, 'src');
 const WWW = path.join(__dirname, 'www');
 
-fs.mkdirSync(WWW, { recursive: true });
-const files = fs.readdirSync(SRC);
-for (const name of files) {
-    fs.copyFileSync(path.join(SRC, name), path.join(WWW, name));
+// dict-bridge.js carries a "// @rate-prompt" marker; the rating sheet itself lives once, in the main
+// app's src/native-bridge.js between its @rate-prompt-begin/-end markers, and is pasted in here.
+function bridgeSource() {
+    const main = fs.readFileSync(path.join(__dirname, '..', 'src', 'native-bridge.js'), 'utf8');
+    const block = main.split(/^.*@rate-prompt-begin.*\n/m)[1].split(/^.*@rate-prompt-end.*\n/m)[0];
+    return fs.readFileSync(path.join(SRC, 'dict-bridge.js'), 'utf8').replace(/^.*\/\/ @rate-prompt .*\n/m, () => block);
 }
-console.log(`dict: ${files.length} file(s) copied to www/`);
+module.exports = { bridgeSource };
+
+if (require.main === module) {
+    fs.mkdirSync(WWW, { recursive: true });
+    const files = fs.readdirSync(SRC);
+    for (const name of files) {
+        fs.copyFileSync(path.join(SRC, name), path.join(WWW, name));
+    }
+    fs.writeFileSync(path.join(WWW, 'dict-bridge.js'), bridgeSource());
+    console.log(`dict: ${files.length} file(s) copied to www/`);
+}

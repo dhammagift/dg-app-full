@@ -1056,6 +1056,7 @@
             // Closing an open overlay first is the expected mobile pattern — otherwise "back"
             // while the Quick Modal (Favorites/History/compass) is open exits the app instead of
             // just closing the modal.
+            if (closeRatePrompt()) return;
             if (window.quickModalIsOpen && typeof window.toggleQuickModal === 'function') {
                 window.toggleQuickModal();
                 return;
@@ -1140,11 +1141,12 @@
         });
     }
 
+    // @rate-prompt-begin (shared with dict/src/dict-bridge.js: dict/build.js inlines it there)
     // ---------------------------------------------------------------------------------------
     // The rating invitation (owner, 2026-09-25 — mockups agreed first: docs/rate-prompt/)
     // ---------------------------------------------------------------------------------------
 
-    // Shown on the 60th day after the FIRST RUN, once more on the 180th if the reader chose "later",
+    // Shown on the 60th day after the FIRST RUN, once more 90 days after that showing if the reader chose "later",
     // and never again after that. Never shown at all once Rate Us has been tapped — in settings or
     // in this sheet, both write dgRateUsTapped.
     //
@@ -1158,8 +1160,9 @@
     // worse than a few duplicated lines.
     var RATE_FIRST_RUN = 'dgFirstRunAt';
     var RATE_SHOWN = 'dgRatePromptShown';   // absent/'0' = never shown, '1' = day-60 done, '2' = done
+    var RATE_SHOWN_AT = 'dgRatePromptShownAt';   // when the last showing was closed (ms)
     var RATE_DAY_FIRST = 60;
-    var RATE_DAY_LAST = 180;
+    var RATE_DAY_GAP = 90;   // second showing: this many days after the first one
 
     var RATE_PROMPT_CSS = [
         '#dgrAsk{position:fixed;inset:0;z-index:10002;display:flex;align-items:flex-end;justify-content:center;',
@@ -1182,7 +1185,7 @@
         '#dgrAsk .dgr-fig{background:var(--sunk);padding:10px 12px}',
         '#dgrAsk .dgr-fig dt{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin:0 0 2px}',
         '#dgrAsk .dgr-fig dd{margin:0;font-size:13.5px;font-weight:500;line-height:1.35;color:var(--ink)}',
-        '#dgrAsk .dgr-fig-wide{grid-column:1/-1}',
+        '#dgrAsk .dgr-fig:last-child{grid-column:1/-1}',
         '#dgrAsk .dgr-actions{display:flex;gap:9px;margin-top:2px}',
         '#dgrAsk .dgr-actions button,#dgrAsk .dgr-actions a{flex:1;font:inherit;font-size:14px;font-weight:600;padding:11px 14px;',
         'border-radius:13px;cursor:pointer;border:1px solid transparent;text-align:center;text-decoration:none;',
@@ -1192,6 +1195,10 @@
         '#dgrAsk button:focus-visible,#dgrAsk a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}',
     ].join('');
 
+    function ratePromptStore() {
+        return (window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform()) === 'ios' ? 'App Store' : 'Google Play';
+    }
+
     function ratePromptCopy(ru) {
         return {
             eyebrow: ru ? 'Оценить приложение' : 'Rate this app',
@@ -1200,8 +1207,8 @@
                 ? 'Нам важно ваше мнение: по обратной связи мы понимаем, что вам нравится, а что улучшить. Рейтинг и комментарии помогают приложению.'
                 : 'Your opinion matters to us: feedback tells us what you like and what to improve. Ratings and comments help the app.',
             figs: ru
-                ? [['Займёт', '30 сек – 2 мин'], ['Где', 'Google Play'], ['Что оставить', 'звёзды и комментарий']]
-                : [['Takes', '30 sec – 2 min'], ['Where', 'Google Play'], ['What to leave', 'stars and a comment']],
+                ? [['Займёт', '30 сек – 2 мин'], ['Где', ratePromptStore()], ['Что оставить', 'звёзды и комментарий']]
+                : [['Takes', '30 sec – 2 min'], ['Where', ratePromptStore()], ['What to leave', 'stars and a comment']],
             later: ru ? 'Позже' : 'Later',
             laterLast: ru ? 'Не спрашивать' : "Don't ask",
             go: ru ? 'Оценить' : 'Rate',
@@ -1209,7 +1216,7 @@
     }
 
     // Which showing, if any, is due. 0 = nothing (either too early or already finished with), 1 =
-    // the day-60 one, 2 = the day-180 one.
+    // the first one, 2 = the second one (90 days after the first).
     function ratePromptDue(now) {
         try {
             if (localStorage.getItem(RATE_FLAG) === '1') return 0;
@@ -1219,22 +1226,30 @@
                 return 0;
             }
             var shown = parseInt(localStorage.getItem(RATE_SHOWN) || '0', 10);
-            var days = (now - first) / 86400000;
-            if (shown === 0 && days >= RATE_DAY_FIRST) return 1;
-            if (shown === 1 && days >= RATE_DAY_LAST) return 2;
+            if (shown === 0 && (now - first) / 86400000 >= RATE_DAY_FIRST) return 1;
+            var at = parseInt(localStorage.getItem(RATE_SHOWN_AT) || '0', 10);
+            if (shown === 1 && at && (now - at) / 86400000 >= RATE_DAY_GAP) return 2;
         } catch (e) { /* private mode: no storage, no prompt */ }
         return 0;
     }
 
     function showRatePrompt(showing) {
-        if (document.getElementById('dgrAsk')) return;
+        // The download consent sheet has the same z-index and the same look: never stack on it (not
+        // counted as a showing, so the next launch tries again).
+        if (document.getElementById('dgrAsk') || document.getElementById('dgConsent')) return;
+        // Counted when it OPENS, not when it closes: back button, swipe-away or a kill while it is up
+        // must not bring it back on every launch. Closing it any way but "Rate" is "later".
+        try {
+            localStorage.setItem(RATE_SHOWN, String(showing));
+            localStorage.setItem(RATE_SHOWN_AT, String(Date.now()));
+        } catch (e) { /* private mode */ }
         var t = ratePromptCopy(isRu());
         var style = document.createElement('style');
         style.textContent = RATE_PROMPT_CSS;
         document.head.appendChild(style);
 
-        var figs = t.figs.map(function (f, i) {
-            return '<div class="dgr-fig' + (i === t.figs.length - 1 ? ' dgr-fig-wide' : '') + '">'
+        var figs = t.figs.map(function (f) {
+            return '<div class="dgr-fig">'
                 + '<dt>' + f[0] + '</dt><dd>' + f[1] + '</dd></div>';
         }).join('');
         var overlay = document.createElement('div');
@@ -1254,40 +1269,43 @@
         requestAnimationFrame(function () { overlay.classList.add('show'); });
 
         var settled = false;
-        function close(mark) {
+        function close() {
             if (settled) return;
             settled = true;
             document.removeEventListener('keydown', onKey, true);
-            try { localStorage.setItem(RATE_SHOWN, mark); } catch (e) { /* private mode */ }
             overlay.classList.remove('show');
             setTimeout(function () { overlay.remove(); }, 200);
         }
         function onKey(ev) {
-            if (ev.key === 'Escape') { ev.preventDefault(); close(showing === 2 ? '2' : '1'); }
+            if (ev.key === 'Escape') { ev.preventDefault(); close(); }
         }
-        // Anything that dismisses without choosing counts as "later" — the same rule the download
-        // consent follows, and the day-180 showing marks itself done either way, because that was
-        // the last chance by design.
-        overlay.addEventListener('click', function (ev) { if (ev.target === overlay) close(showing === 2 ? '2' : '1'); });
-        overlay.querySelector('.dgr-ghost').addEventListener('click', function () { close(showing === 2 ? '2' : '1'); });
+        overlay.addEventListener('click', function (ev) { if (ev.target === overlay) close(); });
+        overlay.querySelector('.dgr-ghost').addEventListener('click', function () { close(); });
         document.addEventListener('keydown', onKey, true);
         overlay.querySelector('.dgr-primary').addEventListener('click', function () {
             // No preventDefault: the navigation is what opens the store (see the Rate Us row). This
             // tap is a rating as far as the app is concerned, so nothing is asked again.
             try { localStorage.setItem(RATE_FLAG, '1'); } catch (e) { /* private mode */ }
-            close('2');
+            close();
         });
-        var primary = overlay.querySelector('.dgr-primary');
-        if (primary && primary.focus) primary.focus();
+        overlay.querySelector('.dgr-primary').focus();
+    }
+
+    // Android "Back" while the sheet is up means "later": true when it consumed the press.
+    function closeRatePrompt() {
+        var later = document.querySelector('#dgrAsk .dgr-ghost');
+        if (later) later.click();
+        return !!later;
     }
 
     function maybeAskForRating() {
         // Only on the app's own first screen: a nudge that interrupts a reader mid-text is the
         // reason these things get a bad name.
-        if (!/\/(index\.html)?$/.test(location.pathname)) return;
+        if (!RATE_HOME.test(location.pathname)) return;
         var showing = ratePromptDue(Date.now());
         if (showing) setTimeout(function () { showRatePrompt(showing); }, 1500);
     }
+    // @rate-prompt-end
 
     // ---------------------------------------------------------------------------------------
     // Rate Us row (settings → "Rate Us", injected by build-assets.js)
@@ -1319,6 +1337,8 @@
     // invitation will read when it exists; the dictionary app writes the same key for the same
     // reason (dict/src/dict-bridge.js).
     var RATE_FLAG = 'dgRateUsTapped';
+    // The app's home page only: settings/, memo/ and login/ are index.html pages too.
+    var RATE_HOME = /^\/(ru\/)?(index\.html)?$/;
 
     function rateUsUrl() {
         var plat = (window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform()) || 'web';

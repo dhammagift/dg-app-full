@@ -1,6 +1,6 @@
 // Browser check for the rating invitation: when it appears, when it must not, and what its buttons
 // do. The real page, the real src/native-bridge.js, and localStorage seeded to stand at a given day
-// after the first run — the only way to reach "day 180" without waiting half a year.
+// after the first run — the only way to reach "90 days after the first showing" without waiting half a year.
 //
 //   node test/rate-prompt-ui.js
 const fs = require('fs');
@@ -21,11 +21,12 @@ function check(name, actual, expected) {
     console.log(`${pass ? 'ok  ' : 'FAIL'} ${name}${pass ? '' : `\n       expected ${JSON.stringify(expected)}\n       actual   ${JSON.stringify(actual)}`}`);
 }
 
-function initScript({ firstRunDaysAgo, shown, tapped, lang }) {
+function initScript({ firstRunDaysAgo, shown, shownDaysAgo, tapped, lang }) {
     try {
         if (firstRunDaysAgo != null) localStorage.setItem('dgFirstRunAt', String(Date.now() - firstRunDaysAgo * 86400000));
         else localStorage.removeItem('dgFirstRunAt');
         if (shown != null) localStorage.setItem('dgRatePromptShown', shown); else localStorage.removeItem('dgRatePromptShown');
+        if (shownDaysAgo != null) localStorage.setItem('dgRatePromptShownAt', String(Date.now() - shownDaysAgo * 86400000)); else localStorage.removeItem('dgRatePromptShownAt');
         if (tapped) localStorage.setItem('dgRateUsTapped', '1'); else localStorage.removeItem('dgRateUsTapped');
         localStorage.setItem('dhammaLanguage', lang || 'ru');
     } catch (e) { /* first paint */ }
@@ -34,7 +35,7 @@ function initScript({ firstRunDaysAgo, shown, tapped, lang }) {
         isNativePlatform: function () { return true; },
         Plugins: {
             DgShortcuts: { set: function () { return Promise.resolve({ count: 0 }); } },
-            App: { addListener: function () { return { remove: function () {} }; }, getInfo: function () { return Promise.resolve({ id: 'gift.dhamma.mobile' }); } },
+            App: { exitApp: function () { window.__exited = true; }, addListener: function (n, cb) { if (n === 'backButton') window.__backCb = cb; return { remove: function () {} }; }, getInfo: function () { return Promise.resolve({ id: 'gift.dhamma.mobile' }); } },
             Browser: { open: function () { return Promise.resolve(); } },
             Share: { share: function () { return Promise.resolve(); } },
         },
@@ -52,8 +53,9 @@ function initScript({ firstRunDaysAgo, shown, tapped, lang }) {
         const context = await browser.newContext({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true, colorScheme: theme || 'dark' });
         await context.addInitScript(initScript, seed);
         const page = await context.newPage();
-        await page.goto(`http://127.0.0.1:${PORT}/index.html`, { waitUntil: 'domcontentloaded' });
+        await page.goto(`http://127.0.0.1:${PORT}${seed.path || '/index.html'}`, { waitUntil: 'domcontentloaded' });
         await page.waitForTimeout(900);
+        if (seed.consent) await page.evaluate(() => { const d = document.createElement('div'); d.id = 'dgConsent'; document.body.appendChild(d); });
         await page.evaluate(BRIDGE);          // the bridge the app injects into its own pages
         await page.waitForTimeout(1900);      // its own 1500ms delay, plus slack
         return { context, page };
@@ -103,29 +105,49 @@ function initScript({ firstRunDaysAgo, shown, tapped, lang }) {
                 shown: localStorage.getItem('dgRatePromptShown'),
             }));
             check('day 61: "later" closes it', after.ask, false);
-            check('day 61: and marks the day-180 chance as the one left', after.shown, '1');
+            check('day 61: and marks the second chance as the one left', after.shown, '1');
             await context.close();
         }
 
-        // 3. Day 181 with the day-60 showing behind us: the last one, and it says so.
+        // 3. 91 days after the first showing: the last one, and it says so.
         {
-            const { context, page } = await open({ firstRunDaysAgo: 181, shown: '1', lang: 'en' });
+            const { context, page } = await open({ firstRunDaysAgo: 152, shown: '1', shownDaysAgo: 91, lang: 'en' });
             const b = await box(page);
-            check('day 181: the sheet appears again', !!b, true);
-            check('day 181: English title', b && b.title, 'How is Dhamma.Gift for you?');
-            check('day 181: the last chance does not offer "later"', b && b.ghost, "Don't ask");
+            check('91 days after first: the sheet appears again', !!b, true);
+            check('91 days after first: English title', b && b.title, 'How is Dhamma.Gift for you?');
+            check('91 days after first: the last chance does not offer "later"', b && b.ghost, "Don't ask");
             if (SHOTS) await page.screenshot({ path: path.join(SHOTS, 'rate-prompt-real-en-dark.png') });
             await page.click('#dgrAsk .dgr-ghost');
             await page.waitForTimeout(400);
-            check('day 181: dismissing it ends the asking', await page.evaluate(() => localStorage.getItem('dgRatePromptShown')), '2');
+            check('91 days after first: dismissing it ends the asking', await page.evaluate(() => localStorage.getItem('dgRatePromptShown')), '2');
             await context.close();
         }
 
         // 3b. The same last chance in Russian — its button is the one the owner renamed by hand.
         {
-            const { context, page } = await open({ firstRunDaysAgo: 181, shown: '1', lang: 'ru' });
+            const { context, page } = await open({ firstRunDaysAgo: 152, shown: '1', shownDaysAgo: 91, lang: 'ru' });
             const b = await box(page);
-            check('day 181 (ru): the last chance says "не спрашивать"', b && b.ghost, 'Не спрашивать');
+            check('91 days after first (ru): the last chance says "не спрашивать"', b && b.ghost, 'Не спрашивать');
+            await context.close();
+        }
+
+        // 3c. Only 89 days after the first showing: too early, however old the install.
+        {
+            const { context, page } = await open({ firstRunDaysAgo: 400, shown: '1', shownDaysAgo: 89 });
+            check('89 days after first: silence', await page.evaluate(() => !!document.getElementById('dgrAsk')), false);
+            await context.close();
+        }
+
+        // 3d. A late return (day 200, never shown) gets the FIRST sheet only, and the next launch is quiet.
+        {
+            const { context, page } = await open({ firstRunDaysAgo: 200, shown: '0', lang: 'ru' });
+            const b = await box(page);
+            check('day 200 never shown: the first sheet, with "later"', b && b.ghost, 'Позже');
+            await page.click('#dgrAsk .dgr-ghost');
+            await page.waitForTimeout(400);
+            await page.evaluate(BRIDGE);      // the next launch: same storage (init script is not re-run by evaluate)
+            await page.waitForTimeout(1900);
+            check('day 200: the next launch is silent', await page.evaluate(() => !!document.getElementById('dgrAsk')), false);
             await context.close();
         }
 
@@ -153,13 +175,51 @@ function initScript({ firstRunDaysAgo, shown, tapped, lang }) {
                 return { tapped: localStorage.getItem('dgRateUsTapped'), shown: localStorage.getItem('dgRatePromptShown') };
             });
             check('"Rate" records the tap', after.tapped, '1');
-            check('"Rate" ends the asking', after.shown, '2');
+            await page.waitForTimeout(400);
+            await page.evaluate(BRIDGE);
+            await page.waitForTimeout(1900);
+            check('"Rate" ends the asking', await page.evaluate(() => !!document.getElementById('dgrAsk')), false);
+            await context.close();
+        }
+
+        // 6a. Android Back while the sheet is up closes it (like "later") and does not leave the app.
+        {
+            const { context, page } = await open({ firstRunDaysAgo: 61, shown: '0' });
+            await page.evaluate(() => window.__backCb({ canGoBack: false }));
+            await page.waitForTimeout(400);
+            check('Back closes the sheet', await page.evaluate(() => !document.getElementById('dgrAsk')), true);
+            check('Back does not exit the app', await page.evaluate(() => !!window.__exited), false);
+            await page.evaluate(() => window.__backCb({ canGoBack: false }));
+            check('Back with no sheet still exits', await page.evaluate(() => !!window.__exited), true);
+            await context.close();
+        }
+
+        // 6b. The showing counts when the sheet OPENS: killing the app while it is up (back, swipe)
+        //     must not bring it back.
+        {
+            const { context, page } = await open({ firstRunDaysAgo: 61, shown: '0' });
+            check('opening counts as the first showing', await page.evaluate(() => localStorage.getItem('dgRatePromptShown')), '1');
+            await context.close();
+        }
+
+        // 6c. Only the home page: settings and the other index.html pages stay quiet.
+        for (const p of ['/settings/', '/memo/', '/login/']) {
+            const { context, page } = await open({ firstRunDaysAgo: 61, shown: '0', path: p });
+            check(`${p}: silence`, await page.evaluate(() => !!document.getElementById('dgrAsk')), false);
+            await context.close();
+        }
+
+        // 6d. The download consent sheet is up: no second sheet on top, and the showing is kept for later.
+        {
+            const { context, page } = await open({ firstRunDaysAgo: 61, shown: '0', consent: true });
+            check('consent up: silence', await page.evaluate(() => !!document.getElementById('dgrAsk')), false);
+            check('consent up: not counted', await page.evaluate(() => localStorage.getItem('dgRatePromptShown')), '0');
             await context.close();
         }
         // 7. The dictionary app has its own bridge and its own copy of the sheet: same rules, its
         //    own package in the store link. Its page is the live site, served here by the test host.
         {
-            const DICT = fs.readFileSync(path.join(ROOT, 'dict', 'src', 'dict-bridge.js'), 'utf8');
+            const DICT = require(path.join(ROOT, 'dict', 'build.js')).bridgeSource();
             const context = await browser.newContext({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true, colorScheme: 'dark' });
             await context.addInitScript(initScript, { firstRunDaysAgo: 61, shown: '0', lang: 'ru' });
             const page = await context.newPage();
@@ -181,6 +241,9 @@ function initScript({ firstRunDaysAgo, shown, tapped, lang }) {
             check('dictionary: same copy', d && [d.title, d.ghost], ['Как вам Dhamma.Gift?', 'Позже']);
             check('dictionary: its own store listing', d && d.href, 'https://play.google.com/store/apps/details?id=gift.dhamma.pali');
             if (SHOTS && d) await page.screenshot({ path: path.join(SHOTS, 'rate-prompt-real-dict-ru-dark.png') });
+            await page.evaluate(() => window.__backCb({ canGoBack: false }));
+            await page.waitForTimeout(400);
+            check('dictionary: Back closes the sheet, the app stays', await page.evaluate(() => [!document.getElementById('dgrAsk'), !!window.__exited]), [true, false]);
             await context.close();
         }
     } finally {
