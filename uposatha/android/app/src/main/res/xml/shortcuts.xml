@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Static App Shortcuts (long-press the launcher icon): two, declared here. The launcher's menu
+     holds FOUR entries and counts every declared shortcut against them, so the other two are
+     dynamic — the next Uposatha days, pushed by src/uposatha-bridge.js (DgShortcutsPlugin).
+
+       Favorites & History  -> dhamma.gift/4as (the errand a reader returns to)
+       Calendar             -> the calendar tab of this app (the bridge opens the tab named in
+                               the route's ?tab=)
+
+     Each starts MainActivity with a "route" extra, which it loads into the WebView. dhamma.gift is
+     in capacitor.config.json's server.allowNavigation, so it opens inside this app. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="calendar"
+        android:enabled="true"
+        android:icon="@drawable/shortcut_calendar"
+        android:shortcutShortLabel="@string/shortcut_cal_short"
+        android:shortcutLongLabel="@string/shortcut_cal_long">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="gift.dhamma.uposatha"
+            android:targetClass="gift.dhamma.uposatha.MainActivity">
+            <extra android:name="route" android:value="/uposatha-calendar?app=1&amp;tab=cal" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="favorites"
+        android:enabled="true"
+        android:icon="@drawable/shortcut_favorites"
+        android:shortcutShortLabel="@string/shortcut_fav_short"
+        android:shortcutLongLabel="@string/shortcut_fav_long">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="gift.dhamma.uposatha"
+            android:targetClass="gift.dhamma.uposatha.MainActivity">
+            <extra android:name="route" android:value="https://dhamma.gift/4as" />
+        </intent>
+    </shortcut>
+</shortcuts>

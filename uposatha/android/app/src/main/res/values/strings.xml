@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Uposatha</string>
+    <string name="title_activity_main">Uposatha</string>
+    <string name="package_name">gift.dhamma.uposatha</string>
+    <string name="custom_url_scheme">gift.dhamma.uposatha</string>
+
+    <!-- Static App Shortcuts (res/xml/shortcuts.xml). "DG " on the first for the same reason the
+         dictionary has it: the reader app declares the same entry, and both can sit on one phone. -->
+    <string name="shortcut_fav_short">DG Favorites &amp; History</string>
+    <string name="shortcut_fav_long">DG Favorites &amp; History</string>
+    <string name="shortcut_cal_short">Calendar</string>
+    <string name="shortcut_cal_long">Uposatha calendar</string>
+</resources>

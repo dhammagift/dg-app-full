@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+
+        <activity
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
+            android:name=".MainActivity"
+            android:label="@string/title_activity_main"
+            android:theme="@style/AppTheme.NoActionBarLaunch"
+            android:launchMode="singleTask"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Static App Shortcuts: the long-press menu is built from this file, and a
+                 shortcut's route arrives as an extra (MainActivity.handleIntent). -->
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
+        </activity>
+
+        <!-- DgSound: the sound the reader picked for the reminders. The file is copied into the app's
+             own files/sounds/ and handed to the system UI (which plays a notification channel's
+             sound) as a content:// URI of this provider. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"></meta-data>
+        </provider>
+    </application>
+
+    <!-- Permissions -->
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- The reminders are local notifications: Android 13+ asks for this at the first reminder. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- A reminder has to arrive at its minute, with the app closed and the phone dozing. This is
+         the permission Android grants a calendar / reminder app without a prompt (API 33+);
+         SCHEDULE_EXACT_ALARM would have to be granted by hand in the system settings. -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <!-- Alarms are lost on reboot: the LocalNotifications plugin re-arms them on boot. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+</manifest>

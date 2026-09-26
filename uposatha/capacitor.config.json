@@ -1,0 +1,26 @@
+{
+  "appId": "gift.dhamma.uposatha",
+  "appName": "Uposatha",
+  "webDir": "www",
+  "server": {
+    "url": "https://test.dhamma.gift/uposatha-calendar?app=1",
+    "errorPath": "index.html",
+    "allowNavigation": [
+      "test.dhamma.gift",
+      "dhamma.gift",
+      "*.dhamma.gift"
+    ]
+  },
+  "android": {
+    "backgroundColor": "#111111"
+  },
+  "plugins": {
+    "SystemBars": {
+      "style": "DARK"
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_uposatha",
+      "iconColor": "#149C7C"
+    }
+  }
+}

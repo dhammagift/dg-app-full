@@ -1,0 +1,19 @@
+{
+  "name": "dg-uposatha-app",
+  "private": true,
+  "description": "Uposatha calendar as a Capacitor Android app. A thin shell around the site's page (capacitor.config.json -> server.url): the UI stays the site's; the app adds what only native can do — reminders as local notifications on the device (they arrive with the app closed), the choice of a sound as notification channels, launcher shortcuts, the app version and the store link.",
+  "scripts": {
+    "build": "node --check src/uposatha-bridge.js && node build.js",
+    "sync-android": "npm run build && cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/browser": "^8.0.4",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/local-notifications": "^8.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2"
+  }
+}

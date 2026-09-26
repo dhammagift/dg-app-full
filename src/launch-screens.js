@@ -19,11 +19,11 @@
     var SPLASH_KEY = 'dgSplashShown';
 
     var CSS = [
-        '.dgls{--p:#fff;--t:#1b1d19;--t2:#5c6058;--tm:#6e716a;--a:#149c7c;--ab:#dff3ec;--aob:#0c6a55;',
+        '.dgls{--p:#fff;--t:#1b1d19;--t2:#5c6058;--tm:#6e716a;--a:#149c7c;--ab:#dff3ec;--aob:#0c6a55;--ni:#2f4a63;',
         'position:fixed;inset:0;z-index:2147483000;display:flex;flex-direction:column;align-items:center;justify-content:center;',
         'box-sizing:border-box;padding:0 28px;text-align:center;background:var(--p);color:var(--t);',
         'font-family:Lato,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}',
-        '@media (prefers-color-scheme:dark){.dgls{--p:#111;--t:#ddd;--t2:#a8a8a8;--tm:#7c7c7c;--a:#136857;--ab:#12241f;--aob:#16b394}}',
+        '@media (prefers-color-scheme:dark){.dgls{--p:#111;--t:#ddd;--t2:#a8a8a8;--tm:#7c7c7c;--a:#136857;--ab:#12241f;--aob:#16b394;--ni:#a9c4dc}}',
         '.dgls.out{opacity:0;transform:scale(1.04);transition:opacity .3s ' + EASE + ',transform .3s ' + EASE + ';pointer-events:none}',
         '.dgls-mk{display:grid;place-items:center;margin-bottom:20px}',
         '.dgls .dgls-name{font-size:23px;font-weight:600;line-height:1.3;letter-spacing:-.015em;color:var(--t);animation:dgls-word 3.2s ' + EASE + ' 1 both}',
@@ -54,10 +54,17 @@
         '@keyframes dgls-d2{0%,14%{stroke-dashoffset:1}32%,100%{stroke-dashoffset:0}}',
         '@keyframes dgls-d3{0%,26%{stroke-dashoffset:1}40%,100%{stroke-dashoffset:0}}',
         '@keyframes dgls-dot{0%,8%{transform:translateY(-40px) scale(.4);opacity:0}18%{transform:translateY(3px) scale(1.1);opacity:1}22%,100%{transform:none;opacity:1}}',
+        // The Uposatha app's mark: the moon rises from under the cloud, then the strokes of the cloud draw.
+        '.dgls-up{width:118px;height:94px;overflow:visible}',
+        '.dgls-up .mn{animation:dgls-rs 3.2s ' + EASE + ' 1 both}',
+        '.dgls-up .cl{stroke-dasharray:1;stroke-dashoffset:1;animation:dgls-d1 3.2s ' + EASE + ' 1 both}',
+        '.dgls-up .cl.b{animation-delay:.12s}.dgls-up .cl.c{animation-delay:.24s}',
+        '@keyframes dgls-rs{0%{transform:translateY(16px);opacity:0}32%,100%{transform:none;opacity:1}}',
         // The error screen: mark, name, phrase, button, each 100 ms after the last.
         '.dgls-err .dgls-mk{height:120px;margin-bottom:22px}',
         '.dgls-err .dgls-dg{width:180px;height:104px}',
         '.dgls-err .dgls-dc{width:104px;height:90px}',
+        '.dgls-err .dgls-up{width:104px;height:83px}',
         '.dgls-err .dgls-h,.dgls-err .dgls-tx,.dgls-err .dgls-bt,.dgls-err .dgls-st{animation:dgls-in .5s ' + EASE + ' both}',
         '.dgls .dgls-h{margin:0 0 10px;font-size:22px;font-weight:600;line-height:1.3;letter-spacing:-.01em;color:var(--t);animation-delay:.75s}',
         '.dgls .dgls-tx{margin:0;font-size:15px;line-height:1.5;font-weight:400;color:var(--t2);animation-delay:.85s}',
@@ -67,11 +74,12 @@
         'animation-delay:.95s;transition:opacity .2s}',
         '.dgls-bt[disabled]{cursor:default;opacity:.6}',
         '.dgls-bt:focus-visible{outline:2px solid var(--a);outline-offset:3px}',
+        '.dgls .dgls-ex{display:block;margin-top:12px;padding:10px 14px;border-radius:14px;background:var(--ab);color:var(--aob);font-size:14px;line-height:1.4}',
         '.dgls .dgls-st{position:absolute;left:0;right:0;bottom:22px;font-size:12px;color:var(--tm);animation-delay:1.1s}',
         '.dgls-spin{width:16px;height:16px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;animation:dgls-spin .8s linear infinite}',
         '@keyframes dgls-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}',
         '@keyframes dgls-spin{to{transform:rotate(360deg)}}',
-        '@media (prefers-reduced-motion:reduce){.dgls *,.dgls *::after{animation:none!important}.dgls-dc .hk,.dgls-dc .st,.dgls-dc .ul{stroke-dashoffset:0}',
+        '@media (prefers-reduced-motion:reduce){.dgls *,.dgls *::after{animation:none!important}.dgls-dc .hk,.dgls-dc .st,.dgls-dc .ul,.dgls-up .cl{stroke-dashoffset:0}',
         '.dgls-dg img{-webkit-mask:none;mask:none}.dgls-dg::after{display:none}.dgls-dc .dt{opacity:1}.dgls.out{transition:none}}',
     ].join('');
 
@@ -81,12 +89,14 @@
             down: ['Сайт не отвечает.', 'Попробуйте чуть позже — сервер сейчас недоступен.'],
             retry: ['Проверяем соединение…', 'Это займёт несколько секунд.'],
             btn: 'Повторить', busy: 'Проверяем…', auto: 'Повторим сами, когда сеть появится',
+            upo: 'Напоминания уже стоят на телефоне и придут без сети.',
         },
         en: {
             none: ['No connection.', 'Check the internet and try again.'],
             down: ['The site isn’t responding.', 'Try again shortly — the server is unavailable right now.'],
             retry: ['Checking the connection…', 'This takes a few seconds.'],
             btn: 'Try again', busy: 'Checking…', auto: 'We’ll retry by ourselves once you’re online',
+            upo: 'Your reminders are set on this phone and will arrive without it.',
         },
     };
 
@@ -96,6 +106,13 @@
         + '<path class="st" pathLength="1" d="M608 690V545H738V380H855V292"/></g>'
         + '<circle class="dt" cx="608" cy="712" r="38" fill="currentColor"/>'
         + '<path class="ul" pathLength="1" d="M258 822H879" stroke="var(--a)" stroke-width="22"/></svg>';
+
+    var UPO_SVG = '<svg class="dgls-up" viewBox="2 7.5 54.5 43.5" aria-hidden="true">'
+        + '<mask id="dglsUpoMask" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64"><rect width="64" height="64" fill="#fff"/>'
+        + '<path d="M6,37 H31 M15,47 H43" stroke="#000" stroke-width="13" stroke-linecap="round"/></mask>'
+        + '<g mask="url(#dglsUpoMask)"><circle class="mn" cx="39" cy="25" r="17" fill="var(--ni)"/></g>'
+        + '<g stroke="var(--tm)" stroke-width="7" stroke-linecap="round" fill="none">'
+        + '<path class="cl a" pathLength="1" d="M6,37 H31"/><path class="cl b" pathLength="1" d="M15,47 H43"/><path class="cl c" pathLength="1" d="M50,47 H53"/></g></svg>';
 
     function lang() {
         var saved = '';
@@ -120,6 +137,8 @@
         var mark;
         if (app === 'dict') {
             mark = DICT_SVG;
+        } else if (app === 'upo') {
+            mark = UPO_SVG;
         } else {
             var url = (opts && opts.markUrl) || '/launch-dg-full.png';
             el.style.setProperty('--dgmark', 'url("' + url + '")');
@@ -163,7 +182,7 @@
             el = build(app, opts, 'dgls-splash');
             var name = document.createElement('div');
             name.className = 'dgls-name';
-            name.textContent = app === 'dict' ? 'Dict' : 'Dhamma.Gift';
+            name.textContent = app === 'dict' ? 'Dict' : app === 'upo' ? 'Uposatha' : 'Dhamma.Gift';
             el.appendChild(name);
             mount(el);
         });
@@ -184,9 +203,10 @@
         var el = build(app, opts, 'dgls-err');
         el.id = 'dglsErr';
         el.setAttribute('role', 'alert');
-        var title = app === 'dict' ? 'Dict.Dhamma.Gift' : 'Dhamma.Gift';
+        var title = app === 'dict' ? 'Dict.Dhamma.Gift' : app === 'upo' ? 'Uposatha' : 'Dhamma.Gift';
         el.insertAdjacentHTML('beforeend',
-            '<div class="dgls-h"></div><div class="dgls-tx"><span class="dgls-hd"></span><span class="dgls-bd"></span></div>'
+            '<div class="dgls-h"></div><div class="dgls-tx"><span class="dgls-hd"></span><span class="dgls-bd"></span>'
+            + (app === 'upo' ? '<span class="dgls-ex"></span>' : '') + '</div>'
             + '<button type="button" class="dgls-bt"></button><div class="dgls-st"></div>');
         el.querySelector('.dgls-h').textContent = title;
         var head = el.querySelector('.dgls-hd'), body = el.querySelector('.dgls-bd');
@@ -224,6 +244,7 @@
         }
         btn.addEventListener('click', again);
         window.addEventListener('online', function () { if (document.getElementById('dglsErr')) again(); });
+        if (app === 'upo') el.querySelector('.dgls-ex').textContent = t.upo;   // the reminders do not need the network
         show(state === 'down' ? 'down' : 'none');
         mount(el);
         el.__dgls = { retry: again };

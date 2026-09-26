@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The launcher icon's plate: the site's own navy (--dg-navy), behind the moon. -->
+    <color name="ic_launcher_background">#243448</color>
+    <!-- The strip behind the status / navigation bar (Android 15 ignores android:statusBarColor):
+         the page's own dark #111111, the same as the WebView background. -->
+    <color name="dg_navbar">#111111</color>
+</resources>
