@@ -82,7 +82,9 @@ on:
 # the queue is shared with every other branch. Tags are exempt — a release run must never be
 # cancelled by whatever is pushed next.
 concurrency:
-  group: build-${{ github.ref }}
+  # The dictionary/Uposatha-only run (dict_only) has a group of its own: it takes minutes, the full run takes
+  # the better part of an hour, and starting the quick one must not cancel the full one that is running.
+  group: build-${{ github.ref }}-${{ inputs.dict_only && 'small' || 'full' }}
   cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
 env:
