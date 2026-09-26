@@ -11,8 +11,8 @@
 </style>
 </head>
 <body>
-<!-- The page Capacitor shows when the site cannot be reached (capacitor.config.json -> server.errorPath):
-     the "no connection" screen of the launch layer, with a Try again that asks the site itself. -->
+<!-- What the app answers when the site cannot be reached for a page the bundle does not have (a word with no
+     network): the "no connection" screen of the launch layer, with a Try again that asks the site itself. -->
 <!-- @launch-screens -->
 <script>
 (function () {
@@ -26,8 +26,10 @@
       .then(function (ok) { clearTimeout(timer); return ok; });
   }
   window.dgLaunch.error('dict', navigator.onLine === false ? 'none' : 'down', {
+    // This page is what a request the site could not answer got (a word's page with no network): the same
+    // address again is the retry.
     retry: function () {
-      return probe().then(function (ok) { if (ok) location.replace(SITE); return ok; });
+      return probe().then(function (ok) { if (ok) location.reload(); return ok; });
     },
   });
 })();

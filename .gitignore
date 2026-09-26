@@ -54,3 +54,4 @@ ios-screenshots/
 
 # The Uposatha app's snapshot of the calendar page (uposatha/tools/snapshot.js): fetched at build time.
 uposatha/snapshot/
+dict/snapshot/

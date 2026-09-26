@@ -294,12 +294,25 @@
 
   // @rate-prompt (inlined from src/native-bridge.js by dict/build.js)
 
+  // ---- the bundled page: no service worker, kept up to date --------------------------------------
+  function store(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+  var SITE_CONFIG = {
+    site: 'https://dict.dhamma.gift',
+    // A directory's page is /ru/index.html in the bundle and /ru/ on the site.
+    urlFor: function (path) { return /\/index\.html$/.test(path) ? path.slice(0, -'index.html'.length) : path; }
+  };
+  // @site-updater (inlined from src/site-updater.js by dict/build.js)
+
   function start() {
     inject();
     watchHistory();
     wireBackButton();
     pushShortcuts();
     maybeAskForRating();
+    // The page has settled (it fetched its word list): now the bundle is checked against the site.
+    function afterLoad() { setTimeout(updateSite, 6000); }
+    if (document.readyState === 'complete') afterLoad();
+    else window.addEventListener('load', afterLoad, { once: true });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);

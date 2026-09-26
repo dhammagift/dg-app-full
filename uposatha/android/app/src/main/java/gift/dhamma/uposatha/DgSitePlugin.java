@@ -7,6 +7,7 @@ import android.webkit.MimeTypeMap;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 
+import com.getcapacitor.Bridge;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -17,6 +18,7 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -155,7 +157,7 @@ public class DgSitePlugin extends Plugin {
      * The downloaded copy of a request's file, or null to let Capacitor serve the bundled one. The page
      * has more than one address (/, /index.html, /uposatha-calendar): all of them are its one HTML.
      */
-    static WebResourceResponse serve(Context context, WebResourceRequest request) {
+    static WebResourceResponse serve(Context context, Bridge bridge, WebResourceRequest request) {
         if (!"GET".equals(request.getMethod())) return null;
         Uri uri = request.getUrl();
         if (!"localhost".equals(uri.getHost())) return null;
@@ -170,7 +172,13 @@ public class DgSitePlugin extends Plugin {
             Map<String, String> headers = new HashMap<>();
             headers.put("Access-Control-Allow-Origin", "*");
             headers.put("Cache-Control", "no-cache");
-            return new WebResourceResponse(typeOf(path), "UTF-8", 200, "OK", headers, new FileInputStream(file));
+            InputStream stream = new FileInputStream(file);
+            // Capacitor puts its own script into the html it serves only on a WebView too old for document-start
+            // scripts; the same call here keeps such a WebView working with a downloaded page.
+            if (path.endsWith(".html") && bridge != null && bridge.getLocalServer() != null) {
+                stream = bridge.getLocalServer().getJavaScriptInjectedStream(stream);
+            }
+            return new WebResourceResponse(typeOf(path), "UTF-8", 200, "OK", headers, stream);
         } catch (Exception e) {
             return null;
         }

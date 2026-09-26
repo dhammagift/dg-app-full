@@ -3,13 +3,11 @@
   "appName": "Dict.Dhamma.Gift",
   "webDir": "www",
   "server": {
-    "url": "https://dict.dhamma.gift/",
+    "androidScheme": "https",
     "allowNavigation": [
-      "dict.dhamma.gift",
-      "*.dhamma.gift",
-      "dhamma.gift"
-    ],
-    "errorPath": "index.html"
+      "dhamma.gift",
+      "*.dhamma.gift"
+    ]
   },
   "android": {
     "backgroundColor": "#111111"

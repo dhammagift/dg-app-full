@@ -6,13 +6,17 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.view.View;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 
 import androidx.core.splashscreen.SplashScreen;
 import androidx.webkit.WebViewCompat;
 import androidx.webkit.WebViewFeature;
 
+import com.getcapacitor.Bridge;
 import com.getcapacitor.BridgeActivity;
+import com.getcapacitor.BridgeWebViewClient;
 import com.getcapacitor.WebViewListener;
 
 import org.json.JSONObject;
@@ -24,8 +28,9 @@ import java.util.Collections;
 /**
  * The dictionary as a Capacitor app.
  *
- * There is no bundled UI: capacitor.config.json points server.url at https://dict.dhamma.gift, so
- * the site IS the app's interface, exactly as it was under the Trusted Web Activity this replaces.
+ * The interface is the dictionary site's own page, bundled in the APK so the app opens with no network
+ * (uposatha-style: dict/tools/snapshot.js takes it off the site at build time, DgSitePlugin keeps it up to
+ * date and answers for the site). It replaces the Trusted Web Activity, whose container was the problem.
  * What changed is the container. A TWA runs inside Chrome's Custom Tab, which is why the owner's
  * two reports existed at all — "не работает стандалон" (a Custom Tab still shows Chrome's own
  * chrome and follows Chrome's display-mode, not the app's) and the burger panel "улетает" (the
@@ -38,11 +43,10 @@ import java.util.Collections;
  */
 public class MainActivity extends BridgeActivity {
 
-    // The one origin the injected bridge may run on. Capacitor itself allows the same origin from
-    // capacitor.config.json's server.url, but this script is ours and does not need to run
-    // anywhere else — the reader pages under dhamma.gift are allowed navigation and must not get
-    // dictionary-only rows.
-    private static final String SITE_ORIGIN = "https://dict.dhamma.gift";
+    // The app's own origin: the dictionary's page is bundled in the APK (www/, a snapshot of the site's page taken
+    // at build time) and served from here; a word's page is fetched from the site by DgSitePlugin under this
+    // address. The injected bridge runs here, and routes (shortcuts, shared text) are loaded from here.
+    private static final String SITE_ORIGIN = "https://localhost";
     private static final String SITE_ROOT = SITE_ORIGIN + "/";
     // Where `cap sync` puts the committed src/dict-bridge.js (see dict/build.js).
     private static final String BRIDGE_ASSET = "public/dict-bridge.js";
@@ -61,6 +65,7 @@ public class MainActivity extends BridgeActivity {
         // Before super.onCreate(): Capacitor collects registered plugins while the bridge is being
         // created. DgShortcuts pushes the lookup history into the launcher's long-press menu.
         registerPlugin(DgShortcutsPlugin.class);
+        registerPlugin(DgSitePlugin.class);
         // The launch splash is the animated mark (res/drawable/dg_splash_icon.xml, 900 ms). The system takes the
         // splash down the moment the first frame is ready, which on a warm start is before the mark has drawn;
         // holding it for the length of the animation is what lets it play, and costs a cold start nothing it
@@ -70,6 +75,7 @@ public class MainActivity extends BridgeActivity {
         splash.setKeepOnScreenCondition(() -> SystemClock.uptimeMillis() - shownAt < SPLASH_HOLD_MS);
         super.onCreate(savedInstanceState);
 
+        serveTheBundle();
         injectBridge();
         // What the WebView shows before the site's first paint is the launch screen's own colour
         // (light/dark by the system theme), so native splash -> web splash has no gap.
@@ -95,6 +101,22 @@ public class MainActivity extends BridgeActivity {
         if (intent == handledIntent) return;
         handledIntent = intent;
         handleIntent(intent);
+    }
+
+    /**
+     * The page is bundled in the APK; DgSitePlugin serves the files downloaded since, the bundle's directory
+     * pages (/ru/), and the site's own answers (a word's page) in place of Capacitor's asset server.
+     */
+    private void serveTheBundle() {
+        final Bridge bridge = getBridge();
+        if (bridge == null) return;
+        bridge.setWebViewClient(new BridgeWebViewClient(bridge) {
+            @Override
+            public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                WebResourceResponse answer = DgSitePlugin.serve(MainActivity.this, bridge, request);
+                return answer != null ? answer : super.shouldInterceptRequest(view, request);
+            }
+        });
     }
 
     /**

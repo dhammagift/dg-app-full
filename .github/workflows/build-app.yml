@@ -864,9 +864,21 @@ jobs:
         working-directory: dict
         run: npm ci
 
-      # src/ -> www/ -> android/app/src/main/assets/public. Not optional: the asset sync is what
-      # puts dict-bridge.js where MainActivity reads it from, and without it the installed app has
-      # no burger-menu rows at all.
+      # The app bundles the dictionary's page (both languages): it opens with no network, and updates itself from
+      # the site when there is one (dict/tools/snapshot.js). A real browser loads the page off the live site and
+      # records everything it fetches. Fails the job when the site cannot be reached: an APK with no page in it
+      # must never be built quietly.
+      - name: Take the dictionary's page off the site
+        working-directory: dict
+        env:
+          SITE: https://dict.dhamma.gift
+        run: |
+          npx playwright install --with-deps chromium
+          node tools/snapshot.js
+
+      # src/ -> www/ -> android/app/src/main/assets/public: the bundled page, dict-bridge.js and the
+      # offline page where MainActivity and Capacitor read them from. Not optional: the asset sync is what
+      # puts dict-bridge.js where MainActivity reads it from.
       - name: Sync Capacitor
         working-directory: dict
         run: npm run sync-android

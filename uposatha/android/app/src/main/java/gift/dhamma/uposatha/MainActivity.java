@@ -111,7 +111,7 @@ public class MainActivity extends BridgeActivity {
         bridge.setWebViewClient(new BridgeWebViewClient(bridge) {
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
-                WebResourceResponse updated = DgSitePlugin.serve(MainActivity.this, request);
+                WebResourceResponse updated = DgSitePlugin.serve(MainActivity.this, bridge, request);
                 return updated != null ? updated : super.shouldInterceptRequest(view, request);
             }
         });
