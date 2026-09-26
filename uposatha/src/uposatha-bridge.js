@@ -165,6 +165,11 @@
   var STREAM_KEY = 'dgUposathaSoundStream';
   function alarmStream() { return store(STREAM_KEY) === 'alarm'; }
 
+  // What the page last asked of the plugin, so a change of the source can be applied without reloading the page:
+  // the channels it made (by their own id) and the reminders it scheduled (as it passed them, unmapped).
+  var lastChannels = {};
+  var lastSchedule = null;
+
   function wrapLocalNotifications() {
     var plugins = Cap.Plugins;
     var LN = plugins && plugins.LocalNotifications;
@@ -176,6 +181,7 @@
         if (key === '__dgWrapped') return true;
         if (key === 'createChannel') {
           return function (ch) {
+            lastChannels[ch.id] = ch;
             // The notification stream is what the plugin does anyway; only the alarm stream needs the native path.
             if (!alarmStream() || !sound() || typeof sound().channel !== 'function') return target.createChannel(ch);
             return sound().channel({ id: suffixed(ch.id), name: ch.name, sound: ch.sound || '', importance: ch.importance, vibration: !!ch.vibration, stream: 'alarm' });
@@ -183,6 +189,7 @@
         }
         if (key === 'schedule') {
           return function (o) {
+            lastSchedule = o;
             // The picture of the reminders (docs/launch-screens/uposatha-notification.png: the mirror, the bowl, the brush),
             // shown at the right of the notification; the sound channel is the reader's.
             var list = ((o && o.notifications) || []).map(function (n) { return Object.assign({ largeIcon: 'uposatha_notification' }, n, { channelId: suffixed(n.channelId) }); });
@@ -195,12 +202,28 @@
     });
   }
 
+  // The source changed: make the channels of the other stream, take back the reminders that are set and set them again on
+  // those channels — no reload of the page. (The page schedules only when its own reminders change, so it would never do
+  // this itself.) What the page has asked of the plugin since it started is what is replayed; it asks at every start.
+  var NATIVE_ID_BASE = 7000;   // the page's ids for its reminders: uposatha-calendar.js, NATIVE_ID_BASE .. +99
+  function restream() {
+    var LN = Cap.Plugins && Cap.Plugins.LocalNotifications;
+    if (!LN) return Promise.resolve();
+    return Promise.all(Object.keys(lastChannels).map(function (id) { return LN.createChannel(lastChannels[id]); }))
+      .then(function () { return LN.getPending(); })
+      .then(function (p) {
+        var ours = ((p && p.notifications) || []).filter(function (n) { return n.id >= NATIVE_ID_BASE && n.id < NATIVE_ID_BASE + 100; }).map(function (n) { return { id: n.id }; });
+        return ours.length ? LN.cancel({ notifications: ours }) : null;
+      })
+      .then(function () { return lastSchedule && lastSchedule.notifications && lastSchedule.notifications.length ? LN.schedule(lastSchedule) : null; })
+      .catch(function (e) { console.log('[dg-uposatha-stream] could not move the reminders:', (e && e.message) || e); });
+  }
+
   // At once, before the page's own scripts reach for the plugin (start() below tries again should Capacitor not have registered it yet).
   if (onCalendar) wrapLocalNotifications();
 
-  // The setting itself, in the settings drawer under the page's own sound row. Changing it reloads the
-  // page: the page schedules its reminders only when they change, and a reload is what makes it
-  // schedule them again — now on the other channels.
+  // The setting itself, in the settings drawer under the page's own sound row. Changing it moves the reminders
+  // to the other channels at once (restream above), without reloading the page.
   //
   // The page may rebuild or clone its drawer (a language switch redraws it), and a listener on the
   // select would be lost with the node: the change is caught at the document instead, and the row is
@@ -237,7 +260,7 @@
       var t = e.target;
       if (!t || t.id !== 'dg-stream') return;
       try { localStorage.setItem(STREAM_KEY, t.value); } catch (err) { /* no storage: the choice is lost */ }
-      location.reload();
+      restream();
     }, true);
     ensureStreamRow();
     new MutationObserver(ensureStreamRow).observe(document.documentElement, { childList: true, subtree: true });

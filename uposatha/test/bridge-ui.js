@@ -173,14 +173,12 @@ function capacitorStub() {
                 await page.evaluate(() => { const d = document.getElementById('dg-drawer'); const c = d.cloneNode(true); d.parentNode.replaceChild(c, d); });
                 await page.waitForTimeout(400);
                 check('the source row comes back after the page redraws its drawer', await page.evaluate(() => !!document.getElementById('dg-stream')), true);
+                await page.evaluate(() => { window.__marker = 'same page'; window.__calls.cancelled = 0; window.__calls.scheduled.length = 0; });
                 await page.evaluate(() => document.querySelector('.dg-menu-btn').click());
                 await page.waitForTimeout(700);
                 await page.selectOption('#dg-stream', 'alarm');
-                await page.waitForLoadState('load');
-                await page.waitForTimeout(2500);
-                check('changing the source reloads the page and reschedules on the alarm channels', await page.evaluate(() => [localStorage.getItem('dgUposathaSoundStream'), window.__calls.scheduled.flat().every((n) => n.channelId.endsWith('-alarm')) && window.__calls.scheduled.length > 0]), ['alarm', true]);
-                await page.evaluate(() => document.querySelector('.dg-menu-btn').click());
-                await page.waitForTimeout(700);
+                await page.waitForTimeout(1200);
+                check('changing the source moves the reminders to the alarm channels, on the same page (no reload)', await page.evaluate(() => [window.__marker, localStorage.getItem('dgUposathaSoundStream'), window.__calls.scheduled.length > 0 && window.__calls.scheduled.flat().every((n) => n.channelId.endsWith('-alarm')), window.__calls.native.some((c) => c.stream === 'alarm')]), ['same page', 'alarm', true, true]);
                 await page.evaluate(() => document.getElementById('dg-stream-row').scrollIntoView());
                 await page.screenshot({ path: path.join(SHOTS, 'launch-upo-stream-row-light.png') });
             }

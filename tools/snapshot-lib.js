@@ -10,6 +10,7 @@
 //             stored at their own paths, query strings dropped: ?v=hash is a cache-buster)
 //   interact  what to do on a loaded page so its scripts fetch what they fetch on demand
 //   skip      (path, resourceType) => true for what is not part of the page (API answers, service worker)
+//   extras    paths on the site to take as they are: what the page fetches only on an action the crawl does not make
 //
 // Every same-origin GET the page makes is recorded, including what its scripts fetch on their own.
 const fs = require('fs');
@@ -18,7 +19,7 @@ const path = require('path');
 // the working directory first.
 const { chromium } = require(process.env.PLAYWRIGHT || require.resolve('playwright', { paths: [process.cwd(), __dirname] }));
 
-async function snapshot({ site, out, prefix = '', visits, interact, skip }) {
+async function snapshot({ site, out, prefix = '', visits, interact, skip, extras = [] }) {
     site = site.replace(/\/$/, '');
     out = path.resolve(out);
     fs.rmSync(out, { recursive: true, force: true });
@@ -66,6 +67,13 @@ async function snapshot({ site, out, prefix = '', visits, interact, skip }) {
         await page.waitForTimeout(1500);
         if (interact) await interact(page, visit);
         await ctx.close();
+    }
+    // Extras: fetched directly, not through a page.
+    for (const extra of extras) {
+        const res = await fetch(site + prefix + extra).catch(() => null);
+        if (!res || !res.ok) { skipped.push('extra ' + (res ? res.status : 'failed') + ' ' + extra); continue; }
+        const body = Buffer.from(await res.arrayBuffer());
+        if (body.length) got.set(extra, body);
     }
     await browser.close();
     const failed = [];

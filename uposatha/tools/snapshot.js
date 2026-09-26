@@ -14,6 +14,10 @@ snapshot({
     site: process.env.SITE || 'https://test.dhamma.gift',
     out: process.argv[2] || path.join(__dirname, '..', 'snapshot'),
     visits: ['ru', 'en'].map((lang) => ({ url: `/uposatha-calendar?app=1&lang=${lang}`, save: '/uposatha-calendar.html' })),
+    // What the settings' sound preview plays: SOUND_FILES in uposatha-calendar.js. Audio is only fetched when a sound
+    // is picked, which the crawl does not do; the same six files are the notification sounds in res/raw.
+    extras: ['/assets/sounds/gong.mp3', '/assets/repeat-timer/sound/gong2.mp3', '/assets/repeat-timer/sound/gong3.mp3',
+        '/assets/repeat-timer/sound/gong4.mp3', '/assets/repeat-timer/sound/gong5.mp3', '/assets/repeat-timer/sound/church.mp3'],
     skip: (p, type) => p.startsWith('/api/') || p === '/sw.js' || (type !== 'document' && p === '/uposatha-calendar'),   // API answers, the site's service worker, a script asking for the page again
     async interact(page) {
         for (const tab of ['list', 'cal', 'parts', 'home']) {

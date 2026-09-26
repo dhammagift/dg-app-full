@@ -19,6 +19,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -130,6 +132,8 @@ public class DgSitePlugin extends Plugin {
 
     // ---- serving ------------------------------------------------------------------------------
 
+    // Where the page comes from: the same site as SITE_CONFIG in uposatha-bridge.js (test for now, dhamma.gift later).
+    private static final String SITE = "https://test.dhamma.gift";
     private static final Map<String, String> TYPES = new HashMap<>();
     static {
         TYPES.put("html", "text/html");
@@ -153,6 +157,30 @@ public class DgSitePlugin extends Plugin {
         return guessed == null ? "application/octet-stream" : guessed;
     }
 
+    private static boolean hasAsset(Context context, String path) {
+        try (InputStream in = context.getAssets().open("public" + path)) {
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static Map<String, String> defaultHeaders() {
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Access-Control-Allow-Origin", "*");
+        headers.put("Cache-Control", "no-cache");
+        return headers;
+    }
+
+    private static InputStream injected(Bridge bridge, String path, InputStream stream) {
+        // Capacitor puts its own script into the html it serves only on a WebView too old for document-start
+        // scripts; the same call here keeps such a WebView working with a page served from here.
+        if (path.endsWith(".html") && bridge != null && bridge.getLocalServer() != null) {
+            return bridge.getLocalServer().getJavaScriptInjectedStream(stream);
+        }
+        return stream;
+    }
+
     /**
      * The downloaded copy of a request's file, or null to let Capacitor serve the bundled one. The page
      * has more than one address (/, /index.html, /uposatha-calendar): all of them are its one HTML.
@@ -167,7 +195,13 @@ public class DgSitePlugin extends Plugin {
             path = "/uposatha-calendar.html";
         }
         File file = resolve(context, path);
-        if (file == null || !file.isFile()) return null;
+        if (file == null || !file.isFile()) {
+            // A file with an extension that neither was downloaded nor is bundled is the site's (and is asked for
+            // there); an address without one is the page's own SPA fallback, Capacitor's.
+            String last = path.substring(path.lastIndexOf('/') + 1);
+            if (last.indexOf('.') > 0 && !path.startsWith("/_capacitor") && !hasAsset(context, path)) return proxy(context, bridge, request);
+            return null;
+        }
         try {
             Map<String, String> headers = new HashMap<>();
             headers.put("Access-Control-Allow-Origin", "*");
@@ -181,6 +215,49 @@ public class DgSitePlugin extends Plugin {
             return new WebResourceResponse(typeOf(path), "UTF-8", 200, "OK", headers, stream);
         } catch (Exception e) {
             return null;
+        }
+    }
+
+    /** A file the bundle does not have (the page or a script asks for something the snapshot never saw): fetched from the site, offline answered with the app's "no connection" page. */
+    private static WebResourceResponse proxy(Context context, Bridge bridge, WebResourceRequest request) {
+        Uri uri = request.getUrl();
+        HttpURLConnection connection = null;
+        try {
+            String target = SITE + uri.getEncodedPath() + (uri.getEncodedQuery() != null ? "?" + uri.getEncodedQuery() : "");
+            connection = (HttpURLConnection) new URL(target).openConnection();
+            connection.setConnectTimeout(8000);
+            connection.setReadTimeout(20000);
+            connection.setInstanceFollowRedirects(true);
+            for (Map.Entry<String, String> h : request.getRequestHeaders().entrySet()) {
+                String name = h.getKey();
+                if (name.equalsIgnoreCase("User-Agent") || name.equalsIgnoreCase("Accept") || name.equalsIgnoreCase("Accept-Language")) {
+                    connection.setRequestProperty(name, h.getValue());
+                }
+            }
+            int status = connection.getResponseCode();
+            String contentType = connection.getContentType();
+            String mime = contentType == null ? "text/html" : contentType.split(";")[0].trim();
+            String charset = "UTF-8";
+            if (contentType != null) {
+                for (String part : contentType.split(";")) {
+                    part = part.trim();
+                    if (part.toLowerCase().startsWith("charset=")) charset = part.substring(8).replace("\"", "");
+                }
+            }
+            InputStream body = status >= 400 ? connection.getErrorStream() : connection.getInputStream();
+            if (body == null) body = new java.io.ByteArrayInputStream(new byte[0]);
+            InputStream stream = "text/html".equals(mime) ? injected(bridge, "x.html", body) : body;
+            // The connection is closed with the stream (HttpURLConnection releases it at end of stream).
+            return new WebResourceResponse(mime, charset, status < 100 || (status >= 300 && status < 400) ? 200 : status,
+                    status == 200 ? "OK" : "Site answer", defaultHeaders(), stream);
+        } catch (Exception e) {
+            if (connection != null) connection.disconnect();
+            try {
+                return new WebResourceResponse("text/html", "UTF-8", 503, "No connection", defaultHeaders(),
+                        injected(bridge, "error.html", context.getAssets().open("public/error.html")));
+            } catch (Exception inner) {
+                return null;
+            }
         }
     }
 }
