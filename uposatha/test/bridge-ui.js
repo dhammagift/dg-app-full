@@ -81,9 +81,9 @@ function capacitorStub() {
             await page.waitForTimeout(2500);
             check('no web splash (Android draws its own, natively)', await page.evaluate(() => !document.querySelector('.dgls')), true);
             const items = await page.evaluate(() => window.__calls.shortcuts.slice(-1)[0] || null);
-            check('shortcuts: three upcoming Uposatha days pushed', items && items.length, 3);
-            console.log('       shortcut labels:', JSON.stringify(items && items.map((i) => i.label)), '->', items && items[0].route);
-            check('shortcuts: ids, route and icon', items && items.map((i) => [i.id, i.route, /^shortcut_moon_[0-7]$/.test(i.icon)]), [0, 1, 2].map((i) => ['dg-uposatha-' + i, '/uposatha-calendar?app=1&tab=list', true]));
+            check('shortcuts: Calendar and the three upcoming Uposatha days pushed', items && items.length, 4);
+            console.log('       shortcut labels:', JSON.stringify(items && items.map((i) => i.label)), '->', items && items[1].route);
+            check('shortcuts: ids, route and icon', items && items.map((i) => [i.id, i.route, /^shortcut_moon_[0-7]$/.test(i.icon)]), [['dg-calendar', '/uposatha-calendar?app=1&tab=cal', true], ...[0, 1, 2].map((i) => ['dg-uposatha-' + i, '/uposatha-calendar?app=1&tab=list', true])]);
             check('page: no script errors', errors, []);
             // Back: drawer first, then a non-home tab goes home, then the app exits.
             await page.evaluate(() => document.querySelector('#appnav [data-tab="cal"]').click());
@@ -108,7 +108,7 @@ function capacitorStub() {
             await page.clock.install({ time: new Date(iso) });
             await page.goto(PAGE, { waitUntil: 'load' });
             await page.waitForTimeout(2500);
-            const labels = await page.evaluate(() => (window.__calls.shortcuts.slice(-1)[0] || []).map((i) => i.label));
+            const labels = await page.evaluate(() => (window.__calls.shortcuts.slice(-1)[0] || []).slice(1).map((i) => i.label));
             console.log('       labels at', iso, JSON.stringify(labels));
             // The page decides its language itself (and the neighbour is editing it): the day words are what matter.
             const norm = (s) => String(s).replace('Tomorrow', 'Завтра').replace('Today', 'Сегодня').replace('Day', '').replace('-й день', '').replace(/\s+/g, ' ').replace(' 8', ' 8').trim();

@@ -2,7 +2,7 @@
 """Draws the eight moon-phase variants of Uposatha's small icons (run from uposatha/):
 
   ic_stat_moon_0..7   the status-bar icon of a reminder: white on transparent, the unlit part of the moon a thin ring
-  shortcut_moon_0..7  the launcher-shortcut icon: white moon on the teal disc, the unlit part faint
+  shortcut_moon_0..7  the launcher-shortcut icon: the bare moon (no plate, no clouds) in grey, as big as the canvas, the unlit part faint
   ic_launcher_moon_N_foreground / _monochrome (mipmap-*)  the adaptive launcher icon of the app on its navy plate (the
                       geometry and colours of ic_launcher_foreground.png); ic_launcher_moon_N (mipmap-*) is the pre-Android-8 square
 
@@ -78,13 +78,21 @@ def compose(i, px, kind):
         alpha = ImageChops.lighter(ImageChops.lighter(lit, ring), clouds)
         out = Image.new('RGBA', (size, size), (255, 255, 255, 0))
         out.putalpha(alpha)
-    else:
-        bg = Image.new('RGBA', (size, size), (0, 0, 0, 0))
-        ImageDraw.Draw(bg).ellipse([0, 0, size - 1, size - 1], fill=TEAL + (255,))
-        faint = whole.point(lambda v: v * 0.28)
-        white = ImageChops.lighter(ImageChops.lighter(lit, faint), clouds)
-        layer = Image.new('RGBA', (size, size), (255, 255, 255, 0)); layer.putalpha(white)
-        out = Image.alpha_composite(bg, layer)
+    else:   # 'shortcut': the moon alone, grey
+        return moon_only(i, px)
+    return out.resize((px, px), Image.LANCZOS)
+
+
+def moon_only(i, px):
+    size = px * SS
+    scale = size * 0.96 / (2 * R)
+    ox, oy = size / 2 - CX * scale, size / 2 - CY * scale
+    lit = lit_mask(i, size, scale, ox, oy)
+    whole = disc_mask(size, scale, ox, oy, R)
+    out = Image.new('RGBA', (size, size), GREY + (0,))
+    for mask, a in ((whole, 0.28), (lit, 1)):
+        layer = Image.new('RGBA', (size, size), GREY + (0,)); layer.putalpha(mask.point(lambda v, a=a: int(v * a)))
+        out = Image.alpha_composite(out, layer)
     return out.resize((px, px), Image.LANCZOS)
 
 
@@ -120,6 +128,7 @@ def legacy(i, px):
     return plate
 
 
+GREY = (138, 144, 153)
 MOON, CLOUD, PLATE = (223, 232, 240), (159, 179, 198), (36, 52, 72)
 DENS = {'mdpi': 1, 'hdpi': 1.5, 'xhdpi': 2, 'xxhdpi': 3, 'xxxhdpi': 4}
 if __name__ == '__main__':

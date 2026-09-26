@@ -5,7 +5,4 @@
     <string name="package_name">gift.dhamma.uposatha</string>
     <string name="custom_url_scheme">gift.dhamma.uposatha</string>
 
-    <!-- The static App Shortcut (res/xml/shortcuts.xml). -->
-    <string name="shortcut_cal_short">Calendar</string>
-    <string name="shortcut_cal_long">Uposatha calendar</string>
 </resources>

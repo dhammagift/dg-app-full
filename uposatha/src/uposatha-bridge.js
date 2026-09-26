@@ -25,7 +25,7 @@
   // Set when the reader taps Rate Us (the page's own row, #up-rate) or "Rate" in the invitation: whoever
   // has tapped it is never invited again.
   var RATE_FLAG = 'dgRateUsTapped';
-  var SHORTCUTS_MAX = 3;   // the launcher's menu holds four entries; the static Calendar one is declared in res/xml/shortcuts.xml
+  var SHORTCUTS_MAX = 3;   // the launcher's menu holds four entries: Calendar and the next three Uposatha days (all dynamic, so each icon is a moon of its own day)
 
   // The page is bundled, so it is at the app's own origin: /, /index.html, /uposatha-calendar (and .html).
   var CALENDAR_PATH = /^\/(uposatha-calendar(\.html)?\/?|index\.html)?$/;
@@ -217,6 +217,14 @@
     if (!plugin || typeof plugin.set !== 'function') return;
     var items = [];
     try { items = nextUposathas(); } catch (e) { console.log('[dg-uposatha-shortcuts] failed to work out the days:', (e && e.message) || e); }
+    // The Calendar entry is dynamic too (it was the one static shortcut), so that its icon can be the moon of today.
+    items.unshift({
+      id: 'dg-calendar',
+      label: isRu() ? 'Календарь' : 'Calendar',
+      route: '/uposatha-calendar?app=1&tab=cal',
+      icon: moonName('shortcut_moon', moonIndexAt(new Date())),
+      rank: 0
+    });
     Promise.resolve(plugin.set({ items: items })).catch(function (e) {
       console.log('[dg-uposatha-shortcuts] set failed:', (e && e.message) || e);
     });
