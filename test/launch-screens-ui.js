@@ -46,6 +46,7 @@ function check(name, actual, expected) {
             await page.waitForSelector('.dgls-splash .dgls-name', { state: 'attached' });
             check('main: splash is up at the first frame', await present(page), true);
             await page.waitForTimeout(850);    // the mark has all but assembled; the splash leaves at ~1.4 s
+            check('main: the page under the splash does not scroll', await page.evaluate(() => getComputedStyle(document.documentElement).overflow), 'hidden');
             check('main: name is Dhamma.Gift', await page.evaluate(() => (document.querySelector('.dgls-name') || {}).textContent), 'Dhamma.Gift');
             await page.screenshot({ path: path.join(SHOTS, 'launch-dg-splash-light.png') });
             await page.evaluate(() => { window.__hold = 0; });
@@ -56,6 +57,7 @@ function check(name, actual, expected) {
             await fp.waitForTimeout(3600);
             const page2 = fp;
             check('main: splash has left', await present(page2), false);
+            check('main: scrolling is back', await page2.evaluate(() => getComputedStyle(document.documentElement).overflow !== 'hidden'), true);
             await page2.reload({ waitUntil: 'domcontentloaded' });
             await page2.waitForTimeout(400);
             check('main: no replay in the same launch', await present(page2), false);

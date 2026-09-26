@@ -24,6 +24,11 @@
         'box-sizing:border-box;padding:0 28px;text-align:center;background:var(--p);color:var(--t);',
         'font-family:Lato,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}',
         '@media (prefers-color-scheme:dark){.dgls{--p:#111;--t:#ddd;--t2:#a8a8a8;--tm:#7c7c7c;--a:#136857;--ab:#12241f;--aob:#16b394;--ni:#a9c4dc}}',
+        // While the splash is up the page under it does not scroll: a WebView draws the page's own scrollbar ABOVE
+        // a fixed overlay, so a long page (the dictionary, the calendar) showed a strip down the splash.
+        // Keyed on the splash element itself (:has, Chrome 105+), not on a class of <html>: the site's own scripts
+        // rewrite <html>'s className.
+        'html:has(.dgls-splash),html:has(.dgls-splash) body{overflow:hidden!important}',
         '.dgls.out{opacity:0;transform:scale(1.04);transition:opacity .3s ' + EASE + ',transform .3s ' + EASE + ';pointer-events:none}',
         '.dgls-mk{display:grid;place-items:center;margin-bottom:20px}',
         '.dgls .dgls-name{font-size:23px;font-weight:600;line-height:1.3;letter-spacing:-.015em;color:var(--t);animation:dgls-word 3.2s ' + EASE + ' 1 both}',

@@ -29,7 +29,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.List;
 
 /**
  * "My own sound" for the reminders.
@@ -51,11 +50,25 @@ import java.util.List;
  * replaces the previous channel and file, so channels and files do not pile up.
  *
  * A cancelled picker rejects with "cancelled" (the page treats any rejection as "nothing changed").
+ *
+ * The SOUND SOURCE. A notification channel plays its sound on an audio stream chosen when the
+ * channel is created, and LocalNotifications creates every channel on the NOTIFICATION stream: the
+ * gong follows the notification volume, and is silent when that is turned down or the phone is on
+ * silent — the alarm goes off, the signal does not. The same sound on the ALARM stream plays at the
+ * alarm volume, like a clock. The stream cannot be changed on an existing channel, so each sound
+ * has a second channel with the suffix "-alarm" and the page bridge (uposatha-bridge.js) picks the
+ * one the reader's setting names:
+ *
+ *     Capacitor.Plugins.DgSound.channel({ id, name, sound, importance, vibration, stream })
+ *
+ * creates one channel of a built-in sound (a res/raw name; empty = silent) on the "alarm" or the
+ * "notification" stream. pick() creates BOTH streams' channels of the sound it copies.
  */
 @CapacitorPlugin(name = "DgSound")
 public class DgSoundPlugin extends Plugin {
 
     private static final String CHANNEL_PREFIX = "uposatha-own-";
+    static final String ALARM_SUFFIX = "-alarm";
     private static final long MAX_BYTES = 10L * 1024 * 1024;   // a notification sound, not a track
 
     @PluginMethod
@@ -64,6 +77,33 @@ public class DgSoundPlugin extends Plugin {
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("audio/*");
         startActivityForResult(call, intent, "pickResult");
+    }
+
+    /** A channel of a built-in sound on the stream the reader chose (see the class comment). */
+    @PluginMethod
+    public void channel(PluginCall call) {
+        String id = call.getString("id");
+        if (id == null || id.isEmpty()) {
+            call.reject("id is required");
+            return;
+        }
+        Context context = getContext();
+        try {
+            String sound = call.getString("sound");
+            Uri uri = null;
+            if (sound != null && !sound.isEmpty()) {
+                int dot = sound.lastIndexOf('.');
+                String base = dot > 0 ? sound.substring(0, dot) : sound;
+                if (context.getResources().getIdentifier(base, "raw", context.getPackageName()) != 0) {
+                    uri = Uri.parse("android.resource://" + context.getPackageName() + "/raw/" + base);
+                }
+            }
+            makeChannel(context, id, call.getString("name", id), uri, "alarm".equals(call.getString("stream")),
+                    call.getInt("importance", NotificationManager.IMPORTANCE_HIGH), call.getBoolean("vibration", true));
+            call.resolve();
+        } catch (Exception e) {
+            call.reject("DgSound.channel failed: " + e.getMessage());
+        }
     }
 
     @ActivityCallback
@@ -85,7 +125,8 @@ public class DgSoundPlugin extends Plugin {
                 call.reject("could not copy the file");
                 return;
             }
-            makeChannel(context, channelId, display, sound);
+            makeChannel(context, channelId, display, sound, false);
+            makeChannel(context, channelId + ALARM_SUFFIX, display, sound, true);
             JSObject out = new JSObject();
             out.put("channelId", channelId);
             out.put("name", display);
@@ -164,22 +205,35 @@ public class DgSoundPlugin extends Plugin {
 
     // ---- the channel ------------------------------------------------------------------------
 
-    private static void makeChannel(Context context, String id, String name, Uri sound) {
+    private static void makeChannel(Context context, String id, String name, Uri sound, boolean alarm) {
+        makeChannel(context, id, name, sound, alarm, NotificationManager.IMPORTANCE_HIGH, true);
+    }
+
+    private static void makeChannel(Context context, String id, String name, Uri sound, boolean alarm, int importance, boolean vibration) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
         NotificationManager manager = context.getSystemService(NotificationManager.class);
         if (manager == null) return;
-        // One own channel at a time: the previous one is dropped with its file.
-        List<NotificationChannel> existing = manager.getNotificationChannels();
-        for (NotificationChannel c : existing) {
-            if (c.getId().startsWith(CHANNEL_PREFIX) && !c.getId().equals(id)) manager.deleteNotificationChannel(c.getId());
+        // One own sound at a time: the previous one's channels (both streams) are dropped.
+        if (id.startsWith(CHANNEL_PREFIX)) {
+            String base = id.endsWith(ALARM_SUFFIX) ? id.substring(0, id.length() - ALARM_SUFFIX.length()) : id;
+            for (NotificationChannel c : manager.getNotificationChannels()) {
+                String other = c.getId();
+                if (other.startsWith(CHANNEL_PREFIX) && !other.equals(base) && !other.equals(base + ALARM_SUFFIX)) {
+                    manager.deleteNotificationChannel(other);
+                }
+            }
         }
-        NotificationChannel channel = new NotificationChannel(id, name, NotificationManager.IMPORTANCE_HIGH);
+        NotificationChannel channel = new NotificationChannel(id, name, importance);
         channel.setDescription("Uposatha reminders");
-        channel.enableVibration(true);
-        channel.setSound(sound, new AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                .build());
+        channel.enableVibration(vibration);
+        if (sound != null) {
+            channel.setSound(sound, new AudioAttributes.Builder()
+                    .setUsage(alarm ? AudioAttributes.USAGE_ALARM : AudioAttributes.USAGE_NOTIFICATION)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build());
+        } else {
+            channel.setSound(null, null);   // silent
+        }
         manager.createNotificationChannel(channel);
     }
 

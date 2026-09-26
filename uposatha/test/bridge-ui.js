@@ -25,7 +25,7 @@ function check(name, actual, expected) {
 
 // The plugins, as recorders. window.__calls collects what the app asked of them.
 function capacitorStub() {
-    window.__calls = { shortcuts: [], channels: [], scheduled: [], picks: 0, exit: 0 };
+    window.__calls = { shortcuts: [], channels: [], native: [], scheduled: [], picks: 0, exit: 0 };
     window.__back = null;
     window.Capacitor = {
         getPlatform: () => 'android',
@@ -33,7 +33,10 @@ function capacitorStub() {
         Plugins: {
             App: { addListener: (n, cb) => { if (n === 'backButton') window.__back = cb; return { remove() {} }; }, exitApp: () => { window.__calls.exit++; } },
             DgShortcuts: { set: (o) => { window.__calls.shortcuts.push(o.items); return Promise.resolve({ count: o.items.length }); } },
-            DgSound: { pick: () => { window.__calls.picks++; return Promise.resolve({ channelId: 'uposatha-own-1', name: 'My bell' }); } },
+            DgSound: {
+                pick: () => { window.__calls.picks++; return Promise.resolve({ channelId: 'uposatha-own-1', name: 'My bell' }); },
+                channel: (c) => { window.__calls.native.push(c); return Promise.resolve(); },
+            },
             LocalNotifications: {
                 requestPermissions: () => Promise.resolve({ display: 'granted' }),
                 createChannel: (c) => { window.__calls.channels.push(c); return Promise.resolve(); },
@@ -75,9 +78,9 @@ function capacitorStub() {
             await page.waitForLoadState('load');
             await page.waitForTimeout(2500);
             const items = await page.evaluate(() => window.__calls.shortcuts.slice(-1)[0] || null);
-            check('shortcuts: two upcoming Uposatha days pushed', items && items.length, 2);
+            check('shortcuts: three upcoming Uposatha days pushed', items && items.length, 3);
             console.log('       shortcut labels:', JSON.stringify(items && items.map((i) => i.label)), '->', items && items[0].route);
-            check('shortcuts: ids, route and icon', items && items.map((i) => [i.id, i.route, i.icon]), [['dg-uposatha-0', '/uposatha-calendar?app=1&tab=list', 'shortcut_moon'], ['dg-uposatha-1', '/uposatha-calendar?app=1&tab=list', 'shortcut_moon']]);
+            check('shortcuts: ids, route and icon', items && items.map((i) => [i.id, i.route, i.icon]), [0, 1, 2].map((i) => ['dg-uposatha-' + i, '/uposatha-calendar?app=1&tab=list', 'shortcut_moon']));
             check('page: no script errors', errors, []);
             // Back: drawer first, then a non-home tab goes home, then the app exits.
             await page.evaluate(() => document.querySelector('#appnav [data-tab="cal"]').click());
@@ -89,6 +92,22 @@ function capacitorStub() {
             await page.evaluate(() => window.__back({ canGoBack: false }));
             check('Back on the first tab leaves the app', await page.evaluate(() => window.__calls.exit), 1);
             await page.screenshot({ path: path.join(SHOTS, 'launch-upo-home-light.png') });
+            await ctx.close();
+        }
+
+        // 1b. Today and tomorrow are named as such (time zone UTC: the 8th day's Uposatha begins on the evening of Oct 2).
+        for (const [iso, first] of [['2026-10-01T09:00:00Z', 'Завтра · 8-й день'], ['2026-10-02T09:00:00Z', 'Сегодня · 8-й день']]) {
+            const ctx = await ctxOf('light', 'ru');
+            await ctx.addInitScript(capacitorStub);
+            await ctx.addInitScript(() => { localStorage.setItem('dgUposathaTz', 'UTC'); });
+            await ctx.addInitScript(BRIDGE);
+            const page = await ctx.newPage();
+            await page.clock.install({ time: new Date(iso) });
+            await page.goto(PAGE, { waitUntil: 'load' });
+            await page.waitForTimeout(2500);
+            const labels = await page.evaluate(() => (window.__calls.shortcuts.slice(-1)[0] || []).map((i) => i.label));
+            console.log('       labels at', iso, JSON.stringify(labels));
+            check(`shortcuts on ${iso.slice(0, 10)}: the first is "${first}"`, labels[0], first);
             await ctx.close();
         }
 
@@ -122,7 +141,46 @@ function capacitorStub() {
             await ctx.close();
         }
 
-        // 4. The offline page: the "no connection" screen with the extra line about the reminders.
+        // 4. The sound source: the alarm stream or the notification stream, per the setting.
+        for (const stream of ['notification', 'alarm']) {
+            const ctx = await ctxOf('light', 'ru');
+            await ctx.addInitScript(capacitorStub);
+            await ctx.addInitScript((st) => {
+                if (sessionStorage.getItem('seeded')) return;   // once: a reload must keep what the page set
+                sessionStorage.setItem('seeded', '1');
+                localStorage.setItem('dgUposathaRemind', JSON.stringify({ on: true, lead: 24, d8: true, d14: true, d15: true, sound: 'gong', ownChannel: '', ownName: '' }));
+                if (st === 'alarm') localStorage.setItem('dgUposathaSoundStream', 'alarm'); else localStorage.removeItem('dgUposathaSoundStream');
+            }, stream);
+            await ctx.addInitScript(BRIDGE);
+            const page = await ctx.newPage();
+            await page.goto(PAGE, { waitUntil: 'load' });
+            await page.waitForTimeout(2500);
+            const got = await page.evaluate(() => ({
+                plugin: window.__calls.channels.map((c) => c.id), native: window.__calls.native.map((c) => [c.id, c.stream, c.sound]),
+                scheduled: [...new Set((window.__calls.scheduled.flat() || []).map((n) => n.channelId))],
+            }));
+            const suffix = stream === 'alarm' ? '-alarm' : '';
+            check(`stream ${stream}: channels are made ${stream === 'alarm' ? 'natively on the alarm stream' : 'by the plugin, as before'}`,
+                stream === 'alarm' ? got.native.some((n) => n[0] === 'uposatha-gong-v1-alarm' && n[1] === 'alarm' && n[2] === 'gong.mp3') && got.plugin.length === 0
+                    : got.plugin.includes('uposatha-gong-v1') && got.native.length === 0, true);
+            check(`stream ${stream}: reminders are scheduled on the ${stream} channels`, got.scheduled.length > 0 && got.scheduled.every((id) => id.endsWith('-v1' + suffix)), true);
+            check(`stream ${stream}: the settings drawer has the source row`, await page.evaluate(() => [!!document.getElementById('dg-stream-row'), document.getElementById('dg-stream').value]), [true, stream]);
+            if (stream === 'notification') {
+                await page.evaluate(() => document.querySelector('.dg-menu-btn').click());
+                await page.waitForTimeout(700);
+                await page.selectOption('#dg-stream', 'alarm');
+                await page.waitForLoadState('load');
+                await page.waitForTimeout(2500);
+                check('changing the source reloads the page and reschedules on the alarm channels', await page.evaluate(() => [localStorage.getItem('dgUposathaSoundStream'), window.__calls.scheduled.flat().every((n) => n.channelId.endsWith('-alarm')) && window.__calls.scheduled.length > 0]), ['alarm', true]);
+                await page.evaluate(() => document.querySelector('.dg-menu-btn').click());
+                await page.waitForTimeout(700);
+                await page.evaluate(() => document.getElementById('dg-stream-row').scrollIntoView());
+                await page.screenshot({ path: path.join(SHOTS, 'launch-upo-stream-row-light.png') });
+            }
+            await ctx.close();
+        }
+
+        // 5. The offline page: the "no connection" screen with the extra line about the reminders.
         for (const [theme, lang] of [['light', 'ru'], ['dark', 'en']]) {
             const ctx = await ctxOf(theme, lang);
             await ctx.addInitScript((l) => { try { localStorage.setItem('dhammaLanguage', l); } catch (e) { /* first paint */ } }, lang);

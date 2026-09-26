@@ -5,10 +5,7 @@
     <string name="package_name">gift.dhamma.uposatha</string>
     <string name="custom_url_scheme">gift.dhamma.uposatha</string>
 
-    <!-- Static App Shortcuts (res/xml/shortcuts.xml). "DG " on the first for the same reason the
-         dictionary has it: the reader app declares the same entry, and both can sit on one phone. -->
-    <string name="shortcut_fav_short">DG Favorites &amp; History</string>
-    <string name="shortcut_fav_long">DG Favorites &amp; History</string>
+    <!-- The static App Shortcut (res/xml/shortcuts.xml). -->
     <string name="shortcut_cal_short">Calendar</string>
     <string name="shortcut_cal_long">Uposatha calendar</string>
 </resources>
