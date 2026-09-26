@@ -6,6 +6,8 @@ import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.View;
+import android.webkit.WebView;
 
 import androidx.core.view.WindowInsetsControllerCompat;
 
@@ -57,6 +59,13 @@ public class MainActivity extends BridgeActivity {
             // What the WebView shows before the page's first paint is the launch screen's own colour
             // (light/dark by the system theme), so native splash -> web splash has no navy or white gap.
             getBridge().getWebView().setBackgroundColor(getColor(R.color.dg_splash_bg));
+            // No scrollbars, no overscroll glow: the WebView draws its own scroll indicator ABOVE the page
+            // (and above the splash), which showed as a strip down the launch screen. The page is the app's
+            // whole interface here, and a phone app has no scrollbars on it.
+            WebView bare = getBridge().getWebView();
+            bare.setVerticalScrollBarEnabled(false);
+            bare.setHorizontalScrollBarEnabled(false);
+            bare.setOverScrollMode(View.OVER_SCROLL_NEVER);
         }
 
         // After the bridge, deliberately: the Capacitor StatusBar plugin applies its style inside

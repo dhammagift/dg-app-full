@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.View;
 import android.webkit.WebView;
 
 import androidx.webkit.WebViewCompat;
@@ -61,6 +62,13 @@ public class MainActivity extends BridgeActivity {
         // (light/dark by the system theme), so native splash -> web splash has no gap.
         if (getBridge() != null && getBridge().getWebView() != null) {
             getBridge().getWebView().setBackgroundColor(getColor(R.color.dg_splash_bg));
+            // No scrollbars, no overscroll glow: the WebView draws its own scroll indicator ABOVE the page
+            // (and above the splash), which showed as a strip down the launch screen. The page is the app's
+            // whole interface here, and a phone app has no scrollbars on it.
+            WebView bare = getBridge().getWebView();
+            bare.setVerticalScrollBarEnabled(false);
+            bare.setHorizontalScrollBarEnabled(false);
+            bare.setOverScrollMode(View.OVER_SCROLL_NEVER);
         }
         // Deliberately no handleIntent(getIntent()) here — see handledIntent above.
     }
