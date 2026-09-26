@@ -41,6 +41,8 @@ function capacitorStub() {
                 requestPermissions: () => Promise.resolve({ display: 'granted' }),
                 createChannel: (c) => { window.__calls.channels.push(c); return Promise.resolve(); },
                 getPending: () => Promise.resolve({ notifications: [] }),
+                getDeliveredNotifications: () => Promise.resolve({ notifications: window.__delivered || [] }),
+                removeDeliveredNotifications: (o) => { window.__calls.removed = (window.__calls.removed || []).concat(o.notifications.map((n) => n.id)); return Promise.resolve(); },
                 cancel: () => Promise.resolve(),
                 schedule: (o) => { window.__calls.scheduled.push(o.notifications); return Promise.resolve(); },
             },
@@ -161,6 +163,9 @@ function capacitorStub() {
                 scheduled: [...new Set((window.__calls.scheduled.flat() || []).map((n) => n.channelId))],
                 icons: [...new Set((window.__calls.scheduled.flat() || []).map((n) => n.largeIcon))],
             }));
+            // A reminder left in the tray must not turn the next one with the same id into a silent update.
+            await page.evaluate(() => { window.__delivered = [{ id: 7000 }, { id: 7990 }, { id: 1 }]; window.__calls.removed = []; return window.Capacitor.Plugins.LocalNotifications.schedule({ notifications: [{ id: 7000, title: 't', body: 'b', channelId: 'uposatha-gong-v1', schedule: { at: new Date(Date.now() + 60000) } }] }); });
+            check(`stream ${stream}: what is left of ours in the tray is taken away before a new reminder`, await page.evaluate(() => window.__calls.removed), [7000, 7990]);
             const suffix = stream === 'alarm' ? '-alarm' : '';
             check(`stream ${stream}: channels are made ${stream === 'alarm' ? 'natively on the alarm stream' : 'by the plugin, as before'}`,
                 stream === 'alarm' ? got.native.some((n) => n[0] === 'uposatha-gong-v1-alarm' && n[1] === 'alarm' && n[2] === 'gong.mp3') && got.plugin.length === 0

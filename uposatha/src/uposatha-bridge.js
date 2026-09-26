@@ -165,6 +165,16 @@
   var STREAM_KEY = 'dgUposathaSoundStream';
   function alarmStream() { return store(STREAM_KEY) === 'alarm'; }
 
+  var NATIVE_ID_BASE = 7000;   // the page's ids for its reminders (uposatha-calendar.js: NATIVE_ID_BASE + list index; the test reminder is 7990)
+
+  function clearDeliveredOurs(LN) {
+    if (!LN || typeof LN.getDeliveredNotifications !== 'function') return Promise.resolve();
+    return LN.getDeliveredNotifications().then(function (d) {
+      var ours = ((d && d.notifications) || []).filter(function (n) { return n.id >= NATIVE_ID_BASE && n.id < NATIVE_ID_BASE + 1000; }).map(function (n) { return { id: n.id }; });
+      return ours.length ? LN.removeDeliveredNotifications({ notifications: ours }) : null;
+    }).catch(function () { /* the tray could not be read: schedule anyway */ });
+  }
+
   // What the page last asked of the plugin, so a change of the source can be applied without reloading the page:
   // the channels it made (by their own id) and the reminders it scheduled (as it passed them, unmapped).
   var lastChannels = {};
@@ -184,7 +194,7 @@
             lastChannels[ch.id] = ch;
             // The notification stream is what the plugin does anyway; only the alarm stream needs the native path.
             if (!alarmStream() || !sound() || typeof sound().channel !== 'function') return target.createChannel(ch);
-            return sound().channel({ id: suffixed(ch.id), name: ch.name, sound: ch.sound || '', importance: ch.importance, vibration: !!ch.vibration, stream: 'alarm' });
+            return sound().channel({ id: suffixed(ch.id), name: ch.name + (isRu() ? ' (будильник)' : ' (alarm)'), sound: ch.sound || '', importance: ch.importance, vibration: !!ch.vibration, stream: 'alarm' });
           };
         }
         if (key === 'schedule') {
@@ -193,7 +203,11 @@
             // The picture of the reminders (docs/launch-screens/uposatha-notification.png: the mirror, the bowl, the brush),
             // shown at the right of the notification; the sound channel is the reader's.
             var list = ((o && o.notifications) || []).map(function (n) { return Object.assign({ largeIcon: 'uposatha_notification' }, n, { channelId: suffixed(n.channelId) }); });
-            return target.schedule(Object.assign({}, o, { notifications: list }));
+            // The plugin posts every notification "alert once": one that REPLACES a notification of the same id still in the
+            // tray makes no sound and no vibration. The page's ids are their place in the list (the next reminder is always
+            // 7000, and the test reminder is 7990), so a reminder that fires after another has been left in the tray would
+            // arrive silent. Whatever of ours is still in the tray is taken away before new ones are set.
+            return clearDeliveredOurs(target).then(function () { return target.schedule(Object.assign({}, o, { notifications: list })); });
           };
         }
         var v = target[key];
@@ -205,7 +219,6 @@
   // The source changed: make the channels of the other stream, take back the reminders that are set and set them again on
   // those channels — no reload of the page. (The page schedules only when its own reminders change, so it would never do
   // this itself.) What the page has asked of the plugin since it started is what is replayed; it asks at every start.
-  var NATIVE_ID_BASE = 7000;   // the page's ids for its reminders: uposatha-calendar.js, NATIVE_ID_BASE .. +99
   function restream() {
     var LN = Cap.Plugins && Cap.Plugins.LocalNotifications;
     if (!LN) return Promise.resolve();
