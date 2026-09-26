@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Part of the 890 ms launch mark: the clean moon grows to 1.08 (650-780 ms) and settles back (450-1000 ms). -->
+<!-- Part of the 890 ms launch mark: the clean moon grows to 1.08 (650-780 ms) and settles back (780-890 ms). -->
 <objectAnimator xmlns:android="http://schemas.android.com/apk/res/android"
     android:duration="890">
     <propertyValuesHolder android:propertyName="scaleX">
