@@ -197,6 +197,27 @@ function capacitorStub() {
             await ctx.close();
         }
 
+        // 4a. Which res/raw file an alarm plays: the built-in sounds, the spoken parts, vikala.
+        {
+            const ctx = await ctxOf('light', 'en');
+            await ctx.addInitScript(capacitorStub);
+            await ctx.addInitScript(() => { localStorage.setItem('dgUposathaSoundStream', 'alarm'); });
+            await ctx.addInitScript(BRIDGE);
+            const page = await ctx.newPage();
+            await page.goto(PAGE, { waitUntil: 'load' });
+            await page.waitForTimeout(1500);
+            const names = await page.evaluate(async () => {
+                const LN = window.Capacitor.Plugins.LocalNotifications;
+                const at = new Date(Date.now() + 90000);
+                const ids = ['uposatha-gong-v1', 'uposatha-bell-v1', 'uposatha-vikala-v1', 'uposatha-part-pubbanha-v1', 'uposatha-part-majjhima-v1', 'uposatha-none-v1', 'uposatha-own-123'];
+                window.__calls.alarms = [];
+                await LN.schedule({ notifications: ids.map((c, i) => ({ id: 7000 + i, title: 't', body: 'b', channelId: c, schedule: { at } })) });
+                return window.__calls.alarms.map((a) => a.sound);
+            });
+            check('alarm: which sound file each channel plays', names, ['gong', 'church', 'vikala', 'pubbanha', 'majjhima', 'own']);
+            await ctx.close();
+        }
+
         // 4b. Do Not Disturb: with the access, channels are made again under "-dnd" ids and reminders move to them.
         {
             const ctx = await ctxOf('light', 'en');

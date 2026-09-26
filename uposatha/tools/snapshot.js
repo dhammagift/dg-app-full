@@ -17,7 +17,9 @@ snapshot({
     // What the settings' sound preview plays: SOUND_FILES in uposatha-calendar.js. Audio is only fetched when a sound
     // is picked, which the crawl does not do; the same six files are the notification sounds in res/raw.
     extras: ['/assets/sounds/gong.mp3', '/assets/repeat-timer/sound/gong2.mp3', '/assets/repeat-timer/sound/gong3.mp3',
-        '/assets/repeat-timer/sound/gong4.mp3', '/assets/repeat-timer/sound/gong5.mp3', '/assets/repeat-timer/sound/church.mp3'],
+        '/assets/repeat-timer/sound/gong4.mp3', '/assets/repeat-timer/sound/gong5.mp3', '/assets/repeat-timer/sound/church.mp3',
+        // the spoken names of the parts of the night and day, and the Vinaya's vikala (also res/raw, as the reminders' sounds)
+        ...['pubbanha', 'majjhanhika', 'sayanha', 'pathama', 'majjhima', 'pacchima', 'vikala'].map((n) => `/assets/audio/parts/${n}.mp3`)],
     skip: (p, type) => p.startsWith('/api/') || p === '/sw.js' || (type !== 'document' && p === '/uposatha-calendar'),   // API answers, the site's service worker, a script asking for the page again
     async interact(page) {
         for (const tab of ['list', 'cal', 'parts', 'home']) {

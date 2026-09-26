@@ -240,12 +240,15 @@
   // and the tray entry), and DgAlarm sets an exact alarm that plays the sound on the ALARM stream, which Do Not Disturb
   // lets through and phone makers' notification layers do not touch. The sound's name comes from the channel the page chose.
   var RAW_OF = { gong: 'gong', gong2: 'gong2', gong3: 'gong3', gong4: 'gong4', gong5: 'gong5', bell: 'church' };
+  // The spoken names of the parts of the night and day ("part-<name>") and the Vinaya's vikala are res/raw files of their own name.
+  var RAW_SPOKEN = { pubbanha: 1, majjhanhika: 1, sayanha: 1, pathama: 1, majjhima: 1, pacchima: 1, vikala: 1 };
   function alarmPlugin() { var p = Cap.Plugins && Cap.Plugins.DgAlarm; return p && typeof p.schedule === 'function' ? p : null; }
   function directAlarm() { return alarmStream() && !!alarmPlugin(); }
   function rawSoundOf(channelId) {
     if (/^uposatha-own-/.test(channelId || '')) return 'own';
-    var m = /^uposatha-([a-z0-9]+)-v\d/.exec(channelId || '');
-    return m && RAW_OF[m[1]] || '';
+    var m = /^uposatha-(?:part-)?([a-z0-9]+)-v\d/.exec(channelId || '');
+    if (!m) return '';
+    return RAW_OF[m[1]] || (RAW_SPOKEN[m[1]] ? m[1] : '');
   }
 
   function wrapLocalNotifications() {
