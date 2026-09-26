@@ -8,7 +8,8 @@
 //
 // Shared code is pasted in by marker, one source each:
 //   "// @rate-prompt"     in uposatha-bridge.js: the rating sheet, from ../src/native-bridge.js
-//   "// @launch-screens"  in uposatha-bridge.js and index.html: the splash and the "no connection"
+//   "// @site-updater"    in uposatha-bridge.js: the bundled page kept current, from ../src/site-updater.js
+//   "// @launch-screens"  in index.html: the "no connection"
 //                         screen, from ../src/launch-screens.js
 const fs = require('fs');
 const path = require('path');
@@ -23,6 +24,7 @@ function bridgeSource() {
     const block = main.split(/^.*@rate-prompt-begin.*\n/m)[1].split(/^.*@rate-prompt-end.*\n/m)[0];
     return fs.readFileSync(path.join(SRC, 'uposatha-bridge.js'), 'utf8')
         .replace(/^.*\/\/ @rate-prompt .*\n/m, () => block)
+        .replace(/^.*\/\/ @site-updater .*\n/m, () => fs.readFileSync(path.join(ROOT_SRC, 'site-updater.js'), 'utf8'))
         .replace(/^.*\/\/ @launch-screens .*\n/m, () => launchScreens());
 }
 
@@ -55,6 +57,8 @@ function bundleSnapshot() {
     const files = [];
     copyTree(SNAPSHOT, WWW, files);
     fs.copyFileSync(path.join(SNAPSHOT, 'uposatha-calendar.html'), path.join(WWW, 'index.html'));
+    const empty = files.filter((f) => fs.statSync(path.join(WWW, f)).size === 0);
+    if (empty.length) throw new Error('the snapshot has empty files (a bundle with blank styles is worse than none): ' + empty.join(', '));
     const hashes = {};
     for (const f of files) hashes[f] = crypto.createHash('sha256').update(fs.readFileSync(path.join(WWW, f))).digest('hex');
     fs.writeFileSync(path.join(WWW, 'site-manifest.json'), JSON.stringify({ built: new Date().toISOString(), files, hashes }));
