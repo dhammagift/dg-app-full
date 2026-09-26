@@ -197,6 +197,45 @@
     }).catch(function () { /* the plugin cannot tell: the plain channels */ });
   }
 
+  // ---- asking for the access -------------------------------------------------------------------
+  //
+  // A reminder that arrives with no sound is a note nobody hears, so the access is asked for, in plain words, when
+  // reminders are on and it is not there: a sheet (the rating invitation's design) with a button to the system page.
+  // Not on every start: once a week until it is given, once per session at most. The settings row stays.
+  var DND_ASK_EVERY = 7 * 86400000;
+  var dndAskedThisSession = false;
+
+  function maybeAskDnd() {
+    if (dndAskedThisSession || dndGranted || document.getElementById('dgrAsk')) return;
+    var DS = Cap.Plugins && Cap.Plugins.DgSound;
+    if (!DS || typeof DS.requestDndAccess !== 'function') return;
+    if (Date.now() - (parseInt(store('dgDndAskedAt'), 10) || 0) < DND_ASK_EVERY) return;
+    dndAskedThisSession = true;
+    try { localStorage.setItem('dgDndAskedAt', String(Date.now())); } catch (e) { /* asked again next time */ }
+    var ru = isRu();
+    var style = document.createElement('style');
+    style.textContent = RATE_PROMPT_CSS;
+    document.head.appendChild(style);
+    var overlay = document.createElement('div');
+    overlay.id = 'dgrAsk';   // the rating sheet's styles, and its Back-button handling (closeRatePrompt)
+    overlay.innerHTML = '<div class="dgr-sheet" role="alertdialog" aria-modal="true" aria-labelledby="dgrTitle">'
+      + '<div class="dgr-eyebrow"></div><p class="dgr-title" id="dgrTitle"></p><p class="dgr-body"></p>'
+      + '<div class="dgr-actions"><button type="button" class="dgr-ghost"></button><button type="button" class="dgr-primary"></button></div></div>';
+    overlay.querySelector('.dgr-eyebrow').textContent = ru ? 'Напоминания' : 'Reminders';
+    overlay.querySelector('.dgr-title').textContent = ru ? 'Чтобы напоминание было слышно' : 'So that a reminder is heard';
+    overlay.querySelector('.dgr-body').textContent = ru
+      ? 'Пока включён режим «Не беспокоить», напоминание приходит без звука. Разрешите Uposatha звучать в этом режиме: откроются настройки Android, включите переключатель для Uposatha и вернитесь.'
+      : 'While Do Not Disturb is on, a reminder arrives with no sound. Allow Uposatha to sound in it: Android settings open, switch it on for Uposatha and come back.';
+    overlay.querySelector('.dgr-ghost').textContent = ru ? 'Позже' : 'Later';
+    overlay.querySelector('.dgr-primary').textContent = ru ? 'Разрешить' : 'Allow';
+    document.body.appendChild(overlay);
+    requestAnimationFrame(function () { overlay.classList.add('show'); });
+    function close() { overlay.classList.remove('show'); setTimeout(function () { overlay.remove(); }, 200); }
+    overlay.querySelector('.dgr-ghost').addEventListener('click', close);
+    overlay.addEventListener('click', function (ev) { if (ev.target === overlay) close(); });
+    overlay.querySelector('.dgr-primary').addEventListener('click', function () { DS.requestDndAccess(); close(); });
+  }
+
   function wrapLocalNotifications() {
     var plugins = Cap.Plugins;
     var LN = plugins && plugins.LocalNotifications;
@@ -230,7 +269,10 @@
             // tray makes no sound and no vibration. The page's ids are their place in the list (the next reminder is always
             // 7000, and the test reminder is 7990), so a reminder that fires after another has been left in the tray would
             // arrive silent. Whatever of ours is still in the tray is taken away before new ones are set.
-            return clearDeliveredOurs(target).then(function () { return target.schedule(Object.assign({}, o, { notifications: list })); });
+            return clearDeliveredOurs(target).then(function () { return target.schedule(Object.assign({}, o, { notifications: list })); }).then(function (res) {
+              if (list.length) setTimeout(function () { refreshDnd().then(maybeAskDnd); }, 2500);   // the page has settled; is the access there?
+              return res;
+            });
           };
         }
         var v = target[key];

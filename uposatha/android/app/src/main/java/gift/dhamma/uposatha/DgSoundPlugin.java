@@ -70,7 +70,7 @@ import java.io.OutputStream;
  * An app may make a channel override it ({@code setBypassDnd}) only once the reader has given it "Do Not
  * Disturb access", a page in the system settings the app can open but not switch on:
  *
- *     Capacitor.Plugins.DgSound.dndAccess()         ->  { granted }
+ *     Capacitor.Plugins.DgSound.dndAccess()         ->  { granted, filter }
  *     Capacitor.Plugins.DgSound.requestDndAccess()      opens that settings page
  *
  * Channels are made with {@code bypass: true}; it takes effect when the access is granted, and a channel's
@@ -97,6 +97,8 @@ public class DgSoundPlugin extends Plugin {
         JSObject out = new JSObject();
         NotificationManager manager = getContext().getSystemService(NotificationManager.class);
         out.put("granted", manager != null && manager.isNotificationPolicyAccessGranted());
+        // 1 all, 2 priority only, 3 nothing, 4 alarms only; 0 unknown
+        out.put("filter", manager == null ? 0 : manager.getCurrentInterruptionFilter());
         call.resolve(out);
     }
 

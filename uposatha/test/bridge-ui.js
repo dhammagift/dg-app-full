@@ -204,6 +204,9 @@ function capacitorStub() {
             await page.goto(PAGE, { waitUntil: 'load' });
             await page.waitForTimeout(2500);
             check('DND: without access the channels are the plain ones', await page.evaluate(() => [...new Set(window.__calls.scheduled.flat().map((n) => n.channelId))]), ['uposatha-gong-v1']);
+            check('DND: with reminders on and no access, the sheet asks in plain words (once)', await page.evaluate(async () => { await new Promise((r) => setTimeout(r, 1500)); const o = document.getElementById('dgrAsk'); return [!!o, o && o.querySelector('.dgr-title').textContent, localStorage.getItem('dgDndAskedAt') !== null]; }), [true, 'So that a reminder is heard', true]);
+            check('DND: its button opens the system page', await page.evaluate(() => { document.querySelector('#dgrAsk .dgr-primary').click(); return [window.__calls.dndAsked, true]; }), [1, true]);
+            await page.evaluate(() => { window.__calls.dndAsked = 0; });
             check('DND: the drawer has the row and the button asks for access', await page.evaluate(() => { document.getElementById('dg-dnd-btn').click(); return [!!document.getElementById('dg-dnd-row'), window.__calls.dndAsked]; }), [true, 1]);
             await page.evaluate(() => { window.__dnd = true; window.__calls.scheduled.length = 0; document.dispatchEvent(new Event('visibilitychange')); });
             await page.waitForTimeout(1200);
