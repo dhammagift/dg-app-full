@@ -18,6 +18,11 @@
   var Cap = window.Capacitor;
   if (!Cap || typeof Cap.getPlatform !== 'function' || Cap.getPlatform() !== 'android') return;
 
+  // The launch splash and the "no connection" screen. Pasted in from src/launch-screens.js by
+  // dict/build.js; the splash goes up now, at document start, and leaves once the site has loaded.
+  // @launch-screens (inlined from src/launch-screens.js by dict/build.js)
+  if (window.dgLaunch) window.dgLaunch.splash('dict');
+
   // Same flag name dg-app-full uses for its own switch. Different origin, so no collision — and
   // the same default: anything but 'off' means on.
   var SHORTCUTS_FLAG = 'dgDynamicShortcuts';

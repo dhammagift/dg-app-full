@@ -3,22 +3,34 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
 <title>Dict.Dhamma.Gift</title>
 <style>
-  :root { color-scheme: dark; }
-  body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
-         background: #111; color: #e8e8e8; font: 16px/1.5 system-ui, sans-serif; text-align: center; }
-  main { padding: 24px; max-width: 30rem; }
-  p { color: #9aa0a6; }
+  html, body { margin: 0; height: 100%; background: #fff; }
+  @media (prefers-color-scheme: dark) { html, body { background: #111; } }
 </style>
 </head>
 <body>
-<main>
-  <!-- The app loads https://dict.dhamma.gift (capacitor.config.json -> server.url). This file is
-       the webDir Capacitor requires and the page shown when the WebView lands here instead of on
-       the site — no network, or a failed navigation. -->
-  <h1>Dict.Dhamma.Gift</h1>
-  <p>Could not reach dict.dhamma.gift. Check your connection and reopen the app.</p>
-</main>
+<!-- The page Capacitor shows when the site cannot be reached (capacitor.config.json -> server.errorPath):
+     the "no connection" screen of the launch layer, with a Try again that asks the site itself. -->
+<!-- @launch-screens -->
+<script>
+(function () {
+  var SITE = 'https://dict.dhamma.gift/';
+  // Does the site answer? no-cors: an opaque response is enough, we only need to know it came.
+  function probe() {
+    var ctl = new AbortController();
+    var timer = setTimeout(function () { ctl.abort(); }, 10000);
+    return fetch(SITE, { mode: 'no-cors', cache: 'no-store', signal: ctl.signal })
+      .then(function () { return true; }, function () { return false; })
+      .then(function (ok) { clearTimeout(timer); return ok; });
+  }
+  window.dgLaunch.error('dict', navigator.onLine === false ? 'none' : 'down', {
+    retry: function () {
+      return probe().then(function (ok) { if (ok) location.replace(SITE); return ok; });
+    },
+  });
+})();
+</script>
 </body>
 </html>

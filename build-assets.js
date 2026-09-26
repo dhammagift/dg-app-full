@@ -601,7 +601,10 @@ function copyNativeFiles() {
     // site-only path list, and it is the file with a node test (test/deep-link.test.js), so it
     // should stay as close to its source as possible.
     fs.copyFileSync(path.join(SRC, 'deep-link.js'), path.join(WWW, 'deep-link.js'));
-    return 3;
+    // The launch splash and "no connection" screen (docs/launch-screens/), and the mark they draw.
+    fs.copyFileSync(path.join(SRC, 'launch-screens.js'), path.join(WWW, 'launch-screens.js'));
+    fs.copyFileSync(path.join(SRC, 'assets', 'dg-full.png'), path.join(WWW, 'launch-dg-full.png'));
+    return 5;
 }
 
 // The ASSETS list above is hand-maintained, so a NEW <script>/<link> added to the site is copied

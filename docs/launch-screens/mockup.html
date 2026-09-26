@@ -1,0 +1,185 @@
+<!-- @dsCard group="Приложения" viewport="1280x820" name="Запуск и ошибки — 3 приложения" subtitle="Заставки Dhamma.Gift, Dict, Uposatha и экраны «нет соединения», где знак собирается так же" -->
+<!DOCTYPE html>
+<html lang="ru" data-theme="light"><head><meta charset="utf-8"><meta name="design_doc_mode" content="canvas"><title>Запуск и ошибки — Dhamma.Gift, Dict, Uposatha</title>
+<link rel="stylesheet" href="../../styles.css">
+<style>
+body{margin:0;background:var(--dg-page);color:var(--dg-text);font-family:var(--dg-font,Lato,system-ui,sans-serif)}
+a{color:var(--dg-accent-ink)}a:hover{color:var(--dg-accent)}
+/* Все три заставки на одном цикле 3,2 с: 0–1,5 с знак собирается, держится, 1,5–1,8 с уходит, пауза. В приложении — один проход без повтора. */
+.ph{position:absolute;width:412px;height:892px;border-radius:44px;background:#0e0f0d;padding:10px;box-sizing:border-box;box-shadow:0 30px 60px rgba(0,0,0,.18)}
+.sc{width:100%;height:100%;border-radius:34px;background:var(--dg-page);color:var(--dg-text);display:grid;place-items:center;align-content:center;gap:20px;overflow:hidden}
+.cap{position:absolute;font-size:18px;font-weight:600;color:var(--dg-text)}
+.spec{position:absolute;width:412px;font-size:14px;line-height:1.55;color:var(--dg-text-2)}
+.spec b{color:var(--dg-text)}
+.wrap{display:grid;place-items:center;gap:20px;animation:out 3.2s var(--dg-ease,cubic-bezier(.22,.68,0,1)) infinite}
+.wrap>b{font-size:23px;font-weight:600;letter-spacing:-.015em;animation:word 3.2s cubic-bezier(.05,.7,.1,1) infinite}
+@keyframes out{0%,46%{opacity:1;transform:none}56%,100%{opacity:0;transform:scale(1.04)}}
+@keyframes word{0%,16%{opacity:0;transform:translateY(8px)}32%,100%{opacity:1;transform:none}}
+/* Dhamma.gift: полный знак. Книга раскрывается от корешка, лепестки раскрываются веером, раковина встаёт последней.
+   PNG один, слои нарезаны clip-path; в конце слои подменяются целым знаком, чтобы не было швов. */
+.dgl{position:relative;width:236px;height:137px}
+.dgl img{position:absolute;inset:0;width:100%;height:100%;display:block}
+.dgl .bk{clip-path:inset(79% 0 0 0);transform-origin:50% 88%;animation:book 3.2s cubic-bezier(.05,.7,.1,1) infinite}
+.dgl .pl{clip-path:polygon(0 0,46% 0,42% 14%,38.5% 30%,38% 48%,41% 62%,47% 75%,49% 80%,0 80%);transform-origin:49% 78%;animation:petL 3.2s cubic-bezier(.05,.7,.1,1) infinite}
+.dgl .pr{clip-path:polygon(54% 0,100% 0,100% 80%,51% 80%,53% 75%,59% 62%,62% 48%,61.5% 30%,58% 14%);transform-origin:51% 78%;animation:petR 3.2s cubic-bezier(.05,.7,.1,1) infinite}
+.dgl .sn{clip-path:polygon(50% 0,54% 3%,58% 14%,61.5% 30%,62% 48%,59% 62%,53% 75%,50% 79%,47% 75%,41% 62%,38% 48%,38.5% 30%,42% 14%,46% 3%);transform-origin:50% 78%;animation:conch 3.2s cubic-bezier(.05,.7,.1,1) infinite}
+.dgl .all{animation:whole 3.2s linear infinite}
+.dgl::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.75) 50%,transparent 60%);background-size:260% 100%;-webkit-mask:url(uposatha-prod/dg-full.png) center/100% 100% no-repeat;mask:url(uposatha-prod/dg-full.png) center/100% 100% no-repeat;animation:sheen 3.2s ease-in-out infinite}
+@keyframes book{0%{transform:scaleX(.15);opacity:0}20%,100%{transform:none;opacity:1}}
+@keyframes petL{0%,6%{transform:rotate(38deg);opacity:0}28%,100%{transform:none;opacity:1}}
+@keyframes petR{0%,6%{transform:rotate(-38deg);opacity:0}28%,100%{transform:none;opacity:1}}
+@keyframes conch{0%,14%{transform:translateY(22px) scale(.85);opacity:0}34%,100%{transform:none;opacity:1}}
+@keyframes whole{0%,36%{opacity:0}37%,100%{opacity:1}}
+@keyframes sheen{0%,36%{background-position:120% 0}50%,100%{background-position:-30% 0}}
+/* знак светло-серый — фон заставки тёмно-синий в обеих темах, как шапка сайта */
+.sc.navy{background:var(--dg-navy);color:#fff}
+/* Dict: крюк прорисовывается, точка падает, от неё вверх растёт лестница, последней — бирюзовая черта */
+.dc{width:150px;height:130px;overflow:visible}
+.dc .hk{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 3.2s cubic-bezier(.05,.7,.1,1) infinite}
+.dc .dt{transform-box:fill-box;transform-origin:50% 50%;animation:dot 3.2s cubic-bezier(.05,.7,.1,1) infinite}
+.dc .st{stroke-dasharray:1;stroke-dashoffset:1;animation:draw2 3.2s cubic-bezier(.05,.7,.1,1) infinite}
+.dc .ul{stroke-dasharray:1;stroke-dashoffset:1;animation:draw3 3.2s cubic-bezier(.05,.7,.1,1) infinite}
+@keyframes draw{0%{stroke-dashoffset:1}24%,100%{stroke-dashoffset:0}}
+@keyframes dot{0%,8%{transform:translateY(-40px) scale(.4);opacity:0}18%{transform:translateY(3px) scale(1.1);opacity:1}22%,100%{transform:none;opacity:1}}
+@keyframes draw2{0%,14%{stroke-dashoffset:1}32%,100%{stroke-dashoffset:0}}
+@keyframes draw3{0%,26%{stroke-dashoffset:1}40%,100%{stroke-dashoffset:0}}
+/* Uposatha: луна поднимается из-под облака (как в app-refresh.css) */
+.up{width:132px;height:106px;overflow:visible}
+.up .mn{animation:rise 3.2s cubic-bezier(.05,.7,.1,1) infinite}
+.up .cl{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 3.2s cubic-bezier(.05,.7,.1,1) infinite}
+.up .cl.b{animation-delay:.12s}.up .cl.c{animation-delay:.24s}
+@keyframes rise{0%{transform:translateY(16px);opacity:0}32%,100%{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+
+.hd{position:absolute;left:0;top:0;width:1900px}.hd h1{font-size:40px;margin:0 0 8px;letter-spacing:-.015em;color:var(--dg-text)}.hd p{margin:0;max-width:1180px;font-size:16px;line-height:1.55;color:var(--dg-text-2)}.hd button{margin-top:14px;font:600 15px/1 var(--dg-font);padding:10px 18px;border-radius:999px;border:0;background:var(--dg-surface-hover);color:var(--dg-text);cursor:pointer}
+
+
+
+
+
+
+
+.ofl-row{position:absolute;left:0;display:flex;flex-wrap:nowrap;width:max-content;gap:24px}.ofl-row>*{flex:none}
+.ofl-lbl{position:absolute;left:0;font-size:18px;font-weight:600}
+.ofl-grp{position:absolute;font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--dg-text-muted)}
+/* Экран — 360×640 dp, телефон по умолчанию. Одна раскладка на все три приложения: знак, название, фраза, кнопка. */
+.ofl-sc{width:300px;height:560px;border-radius:32px;background:var(--dg-page);color:var(--dg-text);box-shadow:0 0 0 1px var(--dg-border),0 20px 40px rgba(0,0,0,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 28px;box-sizing:border-box;text-align:center;position:relative;overflow:hidden}
+.ofl-sc>*{animation:in .5s cubic-bezier(.05,.7,.1,1) both}
+.ofl-sc h2{animation-delay:.08s}.ofl-sc .tx{animation-delay:.16s}.ofl-sc .bt{animation-delay:.24s}
+@keyframes in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.mk{height:96px;display:grid;place-items:center;margin-bottom:22px}
+.mk img{display:block}
+/* полный знак Dhamma.Gift светло-серый: в светлой теме темним его фильтром, чтобы не терялся на белом */
+.ofl-sc.light .dgfull{filter:brightness(.62) contrast(1.15)}
+h2{margin:0 0 10px;font-size:22px;font-weight:600;letter-spacing:-.01em}
+.tx{margin:0;font-size:15px;line-height:1.5;color:var(--dg-text-2);text-wrap:pretty}
+.tx b{display:block;color:var(--dg-text);font-weight:600;margin-bottom:2px}
+.tx .ex{display:block;margin-top:12px;padding:10px 14px;border-radius:14px;background:var(--dg-accent-bg);color:var(--dg-on-accent-bg);font-size:14px}
+.bt{margin-top:26px;min-width:152px;height:44px;padding:0 22px;border-radius:999px;border:0;background:var(--dg-accent);color:#fff;font:700 15px/1 var(--dg-font);display:inline-flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;transition:background .2s,opacity .2s}
+.bt:hover{background:color-mix(in oklab,var(--dg-accent) 88%,black)}
+.bt[disabled]{cursor:default;background:color-mix(in oklab,var(--dg-accent) 55%,var(--dg-page))}
+.ofl-spin{width:16px;height:16px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ofl-st{position:absolute;left:0;right:0;bottom:22px;font-size:12px;color:var(--dg-text-muted)}
+@media (prefers-reduced-motion:reduce){.ofl-sc>*{animation:none}.ofl-spin{animation-duration:2s}}
+.notes{position:absolute;left:0;width:1900px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px;font-size:14px;line-height:1.55;color:var(--dg-text-2)}
+.notes b{color:var(--dg-text)}.notes ul{margin:6px 0 0;padding-left:18px}
+
+/* ошибки: знак собирается той же анимацией, что заставка, но один раз; текст — после знака */
+.ofl-sc>.mk{animation:none}
+.once .mk *,.once .mk *::after,.once .mk{animation-iteration-count:1!important;animation-fill-mode:forwards!important}
+.ofl-sc h2{animation-delay:.75s}.ofl-sc .tx{animation-delay:.85s}.ofl-sc .bt{animation-delay:.95s}.ofl-sc .ofl-st{animation-delay:1.1s}
+.ofl-sc .dgl{width:180px;height:104px}
+.ofl-sc .dc{width:104px;height:90px}
+.ofl-sc .up{width:104px;height:83px}
+
+.sec{position:absolute;left:0;font-size:30px;font-weight:600;letter-spacing:-.01em;margin:0}
+
+/* Три знака — одного визуального размера. Сплошная луна кажется крупнее штрихов, поэтому её рамка меньше:
+   Dhamma.Gift 190×110, Dict 130×116, Uposatha 118×94 — одинаково и на заставке, и на ошибке. */
+.dgl,.ofl-sc .dgl{width:190px;height:110px}
+.dc,.ofl-sc .dc{width:130px;height:116px}
+.up,.ofl-sc .up{width:118px;height:94px}
+/* светлая тема: знак Dhamma.Gift тот же, светло-серый, не инвертируем — только тонкий абрис, чтобы не сливался с фоном */
+.sc[data-theme=light] .dgl,.ofl-sc.light .dgl{filter:drop-shadow(0 0 .5px color-mix(in oklab,var(--dg-text) 55%,transparent)) drop-shadow(0 0 .5px color-mix(in oklab,var(--dg-text) 55%,transparent))}
+.ofl-sc .mk{height:120px}
+
+/* Dhamma.Gift: один цельный знак, без нарезки. Проявляется мягко, как рассвет: круг открывается от книги вверх,
+   знак чуть поднимается. Потом — блик. */
+@property --dgr{syntax:'<percentage>';inherits:false;initial-value:0%}
+.dgl .bk,.dgl .pl,.dgl .pr,.dgl .sn{display:none}
+.dgl .all{-webkit-mask:radial-gradient(circle at 50% 100%,#000 var(--dgr),transparent calc(var(--dgr) + 28%));mask:radial-gradient(circle at 50% 100%,#000 var(--dgr),transparent calc(var(--dgr) + 28%));animation:dgrise 3.2s cubic-bezier(.22,.61,.36,1) infinite}
+@keyframes dgrise{0%{--dgr:0%;opacity:0;transform:translateY(8px) scale(.96)}8%{opacity:1}34%,100%{--dgr:130%;opacity:1;transform:none}}
+.dgl::after{animation-name:dgsheen}
+@keyframes dgsheen{0%,32%{background-position:120% 0}48%,100%{background-position:-30% 0}}
+</style></head><body>
+<div class="hd"><h1>Запуск и ошибки — Dhamma.Gift, Dict, Uposatha</h1><p>Одна грамматика движения: знак собирается 0–1,1 с по кривой (.05,.7,.1,1). Заставка — на повторе для превью, в приложении один проход. На экране ошибки знак собирается так же один раз, затем подхватывают название, фраза и кнопка (шаг 100 мс). Кнопка «Повторить» кликабельна.</p><button type="button" onclick="replay()">Проиграть заново</button></div>
+<h2 class="sec" style="top:180px">1 · Заставки</h2>
+
+
+<div class="cap" style="left:0;top:230px">Dhamma.Gift · полный знак</div>
+<div class="ph" style="left:0;top:266px"><div class="sc" data-theme="light"><div class="wrap"><div class="dgl"><img class="bk" src="uposatha-prod/dg-full.png" alt=""><img class="pl" src="uposatha-prod/dg-full.png" alt=""><img class="pr" src="uposatha-prod/dg-full.png" alt=""><img class="sn" src="uposatha-prod/dg-full.png" alt=""><img class="all" src="uposatha-prod/dg-full.png" alt=""></div><b>Dhamma.Gift</b></div></div></div>
+<div class="cap" style="left:460px;top:230px">Dict · светлая</div>
+<div class="ph" style="left:460px;top:266px"><div class="sc" data-theme="light"><div class="wrap"><svg class="dc" viewBox="240 262 660 590" aria-hidden="true"><g fill="none" stroke="var(--dg-text)" stroke-width="48" stroke-linejoin="miter"><path class="hk" pathLength="1" d="M410 381H282V600C282 690 330 721 372 721C420 721 462 690 462 612"/><path class="st" pathLength="1" d="M608 690V545H738V380H855V292"/></g><circle class="dt" cx="608" cy="712" r="38" fill="var(--dg-text)"/><path class="ul" pathLength="1" d="M258 822H879" stroke="var(--dg-accent)" stroke-width="22"/></svg><b>Dict</b></div></div></div>
+<div class="cap" style="left:920px;top:230px">Uposatha · светлая</div>
+<div class="ph" style="left:920px;top:266px"><div class="sc" data-theme="light"><div class="wrap"><svg class="up" viewBox="2 7.5 54.5 43.5" aria-hidden="true"><mask id="m1" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64"><rect width="64" height="64" fill="#fff"/><path d="M6,37 H31 M15,47 H43" stroke="#000" stroke-width="13" stroke-linecap="round"/></mask><g mask="url(#m1)"><circle class="mn" cx="39" cy="25" r="17" fill="var(--dg-navy-ink)"/></g><g stroke="var(--dg-text-muted)" stroke-width="7" stroke-linecap="round" fill="none"><path class="cl a" pathLength="1" d="M6,37 H31"/><path class="cl b" pathLength="1" d="M15,47 H43"/><path class="cl c" pathLength="1" d="M50,47 H53"/></g></svg><b>Uposatha</b></div></div></div>
+
+<div class="cap" style="left:0;top:1200px">Dhamma.Gift · полный знак, тёмная тема</div>
+<div class="ph dark" style="left:0;top:1236px"><div class="sc" data-theme="dark"><div class="wrap"><div class="dgl"><img class="bk" src="uposatha-prod/dg-full.png" alt=""><img class="pl" src="uposatha-prod/dg-full.png" alt=""><img class="pr" src="uposatha-prod/dg-full.png" alt=""><img class="sn" src="uposatha-prod/dg-full.png" alt=""><img class="all" src="uposatha-prod/dg-full.png" alt=""></div><b>Dhamma.Gift</b></div></div></div>
+<div class="cap" style="left:460px;top:1200px">Dict · тёмная</div>
+<div class="ph" style="left:460px;top:1236px"><div class="sc" data-theme="dark"><div class="wrap"><svg class="dc" viewBox="240 262 660 590" aria-hidden="true"><g fill="none" stroke="var(--dg-text)" stroke-width="48" stroke-linejoin="miter"><path class="hk" pathLength="1" d="M410 381H282V600C282 690 330 721 372 721C420 721 462 690 462 612"/><path class="st" pathLength="1" d="M608 690V545H738V380H855V292"/></g><circle class="dt" cx="608" cy="712" r="38" fill="var(--dg-text)"/><path class="ul" pathLength="1" d="M258 822H879" stroke="var(--dg-accent)" stroke-width="22"/></svg><b>Dict</b></div></div></div>
+<div class="cap" style="left:920px;top:1200px">Uposatha · тёмная</div>
+<div class="ph" style="left:920px;top:1236px"><div class="sc" data-theme="dark"><div class="wrap"><svg class="up" viewBox="2 7.5 54.5 43.5" aria-hidden="true"><mask id="m2" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64"><rect width="64" height="64" fill="#fff"/><path d="M6,37 H31 M15,47 H43" stroke="#000" stroke-width="13" stroke-linecap="round"/></mask><g mask="url(#m2)"><circle class="mn" cx="39" cy="25" r="17" fill="var(--dg-navy-ink)"/></g><g stroke="var(--dg-text-muted)" stroke-width="7" stroke-linecap="round" fill="none"><path class="cl a" pathLength="1" d="M6,37 H31"/><path class="cl b" pathLength="1" d="M15,47 H43"/><path class="cl c" pathLength="1" d="M50,47 H53"/></g></svg><b>Uposatha</b></div></div></div>
+
+<div class="spec" style="left:1380px;top:266px"><p><b>Раскадровка для AVD (Android 12+ SplashScreen, ≤1000 мс на значок)</b></p>
+<p><b>Dhamma.Gift</b> — полный знак; раковина — компактный вариант для мелких размеров. 0–1090 мс: знак целиком проявляется от книги вверх — круговая маска, подъём 8 px, масштаб .96→1. 1020–1540 мс: блик. Фон — <code>--dg-page</code> темы; в светлой знак тот же, с тонким абрисом. Для AVD хватит одного векторного контура знака (маска и блик — поверх).<code>dgsanhkalogo.png</code>.</p>
+<p><b>Dict</b> — новый знак с прода (<code>assets/svg/dict-mark.svg</code>). 0–770 мс: крюк прорисовывается. 260–700 мс: точка падает с отскоком. 450–1020 мс: лестница растёт от точки вверх. 830–1280 мс: бирюзовая черта слева направо. Знак векторный — в AVD переносится как есть.</p>
+<p><b>Uposatha.</b> 0–1020 мс: луна поднимается на 16 px из-под маски облака; три штриха облака прорисовываются слева с шагом 120 мс.</p>
+<p><b>Общее.</b> Одна кривая cubic-bezier(.05,.7,.1,1); уход 300 мс, opacity 1→0 + scale 1→1.04; фон — <code>--dg-page</code> темы. Если AVD длиннее 1 с, системная заставка обрежет его — в ≤1000 мс укладывается сам знак, название показывается уже в приложении, на первом кадре WebView.</p></div>
+
+<div id="cv"></div>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#149c7c"/><circle cx="56" cy="42" r="16" fill="#fff"/><path d="M28 56H52M36 66H62" stroke="#0d5f4c" stroke-width="7" stroke-linecap="round"/></svg></template>
+<script>
+// Тексты — единственный источник для разработки: ключи совпадают для ru/en
+const T={
+ ru:{none:['Нет соединения.','Проверьте интернет и повторите.'],down:['Сайт не отвечает.','Попробуйте чуть позже — сервер сейчас недоступен.'],retry:['Проверяем соединение…','Это займёт несколько секунд.'],btn:'Повторить',busy:'Проверяем…',upo:'Напоминания уже стоят на телефоне и придут без сети.',auto:'Повторим сами, когда сеть появится'},
+ en:{none:['No connection.','Check the internet and try again.'],down:['The site isn’t responding.','Try again shortly — the server is unavailable right now.'],retry:['Checking the connection…','This takes a few seconds.'],btn:'Try again',busy:'Checking…',upo:'Your reminders are set on this phone and will arrive without it.',auto:'We’ll retry by ourselves once you’re online'}
+};
+const APPS=[
+ {k:'dg',name:'Dhamma.Gift',mk:"<div class=\"dgl\"><img class=\"bk\" src=\"uposatha-prod/dg-full.png\" alt=\"\"><img class=\"pl\" src=\"uposatha-prod/dg-full.png\" alt=\"\"><img class=\"pr\" src=\"uposatha-prod/dg-full.png\" alt=\"\"><img class=\"sn\" src=\"uposatha-prod/dg-full.png\" alt=\"\"><img class=\"all\" src=\"uposatha-prod/dg-full.png\" alt=\"\"></div>"},
+ {k:'dict',name:'Dict.Dhamma.Gift',mk:"<svg class=\"dc\" viewBox=\"240 262 660 590\" aria-hidden=\"true\"><g fill=\"none\" stroke=\"var(--dg-text)\" stroke-width=\"48\" stroke-linejoin=\"miter\"><path class=\"hk\" pathLength=\"1\" d=\"M410 381H282V600C282 690 330 721 372 721C420 721 462 690 462 612\"/><path class=\"st\" pathLength=\"1\" d=\"M608 690V545H738V380H855V292\"/></g><circle class=\"dt\" cx=\"608\" cy=\"712\" r=\"38\" fill=\"var(--dg-text)\"/><path class=\"ul\" pathLength=\"1\" d=\"M258 822H879\" stroke=\"var(--dg-accent)\" stroke-width=\"22\"/></svg>"},
+ {k:'upo',name:'Uposatha',mk:"<svg class=\"up\" viewBox=\"2 7.5 54.5 43.5\" aria-hidden=\"true\"><mask id=\"MID\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"64\" height=\"64\"><rect width=\"64\" height=\"64\" fill=\"#fff\"/><path d=\"M6,37 H31 M15,47 H43\" stroke=\"#000\" stroke-width=\"13\" stroke-linecap=\"round\"/></mask><g mask=\"url(#MID)\"><circle class=\"mn\" cx=\"39\" cy=\"25\" r=\"17\" fill=\"var(--dg-navy-ink)\"/></g><g stroke=\"var(--dg-text-muted)\" stroke-width=\"7\" stroke-linecap=\"round\" fill=\"none\"><path class=\"cl a\" pathLength=\"1\" d=\"M6,37 H31\"/><path class=\"cl b\" pathLength=\"1\" d=\"M15,47 H43\"/><path class=\"cl c\" pathLength=\"1\" d=\"M50,47 H53\"/></g></svg>"}
+];
+const STATES=[['none','1 · Нет сети при первом запуске'],['down','2 · Сайт не отвечает'],['retry','3 · Идёт повторная попытка']];
+let uid=0;
+function screen(app,state,theme,lang){
+ const t=T[lang],[h,p]=t[state],id='m'+(uid++);
+ const mk=(typeof app.mk==='function'?app.mk(theme):app.mk).split('MID').join(id);
+ const busy=state==='retry';
+ return `<div class="ofl-sc once ${theme}" data-theme="${theme}" data-app="${app.k}" data-state="${state}" data-lang="${lang}" lang="${lang}">
+<div class="mk">${mk}</div><h2>${app.name}</h2>
+<p class="tx"><b>${h}</b>${p}${app.k==='upo'?`<span class="ex">${t.upo}</span>`:''}</p>
+<button class="bt" type="button" ${busy?'disabled':''} onclick="retry(this)">${busy?`<span class="ofl-spin"></span>${t.busy}`:t.btn}</button>
+${state==='none'?`<div class="ofl-st">${t.auto}</div>`:''}</div>`;
+}
+const W=300,G=24,SET=3*W+2*G,GAP=80;
+let html='<h2 class="sec" style="top:2150px">2 · Ошибки: нет соединения</h2>',y=2290;
+html+=`<div class="ofl-grp" style="left:0;top:${y-40}px">Светлая · русский</div><div class="ofl-grp" style="left:${SET+GAP}px;top:${y-40}px">Тёмная · English</div>`;
+STATES.forEach(([s,label])=>{
+ html+=`<div class="ofl-lbl" style="top:${y}px">${label}</div>`;
+ html+=`<div class="ofl-row" style="top:${y+34}px">`+APPS.map(a=>screen(a,s,'light','ru')).join('')+`<span style="width:${GAP-2*G}px"></span>`+APPS.map(a=>screen(a,s,'dark','en')).join('')+`</div>`;
+ y+=34+560+70;
+});
+html+=`<div class="notes" style="top:${y}px">
+<div><b>Когда какой экран</b><ul><li><b>Нет сети</b> — WebView не загрузил стартовую страницу, <code>navigator.onLine=false</code>. Строка внизу: повторим сами по событию <code>online</code>.</li><li><b>Сайт не отвечает</b> — сеть есть, но стартовая страница не пришла за 10 с или вернула 5xx.</li><li><b>Повтор</b> — после нажатия кнопки или события <code>online</code>; кнопка неактивна, с индикатором.</li></ul></div>
+<div><b>Размеры</b><ul><li>Знак: Dhamma.Gift 150×87 (полный), Dict 84×84, Uposatha 104×83 — одна визуальная высота ~88.</li><li>Поля 28, знак → название 22, название → текст 10, текст → кнопка 26.</li><li>Кнопка 44 выс., мин. 152, пилюля, <code>--dg-accent</code>.</li><li>Язык и тема — системные.</li></ul></div>
+<div><b>Знаки</b><ul><li>Dhamma.Gift — только полный знак; в светлой теме затемнён фильтром. Нужен вектор или тёмная версия PNG.</li><li>Dict — светлая версия сделана: <code>assets/svg/dict-mark-light.svg</code>; в тёмной — прод <code>dict-mark.svg</code>.</li><li>Uposatha — векторный «луна из облака».</li></ul></div></div>`;
+document.getElementById('cv').innerHTML=html;
+function retry(b){
+ const sc=b.closest('.ofl-sc'),t=T[sc.dataset.lang];if(b.disabled)return;
+ const was=b.innerHTML;b.disabled=true;b.innerHTML=`<span class="ofl-spin"></span>${t.busy}`;
+ setTimeout(()=>{b.disabled=false;b.innerHTML=was;},1800);
+}
+function replay(){document.getAnimations().forEach(a=>{a.cancel();a.play();});}
+</script>
+</body></html>

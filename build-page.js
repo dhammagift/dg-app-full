@@ -34,6 +34,11 @@ const APP_SCRIPTS = `<!-- Offline data shim: installs window.fetch interception 
 <!-- Native platform first: sets window.dgPlatform (see src/platform.js) so dg-node's browser
      platform.js, loaded right after, is a documented no-op. -->
 <script src="/offline/platform.js"></script>
+<!-- The launch splash (src/launch-screens.js) — one pass per launch of the app, on the home page only,
+     and the "no connection" screen the offline layer raises. Here, ahead of the heavy scripts, so the
+     mark is on screen at the first frame. -->
+<script src="/launch-screens.js"></script>
+<script>if (window.dgLaunch) window.dgLaunch.splash('dg');</script>
 <!-- speechSynthesis over Android TextToSpeech (src/tts.js), before the page's voice player. -->
 <script src="/tts.js"></script>
 <script src="/offline/app.js"></script>
@@ -99,7 +104,7 @@ function dropServiceWorker(html) {
 // build failure — it fails on the device, offline, where nobody is watching a console.
 function verify(html) {
     const problems = [];
-    for (const tag of ['/offline/platform.js', '/offline/app.js', '/offline/offline-status.js', '/native-bridge.js']) {
+    for (const tag of ['/offline/platform.js', '/launch-screens.js', '/offline/app.js', '/offline/offline-status.js', '/native-bridge.js']) {
         const count = html.split(`src="${tag}"`).length - 1;
         if (count === 0) problems.push(`missing <script src="${tag}">`);
         else if (count > 1) problems.push(`duplicate <script src="${tag}"> (${count}x) — the offline layer would load twice`);

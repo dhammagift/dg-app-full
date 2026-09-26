@@ -8,7 +8,8 @@
       "dict.dhamma.gift",
       "*.dhamma.gift",
       "dhamma.gift"
-    ]
+    ],
+    "errorPath": "index.html"
   },
   "android": {
     "backgroundColor": "#111111"

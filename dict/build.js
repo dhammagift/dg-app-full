@@ -12,14 +12,28 @@ const path = require('path');
 const SRC = path.join(__dirname, 'src');
 const WWW = path.join(__dirname, 'www');
 
-// dict-bridge.js carries a "// @rate-prompt" marker; the rating sheet itself lives once, in the main
-// app's src/native-bridge.js between its @rate-prompt-begin/-end markers, and is pasted in here.
+// Two markers, one source each. dict-bridge.js carries "// @rate-prompt": the rating sheet lives
+// once, in the main app's src/native-bridge.js between its @rate-prompt-begin/-end markers, and is
+// pasted in here. The same file and the offline page carry "@launch-screens": the splash and the
+// "no connection" screen live once, in src/launch-screens.js.
+const ROOT_SRC = path.join(__dirname, '..', 'src');
+const launchScreens = () => fs.readFileSync(path.join(ROOT_SRC, 'launch-screens.js'), 'utf8');
+
 function bridgeSource() {
-    const main = fs.readFileSync(path.join(__dirname, '..', 'src', 'native-bridge.js'), 'utf8');
+    const main = fs.readFileSync(path.join(ROOT_SRC, 'native-bridge.js'), 'utf8');
     const block = main.split(/^.*@rate-prompt-begin.*\n/m)[1].split(/^.*@rate-prompt-end.*\n/m)[0];
-    return fs.readFileSync(path.join(SRC, 'dict-bridge.js'), 'utf8').replace(/^.*\/\/ @rate-prompt .*\n/m, () => block);
+    return fs.readFileSync(path.join(SRC, 'dict-bridge.js'), 'utf8')
+        .replace(/^.*\/\/ @rate-prompt .*\n/m, () => block)
+        .replace(/^.*\/\/ @launch-screens .*\n/m, () => launchScreens());
 }
-module.exports = { bridgeSource };
+
+// The offline page: <!-- @launch-screens --> becomes the shared script, inline (the page is served
+// from the app's own assets, and one file fewer is one request fewer when the network is the problem).
+function errorPageSource() {
+    return fs.readFileSync(path.join(SRC, 'index.html'), 'utf8')
+        .replace('<!-- @launch-screens -->', () => '<script>\n' + launchScreens() + '</script>');
+}
+module.exports = { bridgeSource, errorPageSource };
 
 if (require.main === module) {
     fs.mkdirSync(WWW, { recursive: true });
@@ -28,5 +42,6 @@ if (require.main === module) {
         fs.copyFileSync(path.join(SRC, name), path.join(WWW, name));
     }
     fs.writeFileSync(path.join(WWW, 'dict-bridge.js'), bridgeSource());
+    fs.writeFileSync(path.join(WWW, 'index.html'), errorPageSource());
     console.log(`dict: ${files.length} file(s) copied to www/`);
 }
