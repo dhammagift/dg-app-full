@@ -65,6 +65,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(DgSoundPlugin.class);
         registerPlugin(DgSitePlugin.class);
         registerPlugin(DgAlarmPlugin.class);
+        registerPlugin(DgIconPlugin.class);
         // The launch splash is the animated mark (res/drawable/dg_splash_icon.xml, 890 ms). The system takes the
         // splash down the moment the first frame is ready, which on a warm start is before the mark has drawn;
         // holding it for the length of the animation is what lets it play, and costs a cold start nothing it

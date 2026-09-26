@@ -32,6 +32,7 @@ function capacitorStub() {
         isNativePlatform: () => true,
         Plugins: {
             App: { addListener: (n, cb) => { if (n === 'backButton') window.__back = cb; return { remove() {} }; }, exitApp: () => { window.__calls.exit++; } },
+            DgIcon: { set: (o) => { window.__calls.icon = o.items; return Promise.resolve({ phase: 4 }); } },
             DgShortcuts: { set: (o) => { window.__calls.shortcuts.push(o.items); return Promise.resolve({ count: o.items.length }); } },
             DgAlarm: {
                 schedule: (o) => { window.__calls.alarms = (window.__calls.alarms || []).concat(o.items); return Promise.resolve(); },
@@ -215,6 +216,20 @@ function capacitorStub() {
                 return window.__calls.alarms.map((a) => a.sound);
             });
             check('alarm: which sound file each channel plays', names, ['gong', 'church', 'vikala', 'pubbanha', 'majjhima', 'own']);
+            await ctx.close();
+        }
+
+        // 4a1. The launcher icon of the day: a schedule of the next weeks, a phase index for each day.
+        {
+            const ctx = await ctxOf('light', 'en');
+            await ctx.addInitScript(capacitorStub);
+            await ctx.addInitScript(BRIDGE);
+            const page = await ctx.newPage();
+            await page.goto(PAGE, { waitUntil: 'load' });
+            await page.waitForTimeout(2500);
+            const items = await page.evaluate(() => window.__calls.icon || null);
+            check('launcher icon: 35 days, ascending, phases 0..7', items && [items.length, items.every((x, k) => (k === 0 || x.at > items[k - 1].at) && x.i >= 0 && x.i <= 7 && x.at > 0)], [35, true]);
+            check('launcher icon: the moon changes over the month (all eight shapes appear)', items && new Set(items.map((x) => x.i)).size, 8);
             await ctx.close();
         }
 

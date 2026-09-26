@@ -181,6 +181,37 @@
     return moonIndexAt(r.at || new Date());
   }
 
+  // ---- the launcher icon of the day ---------------------------------------------------------------------
+  //
+  // The next MOON_ICON_DAYS days as {at, i}: from `at` (the start of the day in the reader's zone) the icon of the moon of
+  // that day (noon), so native code (DgIconPlugin) can go on changing the icon while the app is closed. Some launchers drop an
+  // icon pinned to the home screen when the icon changes; MOON_LAUNCHER_ICON = false stops it (and gives back the full moon).
+  var MOON_LAUNCHER_ICON = true;
+  var MOON_ICON_DAYS = 35;
+
+  function moonIconSchedule() {
+    var C = window.UposathaCore;
+    if (!MOON_LAUNCHER_ICON || !C || typeof C.zonedToUtc !== 'function') return [];
+    var tz = store('dgUposathaTz') || (Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
+    var out = [], day = C.localDay(new Date(), tz);
+    for (var n = 0; n < MOON_ICON_DAYS; n++, day = C.ymdAdd(day, 1)) {
+      var p = day.split('-').map(Number);
+      var i = moonIndexAt(C.zonedToUtc(p[0], p[1], p[2], 12, tz));
+      out.push({ at: C.zonedToUtc(p[0], p[1], p[2], 0, tz).getTime(), i: isSouth() ? (8 - i) % 8 : i });
+    }
+    return out;
+  }
+
+  function pushLauncherIcon() {
+    var plugin = Cap.Plugins && Cap.Plugins.DgIcon;
+    if (!plugin || typeof plugin.set !== 'function') return;
+    var items = [];
+    try { items = moonIconSchedule(); } catch (e) { console.log('[dg-uposatha-icon] failed to work out the phases:', (e && e.message) || e); }
+    Promise.resolve(plugin.set({ items: items })).catch(function (e) {
+      console.log('[dg-uposatha-icon] set failed:', (e && e.message) || e);
+    });
+  }
+
   function pushShortcuts() {
     var plugin = Cap.Plugins && Cap.Plugins.DgShortcuts;
     if (!plugin || typeof plugin.set !== 'function') return;
@@ -490,10 +521,10 @@
       if (a) { try { localStorage.setItem(RATE_FLAG, '1'); } catch (err) { /* no storage */ } }
     }, true);
     // UposathaCore is loaded by the page: give it until the page has finished loading.
-    function afterLoad() { pushShortcuts(); setTimeout(updateSite, 6000); }
+    function afterLoad() { pushShortcuts(); pushLauncherIcon(); setTimeout(updateSite, 6000); }
     if (document.readyState === 'complete') afterLoad();
     else window.addEventListener('load', afterLoad, { once: true });
-    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') pushShortcuts(); });
+    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') { pushShortcuts(); pushLauncherIcon(); } });
     maybeAskForRating();
   }
 
