@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Part of the 1000 ms launch mark: the clean moon grows to 1.08 (650-780 ms) and settles back (450-1000 ms). -->
+<!-- Part of the 890 ms launch mark: the clean moon grows to 1.08 (650-780 ms) and settles back (450-1000 ms). -->
 <objectAnimator xmlns:android="http://schemas.android.com/apk/res/android"
-    android:duration="1000">
+    android:duration="890">
     <propertyValuesHolder android:propertyName="scaleX">
         <keyframe android:fraction="0" android:value="1"/>
-        <keyframe android:fraction="0.65" android:value="1"/>
-        <keyframe android:fraction="0.78" android:value="1.08" android:interpolator="@android:interpolator/fast_out_slow_in"/>
+        <keyframe android:fraction="0.730" android:value="1"/>
+        <keyframe android:fraction="0.876" android:value="1.08" android:interpolator="@android:interpolator/fast_out_slow_in"/>
         <keyframe android:fraction="1" android:value="1" android:interpolator="@android:interpolator/fast_out_slow_in"/>
     </propertyValuesHolder>
     <propertyValuesHolder android:propertyName="scaleY">
         <keyframe android:fraction="0" android:value="1"/>
-        <keyframe android:fraction="0.65" android:value="1"/>
-        <keyframe android:fraction="0.78" android:value="1.08" android:interpolator="@android:interpolator/fast_out_slow_in"/>
+        <keyframe android:fraction="0.730" android:value="1"/>
+        <keyframe android:fraction="0.876" android:value="1.08" android:interpolator="@android:interpolator/fast_out_slow_in"/>
         <keyframe android:fraction="1" android:value="1" android:interpolator="@android:interpolator/fast_out_slow_in"/>
     </propertyValuesHolder>
 </objectAnimator>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- One pass, 1000 ms (the SplashScreen icon limit): the whole mark stands still for 250 ms so it can be read,
-     the clouds part (250-650 ms, cuts travel with them), the clean moon pulses once (650-780 up, 780-1000 back). -->
+<!-- One pass, 890 ms: the whole mark stands still for 250 ms so it can be read,
+     the clouds part (250-650 ms, cuts travel with them), the clean moon pulses once (650-780 up, 780-890 back). -->
 <animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:drawable="@drawable/dg_splash_mark">
     <target android:name="cloudTop" android:animation="@animator/dg_splash_move_left"/>

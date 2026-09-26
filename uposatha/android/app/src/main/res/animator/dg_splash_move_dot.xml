@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Part of the 1000 ms launch mark: a cloud (and its cut in the moon) travels in the 250-650 ms, after a 250 ms still frame. -->
+<!-- Part of the 890 ms launch mark: a cloud (and its cut in the moon) travels in the 250-650 ms, after a 250 ms still frame. -->
 <objectAnimator xmlns:android="http://schemas.android.com/apk/res/android"
-    android:duration="1000">
+    android:duration="890">
     <propertyValuesHolder android:propertyName="translateX">
         <keyframe android:fraction="0" android:value="0"/>
-        <keyframe android:fraction="0.25" android:value="0"/>
-        <keyframe android:fraction="0.65" android:value="22" android:interpolator="@android:interpolator/fast_out_slow_in"/>
+        <keyframe android:fraction="0.281" android:value="0"/>
+        <keyframe android:fraction="0.730" android:value="22" android:interpolator="@android:interpolator/fast_out_slow_in"/>
         <keyframe android:fraction="1" android:value="22"/>
     </propertyValuesHolder>
 </objectAnimator>
