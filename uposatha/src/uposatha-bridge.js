@@ -101,6 +101,36 @@
 
   function store(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
 
+  // ---- the moon's phase as icons ---------------------------------------------------------------------
+  //
+  // The reminder's status-bar icon and the shortcuts show the moon of THEIR day, not a fixed one. Index 0..7 = new,
+  // waxing crescent, first quarter, waxing gibbous, full, waning gibbous, last quarter, waning crescent — the page's own
+  // eight shapes (uposatha-calendar.js). The drawables (res/drawable-*/ic_stat_moon_N, shortcut_moon_N) are drawn as in
+  // the Northern Hemisphere, so the Southern one asks for the mirrored index.
+
+  var SOUTHERN_ZONE = /^(Australia|Antarctica)\/|^Pacific\/(Auckland|Chatham|Fiji|Tongatapu|Apia|Noumea|Tahiti|Port_Moresby)|^Africa\/(Johannesburg|Maseru|Mbabane|Windhoek|Harare|Lusaka|Maputo)|^America\/(Sao_Paulo|Argentina|Buenos_Aires|Santiago|Lima|La_Paz|Asuncion|Montevideo)/;
+
+  function isSouth() {
+    var h = store('dgUposathaHemisphere');
+    if (h) return h === 'south';
+    return SOUTHERN_ZONE.test(store('dgUposathaTz') || (Intl.DateTimeFormat().resolvedOptions().timeZone || ''));
+  }
+
+  function moonIndexAt(date) {
+    var A = window.Astronomy, angle;
+    if (A && typeof A.MoonPhase === 'function') angle = A.MoonPhase(date);
+    else angle = (((date.getTime() - 947182440000) / 86400000 / 29.530588853) % 1 + 1) % 1 * 360;   // no astronomy library: the mean month, good to about a day
+    return Math.floor(((angle + 22.5) % 360) / 45) % 8;
+  }
+
+  function moonName(prefix, i) { return prefix + '_' + (isSouth() ? (8 - i) % 8 : i); }
+
+  // The shape an Uposatha day is drawn with (as in the page): the 8th a quarter, the 14th the last shape before full/new, the 15th full (waxing half) or new.
+  function uposathaMoonIndex(tithi) {
+    var n = tithi <= 15 ? tithi : tithi - 15, waxing = tithi <= 15;
+    return waxing ? (n === 8 ? 2 : n === 14 ? 3 : 4) : (n === 8 ? 6 : n === 14 ? 7 : 0);
+  }
+
   function nextUposathas() {
     var C = window.UposathaCore;
     if (!C || typeof C.dataset !== 'function') return [];
@@ -136,11 +166,19 @@
         id: 'dg-uposatha-' + out.length,
         label: kind ? when + ' · ' + kind : when,
         route: '/uposatha-calendar?app=1&tab=list',
-        icon: 'shortcut_moon',
+        icon: moonName('shortcut_moon', rowMoon(r, sutta)),
         rank: 10 + out.length
       });
     });
     return out;
+  }
+
+  function rowMoon(r, sutta) {
+    try {
+      if (sutta && r.names && r.names.length) return uposathaMoonIndex(r.names[0]);
+      if (typeof r.phase === 'number') return [0, 2, 4, 6][r.phase];
+    } catch (e) { /* the icon of the day it is */ }
+    return moonIndexAt(r.at || new Date());
   }
 
   function pushShortcuts() {
@@ -279,7 +317,12 @@
             lastSchedule = o;
             // The picture of the reminders (docs/launch-screens/uposatha-notification.png: the mirror, the bowl, the brush),
             // shown at the right of the notification; the sound channel is the reader's.
-            var list = ((o && o.notifications) || []).map(function (n) { return Object.assign({ largeIcon: 'uposatha_notification' }, n, { channelId: suffixed(n.channelId) }); });
+            var list = ((o && o.notifications) || []).map(function (n) {
+              var at = n.schedule && n.schedule.at ? new Date(n.schedule.at) : null;
+              // The status-bar icon is the moon of the day the reminder is for.
+              var moon = at && !isNaN(at) ? { smallIcon: moonName('ic_stat_moon', moonIndexAt(at)) } : {};
+              return Object.assign({ largeIcon: 'uposatha_notification' }, moon, n, { channelId: suffixed(n.channelId) });
+            });
             // The plugin posts every notification "alert once": one that REPLACES a notification of the same id still in the
             // tray makes no sound and no vibration. The page's ids are their place in the list (the next reminder is always
             // 7000, and the test reminder is 7990), so a reminder that fires after another has been left in the tray would

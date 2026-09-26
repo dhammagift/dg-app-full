@@ -82,7 +82,7 @@ function capacitorStub() {
             const items = await page.evaluate(() => window.__calls.shortcuts.slice(-1)[0] || null);
             check('shortcuts: three upcoming Uposatha days pushed', items && items.length, 3);
             console.log('       shortcut labels:', JSON.stringify(items && items.map((i) => i.label)), '->', items && items[0].route);
-            check('shortcuts: ids, route and icon', items && items.map((i) => [i.id, i.route, i.icon]), [0, 1, 2].map((i) => ['dg-uposatha-' + i, '/uposatha-calendar?app=1&tab=list', 'shortcut_moon']));
+            check('shortcuts: ids, route and icon', items && items.map((i) => [i.id, i.route, /^shortcut_moon_[0-7]$/.test(i.icon)]), [0, 1, 2].map((i) => ['dg-uposatha-' + i, '/uposatha-calendar?app=1&tab=list', true]));
             check('page: no script errors', errors, []);
             // Back: drawer first, then a non-home tab goes home, then the app exits.
             await page.evaluate(() => document.querySelector('#appnav [data-tab="cal"]').click());
@@ -215,6 +215,27 @@ function capacitorStub() {
                 return window.__calls.alarms.map((a) => a.sound);
             });
             check('alarm: which sound file each channel plays', names, ['gong', 'church', 'vikala', 'pubbanha', 'majjhima', 'own']);
+            await ctx.close();
+        }
+
+        // 4a2. The status-bar icon of a reminder is the moon of its day (mirrored in the Southern Hemisphere).
+        for (const [hemi, want] of [['north', 'ic_stat_moon_1'], ['south', 'ic_stat_moon_7']]) {
+            const ctx = await ctxOf('light', 'en');
+            await ctx.addInitScript(capacitorStub);
+            await ctx.addInitScript((h) => { localStorage.setItem('dgUposathaHemisphere', h); }, hemi);
+            await ctx.addInitScript(BRIDGE);
+            const page = await ctx.newPage();
+            await page.goto(PAGE, { waitUntil: 'load' });
+            await page.waitForTimeout(1500);
+            // 3 days after the new moon of 10 Oct 2026: a waxing crescent
+            const got = await page.evaluate(async () => {
+                window.__calls.scheduled.length = 0;
+                await window.Capacitor.Plugins.LocalNotifications.schedule({ notifications: [
+                    { id: 7000, title: 't', body: 'b', channelId: 'uposatha-gong-v1', schedule: { at: new Date('2026-10-13T12:00:00Z') } },
+                    { id: 7001, title: 't', body: 'b', channelId: 'uposatha-gong-v1', schedule: { at: new Date('2026-09-26T18:00:00Z') } }] });
+                return window.__calls.scheduled.flat().map((n) => n.smallIcon);
+            });
+            check(`moon icon of the reminder's day (${hemi}): waxing crescent, and the full moon of 26 Sep`, got, [want, 'ic_stat_moon_4']);
             await ctx.close();
         }
 
