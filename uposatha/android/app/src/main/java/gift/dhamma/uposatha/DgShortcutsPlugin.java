@@ -2,6 +2,8 @@ package gift.dhamma.uposatha;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Build;
 
 import androidx.core.content.pm.ShortcutInfoCompat;
@@ -129,7 +131,15 @@ public class DgShortcutsPlugin extends Plugin {
     private static IconCompat iconFor(Context context, String name) {
         if (name != null && !name.isEmpty()) {
             int res = context.getResources().getIdentifier(name, "drawable", context.getPackageName());
-            if (res != 0) return IconCompat.createWithResource(context, res);
+            if (res != 0) {
+                // A bitmap given as a plain resource is a "legacy" icon: the launcher shrinks it and sets it on a plate of its own,
+                // so the mark showed at about half the size of the plate. Given as an ADAPTIVE bitmap (the whole 108dp canvas, its
+                // middle two thirds visible) the launcher draws it as it is: the artwork (res/drawable-*/shortcut_moon_N, made by
+                // tools/moon-icons.py) fills that visible part, so the moon is twice as big as before.
+                Bitmap art = BitmapFactory.decodeResource(context.getResources(), res);
+                if (art != null) return IconCompat.createWithAdaptiveBitmap(art);
+                return IconCompat.createWithResource(context, res);
+            }
         }
         return IconCompat.createWithResource(context, R.mipmap.ic_launcher);
     }

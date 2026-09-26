@@ -2,7 +2,7 @@
 """Draws the eight moon-phase variants of Uposatha's small icons (run from uposatha/):
 
   ic_stat_moon_0..7   the status-bar icon of a reminder: white on transparent, the unlit part of the moon a thin ring
-  shortcut_moon_0..7  the launcher-shortcut icon: the bare moon (no plate, no clouds) in grey, as big as the canvas, the unlit part faint
+  shortcut_moon_0..7  the launcher-shortcut icon: the bare moon (no plate, no clouds) in grey, the unlit part faint, on an adaptive icon's 108dp canvas (the moon fills the visible two thirds; DgShortcutsPlugin hands it over as an adaptive bitmap)
   ic_launcher_moon_N_foreground / _monochrome (mipmap-*)  the adaptive launcher icon of the app on its navy plate (the
                       geometry and colours of ic_launcher_foreground.png); ic_launcher_moon_N (mipmap-*) is the pre-Android-8 square
 
@@ -85,7 +85,7 @@ def compose(i, px, kind):
 
 def moon_only(i, px):
     size = px * SS
-    scale = size * 0.96 / (2 * R)
+    scale = size * 0.66 / (2 * R)   # the visible middle of an adaptive icon's canvas is 72 of 108 (0.667): the moon fills it
     ox, oy = size / 2 - CX * scale, size / 2 - CY * scale
     lit = lit_mask(i, size, scale, ox, oy)
     whole = disc_mask(size, scale, ox, oy, R)
@@ -136,7 +136,7 @@ if __name__ == '__main__':
         os.makedirs(os.path.join(RES, 'drawable-' + d), exist_ok=True)
         for i in range(8):
             compose(i, int(24 * k), 'stat').save(os.path.join(RES, 'drawable-' + d, 'ic_stat_moon_%d.png' % i))
-            compose(i, int(48 * k), 'shortcut').save(os.path.join(RES, 'drawable-' + d, 'shortcut_moon_%d.png' % i))
+            compose(i, int(108 * k), 'shortcut').save(os.path.join(RES, 'drawable-' + d, 'shortcut_moon_%d.png' % i))
             mm = os.path.join(RES, 'mipmap-' + d); os.makedirs(mm, exist_ok=True)
             launcher(i, int(108 * k), False).save(os.path.join(mm, 'ic_launcher_moon_%d_foreground.png' % i))
             launcher(i, int(108 * k), True).save(os.path.join(mm, 'ic_launcher_moon_%d_monochrome.png' % i))
