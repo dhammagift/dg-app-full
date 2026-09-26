@@ -60,8 +60,8 @@
   //
   // A web page lets the reader select anything with a long press, flashes a tap highlight and offers
   // the browser's menu on links; an app does none of it. Text can be selected only where it is text to
-  // take away: the quotes of the slideshow and any Pali (the page marks Pali with .pli-lang / lang="pi"),
-  // and the fields. Everything else is not selectable. Only on the calendar page: the other pages of
+  // take away: the quotes of the slideshow, any Pali (the page marks Pali with .pli-lang / lang="pi"), sutta names
+  // and anything else the page marks with class="selectable" (or data-selectable), and the fields. Everything else is not selectable. Only on the calendar page: the other pages of
   // the site the app may pass through (dhamma.gift/4as) are the reader's own business.
   if (onCalendar) {
     var feel = document.createElement('style');
@@ -69,6 +69,7 @@
     feel.textContent = 'html{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}'
       + 'html body,html body *{-webkit-user-select:none;user-select:none}'
       + 'html body input,html body textarea,html body [contenteditable],html body .pli-lang,html body [lang="pi"],'
+      + 'html body .selectable,html body [data-selectable],html body .selectable *,html body [data-selectable] *,'
       + 'html body #slides,html body #slides *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}';
     (function put() {
       if (document.documentElement) document.documentElement.appendChild(feel);

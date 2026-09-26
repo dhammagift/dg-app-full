@@ -123,8 +123,8 @@ function capacitorStub() {
             check('text is not selectable on the page, but is in a field, a quote and a Pali word', await page.evaluate(() => {
                 const us = (el) => getComputedStyle(el).userSelect;
                 const probe = (html) => { const d = document.createElement('div'); d.innerHTML = html; document.body.appendChild(d); return d.firstElementChild; };
-                return [us(document.body), us(document.querySelector('h1, h2, .dg-drawer-subtitle') || document.body), us(document.querySelector('input')), us(probe('<span class="pli-lang" lang="pi">satipaṭṭhāna</span>')), us(document.querySelector('#slides') || document.body)];
-            }), ['none', 'none', 'text', 'text', 'text']);
+                return [us(document.body), us(document.querySelector('h1, h2, .dg-drawer-subtitle') || document.body), us(document.querySelector('input')), us(probe('<span class="pli-lang" lang="pi">satipaṭṭhāna</span>')), us(document.querySelector('#slides') || document.body), us(probe('<b class="selectable">AN 3.37</b>')), us(probe('<b data-selectable>MN 10</b>'))];
+            }), ['none', 'none', 'text', 'text', 'text', 'text', 'text']);
             check('own sound: the picker plugin makes "own" an option', await page.evaluate(() => [...document.querySelectorAll('#rem-sound option')].some((o) => o.value === 'own')), true);
             await page.screenshot({ path: path.join(SHOTS, 'launch-upo-cal-dark.png') });
             await ctx.close();
