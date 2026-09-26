@@ -52,8 +52,9 @@ public class MainActivity extends BridgeActivity {
     // through the override below and no explicit call belongs in onCreate.
     private Intent handledIntent;
 
-    // How long the animated splash mark is held on screen: its own length (see onCreate).
-    private static final long SPLASH_HOLD_MS = 900;
+    // How long the animated splash mark is held on screen: nearly its own length (the motion decelerates and
+    // is ~95% done by then), so a warm start is not made to wait for the last few frames.
+    private static final long SPLASH_HOLD_MS = 750;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {

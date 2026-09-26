@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The reader's launch mark: the full Dhamma.Gift mark, still (there is no vector outline of it yet, only
-     the PNG; the two other apps animate a vector). 166x96dp: what fits the 192dp circle a splash icon is
-     cropped to. drawable-nodpi/dg_mark.png is the light-theme one (thin outline), drawable-night-nodpi/ the dark. -->
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:gravity="center" android:width="166dp" android:height="96dp">
-        <bitmap android:src="@drawable/dg_mark" android:gravity="fill" android:filter="true"/>
-    </item>
-</layer-list>
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/dg_splash_mark">
+    <target android:name="reveal" android:animation="@animator/dg_splash_reveal"/>
+    <target android:name="pop" android:animation="@animator/dg_splash_pop"/>
+</animated-vector>

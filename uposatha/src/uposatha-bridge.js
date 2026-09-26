@@ -2,14 +2,14 @@
 //
 // NOT part of the website. This file ships inside the Android app and MainActivity injects it into
 // the page at document start (WebViewCompat.addDocumentStartJavaScript, with a WebViewListener
-// re-inject on page load for WebViews older than Chrome 105). The app loads the site from the
-// network — capacitor.config.json's server.url — so there is nothing bundled to patch; this reaches
-// into the live page, and without the Capacitor runtime (the same page in a browser) it returns at
-// once.
+// re-inject on page load for WebViews older than Chrome 105). The page is bundled in the APK (www/ is
+// a snapshot of the site's calendar page, taken at build time), so there is nothing to patch at build
+// time; this reaches into the running page, and without the Capacitor runtime (the same page in a
+// browser) it returns at once.
 //
 // The page draws its own app layer (?app=1: tabs, the Rate Us row, the version row). What is here is
-// only what a page cannot do: the splash, the back button, the launcher shortcuts, the tab a
-// shortcut asks for, and the rating invitation. The reminders themselves are the page's own
+// only what a page cannot do: the back button, the launcher shortcuts, the tab a shortcut asks for,
+// the sound source, keeping the bundled page up to date, and the rating invitation. The reminders themselves are the page's own
 // (LocalNotifications, scheduled from uposatha-calendar.js); this file has no part in them.
 (function () {
   'use strict';
@@ -27,7 +27,9 @@
   var RATE_FLAG = 'dgRateUsTapped';
   var SHORTCUTS_MAX = 3;   // the launcher's menu holds four entries; the static Calendar one is declared in res/xml/shortcuts.xml
 
-  var onCalendar = /^\/uposatha-calendar\/?$/.test(location.pathname);
+  // The page is bundled, so it is at the app's own origin: /, /index.html, /uposatha-calendar (and .html).
+  var CALENDAR_PATH = /^\/(uposatha-calendar(\.html)?\/?|index\.html)?$/;
+  var onCalendar = CALENDAR_PATH.test(location.pathname);
 
   // The page's own rule (uposatha-calendar.js: ?lang=, then the stored dhammaLanguage, then the phone's
   // language) — not <html lang>, which the page sets late.
@@ -36,6 +38,81 @@
     var l = (m && m[1]) || '';
     if (!l) { try { l = localStorage.getItem('dhammaLanguage') || ''; } catch (e) { /* no storage */ } }
     return /^ru/i.test(l || navigator.language || '');
+  }
+
+  // ---- no service worker ---------------------------------------------------------------------
+  //
+  // The site's page registers its own service worker (/sw.js, its caching for the website). In the app the
+  // files come from the APK and DgSite, and a second layer of caching on top of them would decide what the
+  // reader sees behind our back: registrations are swallowed here.
+  if (navigator.serviceWorker && typeof navigator.serviceWorker.register === 'function') {
+    navigator.serviceWorker.register = function () {
+      return Promise.resolve({ scope: '/', update: function () { return Promise.resolve(); }, unregister: function () { return Promise.resolve(true); } });
+    };
+  }
+
+  // ---- keeping the bundled page up to date --------------------------------------------------
+  //
+  // The APK holds the page as it was when it was built. When the phone is online, and at most every 12
+  // hours, every file of the bundle is fetched from the site; the ones whose SHA-256 differs from what the
+  // app has (the manifest of the bundle, then whatever was downloaded before) go to DgSite, which serves
+  // them from the next request on — for the page itself, the next launch. A file the new page brings that
+  // the bundle has never had (found in the new html / css / js) is fetched too. Nothing is ever deleted: a
+  // file the site no longer has stays, harmlessly.
+  var SITE = 'https://test.dhamma.gift';   // where the page comes from: test for now, https://dhamma.gift later
+  var SITE_CHECK_EVERY = 12 * 3600 * 1000;
+  var SITE_PAGE = '/uposatha-calendar.html';   // the page's file in the bundle; on the site it is /uposatha-calendar
+
+  function bytesToBase64(bytes) {
+    var out = '';
+    for (var i = 0; i < bytes.length; i += 0x8000) out += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return btoa(out);
+  }
+
+  function hex(buf) {
+    return Array.prototype.map.call(new Uint8Array(buf), function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+  }
+
+  // Local paths a text file mentions, as the site serves them.
+  function referencedPaths(text) {
+    var found = [], re = /["'(=]\s*(\/(?:assets|nodejs|offline|reader|settings|spa)\/[A-Za-z0-9_\-./]+\.[A-Za-z0-9]+)/g, m;
+    while ((m = re.exec(text))) found.push(m[1]);
+    return found;
+  }
+
+  function updateSite() {
+    var DS = Cap.Plugins && Cap.Plugins.DgSite;
+    if (!DS || navigator.onLine === false || !window.crypto || !crypto.subtle) return;
+    if (Date.now() - (parseInt(store('dgSiteCheckedAt'), 10) || 0) < SITE_CHECK_EVERY) return;
+    var hashes = {};
+    try { hashes = JSON.parse(store('dgSiteHashes')) || {}; } catch (e) { hashes = {}; }
+    fetch('/site-manifest.json', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (manifest) {
+      var queue = manifest.files.slice(), seen = {}, changed = 0, fetched = 0;
+      manifest.files.forEach(function (f) { seen[f] = 1; });
+      function next() {
+        var path = queue.shift();
+        if (!path || fetched > 400) return Promise.resolve();
+        fetched++;
+        return fetch(SITE + (path === SITE_PAGE ? '/uposatha-calendar' : path), { cache: 'no-store' }).then(function (res) {
+          if (!res.ok) return null;
+          return res.arrayBuffer();
+        }).then(function (buf) {
+          if (!buf || !buf.byteLength) return null;
+          return crypto.subtle.digest('SHA-256', buf).then(function (digest) {
+            var sha = hex(digest), had = hashes[path] || (manifest.hashes || {})[path];
+            if (/\.(html|css|js|json)$/.test(path)) {
+              referencedPaths(new TextDecoder().decode(buf)).forEach(function (p) { if (!seen[p]) { seen[p] = 1; queue.push(p); } });
+            }
+            if (sha === had) return null;
+            return DS.put({ path: path, data: bytesToBase64(new Uint8Array(buf)) }).then(function () { hashes[path] = sha; changed++; });
+          });
+        }).catch(function () { /* one file that would not come: the rest still matter */ }).then(next);
+      }
+      return next().then(function () {
+        try { localStorage.setItem('dgSiteHashes', JSON.stringify(hashes)); localStorage.setItem('dgSiteCheckedAt', String(Date.now())); } catch (e) { /* no storage: it is checked again next time */ }
+        console.log('[dg-uposatha-site] checked ' + fetched + ' files, ' + changed + ' updated');
+      });
+    }).catch(function (e) { console.log('[dg-uposatha-site] update failed:', (e && e.message) || e); });
   }
 
   // ---- an app, not a page ----------------------------------------------------------------------
@@ -250,7 +327,7 @@
   function rateUsUrl() { return STORE_URL; }
   // The calendar page only: the invitation must not appear on a page of the site the app merely
   // passed through (a shortcut can open dhamma.gift/4as inside this WebView).
-  var RATE_HOME = /^\/uposatha-calendar\/?$/;
+  var RATE_HOME = CALENDAR_PATH;
 
   // @rate-prompt (inlined from src/native-bridge.js by uposatha/build.js)
 
@@ -265,8 +342,9 @@
       if (a) { try { localStorage.setItem(RATE_FLAG, '1'); } catch (err) { /* no storage */ } }
     }, true);
     // UposathaCore is loaded by the page: give it until the page has finished loading.
-    if (document.readyState === 'complete') pushShortcuts();
-    else window.addEventListener('load', pushShortcuts, { once: true });
+    function afterLoad() { pushShortcuts(); setTimeout(updateSite, 6000); }
+    if (document.readyState === 'complete') afterLoad();
+    else window.addEventListener('load', afterLoad, { once: true });
     document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') pushShortcuts(); });
     maybeAskForRating();
   }

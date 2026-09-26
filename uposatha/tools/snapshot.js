@@ -33,6 +33,8 @@ const OUT = path.resolve(process.argv[2] || path.join(__dirname, '..', 'snapshot
             let p = decodeURIComponent(u.pathname);
             if (req.resourceType() === 'document') p = '/uposatha-calendar.html';
             else if (p === '/' || p.endsWith('/')) return;
+            if (req.resourceType() !== 'document' && p === '/uposatha-calendar') return;   // a script asking for the page again: the page is saved once, as .html
+            if (p.startsWith('/api/') || p === '/sw.js') return;   // answers of the site's own APIs and its service worker are not part of a page
             if (req.resourceType() === 'document' && !/uposatha-calendar/.test(u.pathname)) return;
             got.set(p, await res.body());
         } catch (e) { /* a response that went away with its page */ }
@@ -52,13 +54,17 @@ const OUT = path.resolve(process.argv[2] || path.join(__dirname, '..', 'snapshot
     }
     await browser.close();
     let bytes = 0;
+    const failed = [];
     for (const [p, body] of got) {
         const file = path.join(OUT, p);
-        fs.mkdirSync(path.dirname(file), { recursive: true });
-        fs.writeFileSync(file, body);
-        bytes += body.length;
+        try {
+            fs.mkdirSync(path.dirname(file), { recursive: true });
+            fs.writeFileSync(file, body);
+            bytes += body.length;
+        } catch (e) { failed.push(p + ' (' + e.code + ')'); }   // a path that is both a file and a directory: an API answer, not a page asset
     }
     console.log(`snapshot: ${got.size} files, ${(bytes / 1048576).toFixed(2)} MB from ${SITE} -> ${OUT}`);
     console.log([...got.keys()].sort().join('\n'));
+    if (failed.length) console.log('\nnot saved:\n' + failed.join('\n'));
     if (skipped.length) console.log('\nnot recorded:\n' + [...new Set(skipped)].sort().join('\n'));
 })();

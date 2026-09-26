@@ -1,18 +1,21 @@
 package gift.dhamma.uposatha;
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.view.View;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 
 import androidx.core.splashscreen.SplashScreen;
 import androidx.webkit.WebViewCompat;
 import androidx.webkit.WebViewFeature;
 
+import com.getcapacitor.Bridge;
 import com.getcapacitor.BridgeActivity;
+import com.getcapacitor.BridgeWebViewClient;
 import com.getcapacitor.WebViewListener;
 
 import org.json.JSONObject;
@@ -25,23 +28,23 @@ import java.util.HashSet;
 /**
  * The Uposatha calendar as a Capacitor app.
  *
- * There is no bundled UI: capacitor.config.json points server.url at the site's calendar page
- * (?app=1 is the page's own app layer), so the site IS the app's interface, the same arrangement as
- * the dictionary app (dict/). What this file adds is the part a web page cannot do:
+ * The page is the site's own calendar page, bundled in the APK: www/ is a snapshot of it and of
+ * everything it loads (uposatha/tools/snapshot.js, taken at build time), so the app opens with no network
+ * at all. When the phone is online the bridge fetches what the site has changed since and DgSitePlugin
+ * serves those files in place of the bundled ones. What this file adds is the part a web page cannot do:
  *
  *   - the bridge (www/uposatha-bridge.js, injected below): back button, the next Uposatha days as
- *     launcher shortcuts, the rating sheet, the app version;
- *   - DgShortcuts and DgSound, two plugins of this package (LocalNotifications, the reminders
+ *     launcher shortcuts, the sound source, the rating sheet, the updater;
+ *   - DgShortcuts, DgSound and DgSite, three plugins of this package (LocalNotifications, the reminders
  *     themselves, is an npm plugin and needs nothing here);
  *   - the launch routes of the App Shortcuts (res/xml/shortcuts.xml, DgShortcutsPlugin).
  */
 public class MainActivity extends BridgeActivity {
 
-    // The origins the injected bridge may run on: the site's own, test and production. Capacitor
-    // allows navigation to them from capacitor.config.json; this script is ours and does not need
-    // to run anywhere else.
-    private static final HashSet<String> BRIDGE_ORIGINS = new HashSet<>(Arrays.asList(
-            "https://test.dhamma.gift", "https://dhamma.gift"));
+    // The origin the injected bridge may run on: the app's own. The page it shows is bundled in the APK
+    // (www/, a snapshot of the site's calendar page taken at build time) and served from here; links to the
+    // site itself open in the browser.
+    private static final HashSet<String> BRIDGE_ORIGINS = new HashSet<>(Arrays.asList("https://localhost"));
     // Where `cap sync` puts src/uposatha-bridge.js (see uposatha/build.js).
     private static final String BRIDGE_ASSET = "public/uposatha-bridge.js";
 
@@ -50,8 +53,9 @@ public class MainActivity extends BridgeActivity {
     // through the override below and no explicit call belongs in onCreate.
     private Intent handledIntent;
 
-    // How long the animated splash mark is held on screen: its own length (see onCreate).
-    private static final long SPLASH_HOLD_MS = 900;
+    // How long the animated splash mark is held on screen: nearly its own length (the motion decelerates and
+    // is ~95% done by then), so a warm start is not made to wait for the last few frames.
+    private static final long SPLASH_HOLD_MS = 750;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -59,6 +63,7 @@ public class MainActivity extends BridgeActivity {
         // being created.
         registerPlugin(DgShortcutsPlugin.class);
         registerPlugin(DgSoundPlugin.class);
+        registerPlugin(DgSitePlugin.class);
         // The launch splash is the animated mark (res/drawable/dg_splash_icon.xml, 900 ms). The system takes the
         // splash down the moment the first frame is ready, which on a warm start is before the mark has drawn;
         // holding it for the length of the animation is what lets it play, and costs a cold start nothing it
@@ -68,6 +73,7 @@ public class MainActivity extends BridgeActivity {
         splash.setKeepOnScreenCondition(() -> SystemClock.uptimeMillis() - shownAt < SPLASH_HOLD_MS);
         super.onCreate(savedInstanceState);
 
+        serveUpdatedFiles();
         injectBridge();
         // What the WebView shows before the site's first paint is the launch screen's own colour
         // (light/dark by the system theme), so native splash -> web splash has no gap.
@@ -93,6 +99,22 @@ public class MainActivity extends BridgeActivity {
         if (intent == handledIntent) return;
         handledIntent = intent;
         handleIntent(intent);
+    }
+
+    /**
+     * Files the page bridge has downloaded since the APK was built (DgSitePlugin) are served in place of
+     * the bundled copy; everything else is Capacitor's own.
+     */
+    private void serveUpdatedFiles() {
+        final Bridge bridge = getBridge();
+        if (bridge == null) return;
+        bridge.setWebViewClient(new BridgeWebViewClient(bridge) {
+            @Override
+            public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                WebResourceResponse updated = DgSitePlugin.serve(MainActivity.this, request);
+                return updated != null ? updated : super.shouldInterceptRequest(view, request);
+            }
+        });
     }
 
     /**
@@ -149,8 +171,8 @@ public class MainActivity extends BridgeActivity {
 
     /**
      * A shortcut's "route" extra (res/xml/shortcuts.xml statics, DgShortcutsPlugin's dynamics)
-     * turned into a URL and loaded into the WebView. A route starting with "/" is on the site the
-     * app is built for (capacitor.config.json's server.url); a full URL is used as it is.
+     * turned into a URL and loaded into the WebView. A route starting with "/" is on the app's own
+     * (bundled) page; a full URL is used as it is.
      */
     private void handleIntent(Intent intent) {
         if (intent == null) return;
@@ -158,10 +180,8 @@ public class MainActivity extends BridgeActivity {
         if (route == null || route.isEmpty()) return;
         String url = route;
         if (!route.startsWith("http")) {
-            String server = getBridge() != null ? getBridge().getConfig().getServerUrl() : null;
-            Uri base = server == null ? null : Uri.parse(server);
-            if (base == null || base.getScheme() == null || base.getAuthority() == null) return;
-            url = base.getScheme() + "://" + base.getAuthority() + route;
+            if (getBridge() == null) return;
+            url = getBridge().getLocalUrl() + route;   // https://localhost: the bundled page
         }
         final String finalUrl = url;
         final WebView webView = getBridge() != null ? getBridge().getWebView() : null;

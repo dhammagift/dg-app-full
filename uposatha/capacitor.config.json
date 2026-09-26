@@ -3,13 +3,7 @@
   "appName": "Uposatha",
   "webDir": "www",
   "server": {
-    "url": "https://test.dhamma.gift/uposatha-calendar?app=1",
-    "errorPath": "index.html",
-    "allowNavigation": [
-      "test.dhamma.gift",
-      "dhamma.gift",
-      "*.dhamma.gift"
-    ]
+    "androidScheme": "https"
   },
   "android": {
     "backgroundColor": "#111111"

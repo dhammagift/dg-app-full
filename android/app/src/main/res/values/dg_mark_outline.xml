@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The thin outline of the splash mark: visible on the light theme, none on the dark. -->
+    <color name="dg_mark_outline">#8C8F88</color>
+</resources>

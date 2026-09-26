@@ -6,9 +6,11 @@ import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.view.View;
 import android.webkit.WebView;
 
+import androidx.core.splashscreen.SplashScreen;
 import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.getcapacitor.BridgeActivity;
@@ -21,6 +23,10 @@ public class MainActivity extends BridgeActivity {
     // cold start: two loadUrl() calls for one shortcut tap, the second restarting a navigation the
     // first had already begun, racing the bridge's own initial load of the start page.
     private Intent handledIntent;
+
+    // How long the animated splash mark is held on screen: nearly its own length (the motion decelerates and
+    // is ~95% done by then), so a warm start is not made to wait for the last few frames.
+    private static final long SPLASH_HOLD_MS = 750;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -44,6 +50,12 @@ public class MainActivity extends BridgeActivity {
                 android.util.Log.w("DgSearch", "plugin not registered: " + t);
             }
         }
+        // The launch splash is the animated mark (res/drawable/dg_splash_icon.xml, 900 ms). The system takes the
+        // splash down the moment the first frame is ready, which on a warm start is before the mark has drawn;
+        // holding it for nearly the length of the animation lets it play.
+        SplashScreen splash = SplashScreen.installSplashScreen(this);
+        final long shownAt = SystemClock.uptimeMillis();
+        splash.setKeepOnScreenCondition(() -> SystemClock.uptimeMillis() - shownAt < SPLASH_HOLD_MS);
         super.onCreate(savedInstanceState);
         // Deliberately no handleIntent() here — see handledIntent above.
 
