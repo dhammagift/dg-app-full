@@ -242,7 +242,9 @@
         }
         if (key === 'schedule') {
           return function (o) {
-            var list = ((o && o.notifications) || []).map(function (n) { return Object.assign({}, n, { channelId: suffixed(n.channelId) }); });
+            // The picture of the reminders (docs/launch-screens/uposatha-notification.png: the mirror, the bowl, the brush),
+            // shown at the right of the notification; the sound channel is the reader's.
+            var list = ((o && o.notifications) || []).map(function (n) { return Object.assign({ largeIcon: 'uposatha_notification' }, n, { channelId: suffixed(n.channelId) }); });
             return target.schedule(Object.assign({}, o, { notifications: list }));
           };
         }

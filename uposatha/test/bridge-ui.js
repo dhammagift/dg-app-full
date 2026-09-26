@@ -159,12 +159,14 @@ function capacitorStub() {
             const got = await page.evaluate(() => ({
                 plugin: window.__calls.channels.map((c) => c.id), native: window.__calls.native.map((c) => [c.id, c.stream, c.sound]),
                 scheduled: [...new Set((window.__calls.scheduled.flat() || []).map((n) => n.channelId))],
+                icons: [...new Set((window.__calls.scheduled.flat() || []).map((n) => n.largeIcon))],
             }));
             const suffix = stream === 'alarm' ? '-alarm' : '';
             check(`stream ${stream}: channels are made ${stream === 'alarm' ? 'natively on the alarm stream' : 'by the plugin, as before'}`,
                 stream === 'alarm' ? got.native.some((n) => n[0] === 'uposatha-gong-v1-alarm' && n[1] === 'alarm' && n[2] === 'gong.mp3') && got.plugin.length === 0
                     : got.plugin.includes('uposatha-gong-v1') && got.native.length === 0, true);
             check(`stream ${stream}: reminders are scheduled on the ${stream} channels`, got.scheduled.length > 0 && got.scheduled.every((id) => id.endsWith('-v1' + suffix)), true);
+            check(`stream ${stream}: reminders carry the mirror picture`, got.icons, ['uposatha_notification']);
             check(`stream ${stream}: the settings drawer has the source row`, await page.evaluate(() => [!!document.getElementById('dg-stream-row'), document.getElementById('dg-stream').value]), [true, stream]);
             if (stream === 'notification') {
                 // The page redraws its drawer (a clone has none of the old listeners): the row must still work.
@@ -191,7 +193,7 @@ function capacitorStub() {
             await ctx.addInitScript((l) => { try { localStorage.setItem('dhammaLanguage', l); } catch (e) { /* first paint */ } }, lang);
             const page = await ctx.newPage();
             await page.route(/test\.dhamma\.gift|localhost:3003/, (r) => r.abort('internetdisconnected'));
-            await page.goto('http://127.0.0.1:8106/index.html', { waitUntil: 'domcontentloaded' });
+            await page.goto('http://127.0.0.1:8106/error.html', { waitUntil: 'domcontentloaded' });
             await page.waitForTimeout(1800);
             const txt = await page.evaluate(() => ({ h: document.querySelector('#dglsErr .dgls-h').textContent, ex: document.querySelector('#dglsErr .dgls-ex').textContent, up: !!document.querySelector('#dglsErr .dgls-up') }));
             check(`offline page ${lang}: title, the reminders line, the mark`, txt, { h: 'Uposatha', ex: lang === 'ru' ? 'Напоминания уже стоят на телефоне и придут без сети.' : 'Your reminders are set on this phone and will arrive without it.', up: true });

@@ -37,42 +37,15 @@ function check(name, actual, expected) {
     const HOLD = () => { const st = window.setTimeout; window.setTimeout = (f, ms, ...a) => st(f, typeof f === 'function' && String(f).includes('leave(el)') ? 60000 : ms, ...a); };
     const present = (page) => page.evaluate(() => !!document.querySelector('.dgls'));
     try {
-        // 1. Main app: the splash plays once per launch, then leaves; it does not replay on the next visit.
-        {
+        // 1. The reader's home page draws no splash of its own, on any platform (the platform's launch screen is the splash).
+        for (const platform of ['ios', 'android']) {
             const ctx = await ctxOf('light', 'ru');
-            await ctx.addInitScript(HOLD);
-            await ctx.addInitScript(() => { window.Capacitor = { getPlatform: () => 'ios' }; });   // the web splash is iOS's; Android's is native
+            await ctx.addInitScript((pl) => { window.Capacitor = { getPlatform: () => pl }; }, platform);
             const page = await ctx.newPage();
-            await page.goto(`http://127.0.0.1:${PORT}/index.html`, { waitUntil: 'commit' });
-            await page.waitForSelector('.dgls-splash .dgls-name', { state: 'attached' });
-            check('main: splash is up at the first frame', await present(page), true);
-            await page.waitForTimeout(850);    // the mark has all but assembled; the splash leaves at ~1.4 s
-            check('main: the page under the splash does not scroll', await page.evaluate(() => getComputedStyle(document.documentElement).overflow), 'hidden');
-            check('main: name is Dhamma.Gift', await page.evaluate(() => (document.querySelector('.dgls-name') || {}).textContent), 'Dhamma.Gift');
-            await page.screenshot({ path: path.join(SHOTS, 'launch-dg-splash-light.png') });
-            await page.evaluate(() => { window.__hold = 0; });
+            await page.goto(`http://127.0.0.1:${PORT}/index.html`, { waitUntil: 'load' });
+            await page.waitForTimeout(700);
+            check(`reader on ${platform}: no web splash`, await page.evaluate(() => !document.querySelector('.dgls')), true);
             await ctx.close();
-            const free = await ctxOf('light', 'ru');
-            await free.addInitScript(() => { window.Capacitor = { getPlatform: () => 'ios' }; });
-            const fp = await free.newPage();
-            await fp.goto(`http://127.0.0.1:${PORT}/index.html`, { waitUntil: 'commit' });
-            await fp.waitForTimeout(3600);
-            const page2 = fp;
-            check('main: splash has left', await present(page2), false);
-            check('main: scrolling is back', await page2.evaluate(() => getComputedStyle(document.documentElement).overflow !== 'hidden'), true);
-            await page2.reload({ waitUntil: 'domcontentloaded' });
-            await page2.waitForTimeout(400);
-            check('main: no replay in the same launch', await present(page2), false);
-            await free.close();
-            const dark = await ctxOf('dark', 'en');
-            await dark.addInitScript(HOLD);
-            await dark.addInitScript(() => { window.Capacitor = { getPlatform: () => 'ios' }; });
-            const p2 = await dark.newPage();
-            await p2.goto(`http://127.0.0.1:${PORT}/index.html`, { waitUntil: 'commit' });
-            await p2.waitForSelector('.dgls-splash .dgls-name', { state: 'attached' });
-            await p2.waitForTimeout(850);
-            await p2.screenshot({ path: path.join(SHOTS, 'launch-dg-splash-dark.png') });
-            await dark.close();
         }
 
         // 2. Main app error screen: three states, both themes and languages; Try again shows "checking".
@@ -129,13 +102,7 @@ function check(name, actual, expected) {
             await page.goto('https://dict.dhamma.gift/', { waitUntil: 'load' });
             await page.waitForTimeout(600);
             check('dict on Android: no web splash', await page.evaluate(() => !document.querySelector('.dgls')), true);
-            const ctx2 = await ctxOf('dark', 'en');
-            await ctx2.addInitScript(() => { window.Capacitor = { getPlatform: () => 'android', isNativePlatform: () => true, Plugins: {} }; });
-            const p2 = await ctx2.newPage();
-            await p2.goto(`http://127.0.0.1:${PORT}/index.html`, { waitUntil: 'load' });
-            await p2.waitForTimeout(600);
-            check('reader on Android: no web splash', await p2.evaluate(() => !document.querySelector('.dgls-splash')), true);
-            await ctx.close(); await ctx2.close();
+            await ctx.close();
         }
     } finally {
         await browser.close();
