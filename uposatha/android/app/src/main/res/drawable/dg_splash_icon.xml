@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- One pass, 700 ms: the clouds part (0-320 ms, cuts travel with them), the clean moon pulses once
+     (320-450 up, 450-700 back). Frame 0 is the whole mark, so nothing appears late. -->
 <animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:drawable="@drawable/dg_splash_mark">
-    <target android:name="rise" android:animation="@animator/dg_splash_rise"/>
-    <target android:name="moon" android:animation="@animator/dg_splash_moonfade"/>
-    <target android:name="cloud1" android:animation="@animator/dg_splash_cloud1"/>
-    <target android:name="cloud2" android:animation="@animator/dg_splash_cloud2"/>
-    <target android:name="cloud3" android:animation="@animator/dg_splash_cloud3"/>
+    <target android:name="cloudTop" android:animation="@animator/dg_splash_move_left"/>
+    <target android:name="cutTop" android:animation="@animator/dg_splash_move_left"/>
+    <target android:name="cloudBottom" android:animation="@animator/dg_splash_move_right"/>
+    <target android:name="cutBottom" android:animation="@animator/dg_splash_move_right"/>
+    <target android:name="cloudDot" android:animation="@animator/dg_splash_move_dot"/>
+    <target android:name="cloudTopPath" android:animation="@animator/dg_splash_fade"/>
+    <target android:name="cutTopPath" android:animation="@animator/dg_splash_fade"/>
+    <target android:name="cloudBottomPath" android:animation="@animator/dg_splash_fade"/>
+    <target android:name="cutBottomPath" android:animation="@animator/dg_splash_fade"/>
+    <target android:name="cloudDotPath" android:animation="@animator/dg_splash_fade"/>
+    <target android:name="moon" android:animation="@animator/dg_splash_pulse"/>
 </animated-vector>

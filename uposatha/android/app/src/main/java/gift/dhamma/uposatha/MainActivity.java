@@ -53,9 +53,9 @@ public class MainActivity extends BridgeActivity {
     // through the override below and no explicit call belongs in onCreate.
     private Intent handledIntent;
 
-    // How long the animated splash mark is held on screen: nearly its own length (the motion decelerates and
-    // is ~95% done by then), so a warm start is not made to wait for the last few frames.
-    private static final long SPLASH_HOLD_MS = 750;
+    // How long the animated splash mark is held on screen: its own length (700 ms), so a warm start plays
+    // the whole pass and is not made to wait any longer than that.
+    private static final long SPLASH_HOLD_MS = 700;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -65,7 +65,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(DgSoundPlugin.class);
         registerPlugin(DgSitePlugin.class);
         registerPlugin(DgAlarmPlugin.class);
-        // The launch splash is the animated mark (res/drawable/dg_splash_icon.xml, 900 ms). The system takes the
+        // The launch splash is the animated mark (res/drawable/dg_splash_icon.xml, 700 ms). The system takes the
         // splash down the moment the first frame is ready, which on a warm start is before the mark has drawn;
         // holding it for the length of the animation is what lets it play, and costs a cold start nothing it
         // was not going to spend loading anyway.

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Part of the 700 ms launch mark: a cloud (and its cut in the moon) travels in the first 320 ms. -->
+<objectAnimator xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="700">
+    <propertyValuesHolder android:propertyName="translateX">
+        <keyframe android:fraction="0" android:value="0"/>
+        <keyframe android:fraction="0.457" android:value="-16" android:interpolator="@android:interpolator/fast_out_slow_in"/>
+        <keyframe android:fraction="1" android:value="-16"/>
+    </propertyValuesHolder>
+</objectAnimator>

@@ -35,7 +35,7 @@
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/dg_splash_bg</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/dg_splash_icon</item>
-        <item name="windowSplashScreenAnimationDuration">900</item>
+        <item name="windowSplashScreenAnimationDuration">700</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
         <item name="android:background">@color/dg_splash_bg</item>
         <!-- The splash window is dark, so its status bar needs the same light icons as the real
