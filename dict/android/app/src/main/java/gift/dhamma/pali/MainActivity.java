@@ -57,6 +57,11 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
 
         injectBridge();
+        // What the WebView shows before the site's first paint is the launch screen's own colour
+        // (light/dark by the system theme), so native splash -> web splash has no gap.
+        if (getBridge() != null && getBridge().getWebView() != null) {
+            getBridge().getWebView().setBackgroundColor(getColor(R.color.dg_splash_bg));
+        }
         // Deliberately no handleIntent(getIntent()) here — see handledIntent above.
     }
 

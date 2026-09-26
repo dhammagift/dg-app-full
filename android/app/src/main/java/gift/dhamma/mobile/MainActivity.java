@@ -54,6 +54,9 @@ public class MainActivity extends BridgeActivity {
         // if anything still asks for a window, the WebView loads it in the current view instead.
         if (getBridge() != null && getBridge().getWebView() != null) {
             getBridge().getWebView().getSettings().setSupportMultipleWindows(false);
+            // What the WebView shows before the page's first paint is the launch screen's own colour
+            // (light/dark by the system theme), so native splash -> web splash has no navy or white gap.
+            getBridge().getWebView().setBackgroundColor(getColor(R.color.dg_splash_bg));
         }
 
         // After the bridge, deliberately: the Capacitor StatusBar plugin applies its style inside

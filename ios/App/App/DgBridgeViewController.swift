@@ -65,6 +65,13 @@ class DgBridgeViewController: CAPBridgeViewController {
         // is somewhere to go.
         webView?.allowsBackForwardNavigationGestures = true
 
+        // Before the page's first paint the WebView shows the launch screen's own colour (light /
+        // dark by the system theme), so launch screen -> web splash has no navy or black gap.
+        if let launch = UIColor(named: "LaunchBackground") {
+            webView?.backgroundColor = launch
+            webView?.scrollView.backgroundColor = launch
+        }
+
         // The page learns that SQL runs natively (DgSharedLibrary.swift). Added here and not in
         // webViewConfiguration(for:), because Capacitor replaces the user content controller after
         // that call.
