@@ -974,8 +974,21 @@ jobs:
         working-directory: uposatha
         run: npm ci
 
-      # src/ -> www/ -> android/app/src/main/assets/public: puts uposatha-bridge.js and the "no
-      # connection" page where MainActivity and server.errorPath read them from.
+      # The app bundles the calendar page: it opens with no network, and updates itself from the site when
+      # there is one (uposatha/tools/snapshot.js). A real browser loads the page off the site and records
+      # everything it fetches. The site is test.dhamma.gift for now (the same value as SITE in
+      # uposatha/src/uposatha-bridge.js). Fails the job when the site cannot be reached: an APK with no
+      # page in it must never be built quietly.
+      - name: Take the calendar page off the site
+        working-directory: uposatha
+        env:
+          SITE: https://test.dhamma.gift
+        run: |
+          npx playwright install --with-deps chromium
+          node tools/snapshot.js
+
+      # src/ -> www/ -> android/app/src/main/assets/public: the bundled page, uposatha-bridge.js and
+      # the offline page where MainActivity and Capacitor read them from.
       - name: Sync Capacitor
         working-directory: uposatha
         run: npm run sync-android
