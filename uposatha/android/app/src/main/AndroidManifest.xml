@@ -56,6 +56,9 @@
          the permission Android grants a calendar / reminder app without a prompt (API 33+);
          SCHEDULE_EXACT_ALARM would have to be granted by hand in the system settings. -->
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <!-- Lets the app appear in the system list "Do Not Disturb access": reminders should sound through
+         Do Not Disturb, and only the reader can allow that (DgSoundPlugin.requestDndAccess opens the page). -->
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
     <!-- Alarms are lost on reboot: the LocalNotifications plugin re-arms them on boot. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 </manifest>

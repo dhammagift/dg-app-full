@@ -180,21 +180,43 @@
   var lastChannels = {};
   var lastSchedule = null;
 
+  // Do Not Disturb: reminders should sound through it. Only the reader can allow that (a system page the app opens);
+  // while the access is not there the channels are the plain ones, and when it arrives they are made again under other
+  // ids (a channel's override cannot be changed afterwards): "-dnd".
+  var dndGranted = false;
+  function refreshDnd() {
+    var DS = Cap.Plugins && Cap.Plugins.DgSound;
+    if (!DS || typeof DS.dndAccess !== 'function') return Promise.resolve();
+    return DS.dndAccess().then(function (r) {
+      var granted = !!(r && r.granted);
+      var changed = granted !== dndGranted;
+      dndGranted = granted;
+      paintDndRow();
+      return changed ? restream() : null;
+    }).catch(function () { /* the plugin cannot tell: the plain channels */ });
+  }
+
   function wrapLocalNotifications() {
     var plugins = Cap.Plugins;
     var LN = plugins && plugins.LocalNotifications;
     if (!LN || LN.__dgWrapped) return;
     var sound = function () { return plugins.DgSound; };
-    var suffixed = function (id) { return alarmStream() && id && id.indexOf('uposatha-') === 0 && !/-alarm$/.test(id) ? id + '-alarm' : id; };
+    var suffixed = function (id) {
+      if (!id || id.indexOf('uposatha-') !== 0 || /-(alarm|dnd)$/.test(id)) return id;
+      // The reader's own sound has both streams made by DgSound at the pick; the built-in ones are made here.
+      var own = id.indexOf('uposatha-own-') === 0;
+      return id + (alarmStream() ? '-alarm' : '') + (dndGranted && !own ? '-dnd' : '');
+    };
     plugins.LocalNotifications = new Proxy(LN, {
       get: function (target, key) {
         if (key === '__dgWrapped') return true;
         if (key === 'createChannel') {
           return function (ch) {
             lastChannels[ch.id] = ch;
-            // The notification stream is what the plugin does anyway; only the alarm stream needs the native path.
-            if (!alarmStream() || !sound() || typeof sound().channel !== 'function') return target.createChannel(ch);
-            return sound().channel({ id: suffixed(ch.id), name: ch.name + (isRu() ? ' (будильник)' : ' (alarm)'), sound: ch.sound || '', importance: ch.importance, vibration: !!ch.vibration, stream: 'alarm' });
+            if (!sound() || typeof sound().channel !== 'function') return target.createChannel(ch);
+            // Made natively, on the stream the reader chose, asking to sound through Do Not Disturb.
+            return sound().channel({ id: suffixed(ch.id), name: ch.name + (alarmStream() ? (isRu() ? ' (будильник)' : ' (alarm)') : ''), sound: ch.sound || '',
+              importance: ch.importance, vibration: !!ch.vibration, stream: alarmStream() ? 'alarm' : 'notification', bypass: true });
           };
         }
         if (key === 'schedule') {
@@ -262,10 +284,34 @@
     return row;
   }
 
+  function dndRow() {
+    var ru = isRu();
+    var row = document.createElement('div');
+    row.id = 'dg-dnd-row';
+    row.innerHTML = '<p class="dg-drawer-subtitle"></p><button type="button" class="pillbtn" id="dg-dnd-btn"></button>'
+      + '<p class="dg-drawer-subtitle dg-dnd-note" style="font-weight:400;opacity:.75;margin-top:6px"></p>';
+    row.querySelector('.dg-drawer-subtitle').textContent = ru ? 'Звук при «Не беспокоить»' : 'Sound in Do Not Disturb';
+    row.querySelector('.dg-dnd-note').textContent = ru
+      ? 'Иначе при включённом «Не беспокоить» напоминание придёт без звука. Разрешить может только владелец телефона, в настройках Android.'
+      : 'Without it, a reminder arrives with no sound while Do Not Disturb is on. Only the phone\'s owner can allow it, in Android settings.';
+    return row;
+  }
+
+  function paintDndRow() {
+    var btn = document.getElementById('dg-dnd-btn');
+    if (!btn) return;
+    var ru = isRu();
+    btn.textContent = dndGranted ? (ru ? 'Разрешено ✓' : 'Allowed ✓') : (ru ? 'Разрешить в настройках' : 'Allow in settings');
+    btn.disabled = false;
+  }
+
   function ensureStreamRow() {
     var anchor = document.getElementById('rem-sound-row');
     if (!anchor || document.getElementById('dg-stream-row')) return;
-    anchor.parentNode.insertBefore(streamRow(), anchor.nextSibling);
+    var stream = streamRow();
+    anchor.parentNode.insertBefore(stream, anchor.nextSibling);
+    stream.parentNode.insertBefore(dndRow(), stream.nextSibling);
+    paintDndRow();
   }
 
   function watchStreamRow() {
@@ -275,6 +321,14 @@
       try { localStorage.setItem(STREAM_KEY, t.value); } catch (err) { /* no storage: the choice is lost */ }
       restream();
     }, true);
+    document.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest && e.target.closest('#dg-dnd-btn');
+      var DS = Cap.Plugins && Cap.Plugins.DgSound;
+      if (b && DS && typeof DS.requestDndAccess === 'function') DS.requestDndAccess();
+    }, true);
+    // Back from the system's settings page: has the access been given?
+    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') refreshDnd(); });
+    refreshDnd();
     ensureStreamRow();
     new MutationObserver(ensureStreamRow).observe(document.documentElement, { childList: true, subtree: true });
   }

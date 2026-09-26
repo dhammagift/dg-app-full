@@ -12,6 +12,7 @@ import android.media.AudioAttributes;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.provider.OpenableColumns;
 import android.webkit.MimeTypeMap;
 
@@ -63,6 +64,18 @@ import java.io.OutputStream;
  *
  * creates one channel of a built-in sound (a res/raw name; empty = silent) on the "alarm" or the
  * "notification" stream. pick() creates BOTH streams' channels of the sound it copies.
+ *
+ * DO NOT DISTURB. With "Do not disturb" on, Android silences the notification channels of apps that may not
+ * override it; a reminder then arrives with no sound (the alarm channels too, unless alarms are let through).
+ * An app may make a channel override it ({@code setBypassDnd}) only once the reader has given it "Do Not
+ * Disturb access", a page in the system settings the app can open but not switch on:
+ *
+ *     Capacitor.Plugins.DgSound.dndAccess()         ->  { granted }
+ *     Capacitor.Plugins.DgSound.requestDndAccess()      opens that settings page
+ *
+ * Channels are made with {@code bypass: true}; it takes effect when the access is granted, and a channel's
+ * override cannot be changed afterwards, so the bridge makes the channels again (under other ids) when the access
+ * arrives.
  */
 @CapacitorPlugin(name = "DgSound")
 public class DgSoundPlugin extends Plugin {
@@ -77,6 +90,26 @@ public class DgSoundPlugin extends Plugin {
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("audio/*");
         startActivityForResult(call, intent, "pickResult");
+    }
+
+    @PluginMethod
+    public void dndAccess(PluginCall call) {
+        JSObject out = new JSObject();
+        NotificationManager manager = getContext().getSystemService(NotificationManager.class);
+        out.put("granted", manager != null && manager.isNotificationPolicyAccessGranted());
+        call.resolve(out);
+    }
+
+    @PluginMethod
+    public void requestDndAccess(PluginCall call) {
+        try {
+            Intent intent = new Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(intent);
+            call.resolve();
+        } catch (Exception e) {
+            call.reject("could not open the settings: " + e.getMessage());
+        }
     }
 
     /** A channel of a built-in sound on the stream the reader chose (see the class comment). */
@@ -99,7 +132,8 @@ public class DgSoundPlugin extends Plugin {
                 }
             }
             makeChannel(context, id, call.getString("name", id), uri, "alarm".equals(call.getString("stream")),
-                    call.getInt("importance", NotificationManager.IMPORTANCE_HIGH), call.getBoolean("vibration", true));
+                    call.getInt("importance", NotificationManager.IMPORTANCE_HIGH), call.getBoolean("vibration", true),
+                    Boolean.TRUE.equals(call.getBoolean("bypass", false)));
             call.resolve();
         } catch (Exception e) {
             call.reject("DgSound.channel failed: " + e.getMessage());
@@ -206,10 +240,10 @@ public class DgSoundPlugin extends Plugin {
     // ---- the channel ------------------------------------------------------------------------
 
     private static void makeChannel(Context context, String id, String name, Uri sound, boolean alarm) {
-        makeChannel(context, id, name, sound, alarm, NotificationManager.IMPORTANCE_HIGH, true);
+        makeChannel(context, id, name, sound, alarm, NotificationManager.IMPORTANCE_HIGH, true, true);
     }
 
-    private static void makeChannel(Context context, String id, String name, Uri sound, boolean alarm, int importance, boolean vibration) {
+    private static void makeChannel(Context context, String id, String name, Uri sound, boolean alarm, int importance, boolean vibration, boolean bypass) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
         NotificationManager manager = context.getSystemService(NotificationManager.class);
         if (manager == null) return;
@@ -226,6 +260,9 @@ public class DgSoundPlugin extends Plugin {
         NotificationChannel channel = new NotificationChannel(id, name, importance);
         channel.setDescription("Uposatha reminders");
         channel.enableVibration(vibration);
+        // Only a silent channel has nothing to override; the rest ask to sound through Do Not Disturb (honoured once the
+        // reader has given the app that access).
+        if (bypass && sound != null && manager.isNotificationPolicyAccessGranted()) channel.setBypassDnd(true);
         if (sound != null) {
             channel.setSound(sound, new AudioAttributes.Builder()
                     .setUsage(alarm ? AudioAttributes.USAGE_ALARM : AudioAttributes.USAGE_NOTIFICATION)

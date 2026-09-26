@@ -34,6 +34,8 @@ function capacitorStub() {
             App: { addListener: (n, cb) => { if (n === 'backButton') window.__back = cb; return { remove() {} }; }, exitApp: () => { window.__calls.exit++; } },
             DgShortcuts: { set: (o) => { window.__calls.shortcuts.push(o.items); return Promise.resolve({ count: o.items.length }); } },
             DgSound: {
+                dndAccess: () => Promise.resolve({ granted: !!window.__dnd }),
+                requestDndAccess: () => { window.__calls.dndAsked = (window.__calls.dndAsked || 0) + 1; return Promise.resolve(); },
                 pick: () => { window.__calls.picks++; return Promise.resolve({ channelId: 'uposatha-own-1', name: 'My bell' }); },
                 channel: (c) => { window.__calls.native.push(c); return Promise.resolve(); },
             },
@@ -159,7 +161,7 @@ function capacitorStub() {
             await page.goto(PAGE, { waitUntil: 'load' });
             await page.waitForTimeout(2500);
             const got = await page.evaluate(() => ({
-                plugin: window.__calls.channels.map((c) => c.id), native: window.__calls.native.map((c) => [c.id, c.stream, c.sound]),
+                plugin: window.__calls.channels.map((c) => c.id), native: window.__calls.native.map((c) => [c.id, c.stream, c.sound, c.bypass]),
                 scheduled: [...new Set((window.__calls.scheduled.flat() || []).map((n) => n.channelId))],
                 icons: [...new Set((window.__calls.scheduled.flat() || []).map((n) => n.largeIcon))],
             }));
@@ -167,9 +169,8 @@ function capacitorStub() {
             await page.evaluate(() => { window.__delivered = [{ id: 7000 }, { id: 7990 }, { id: 1 }]; window.__calls.removed = []; return window.Capacitor.Plugins.LocalNotifications.schedule({ notifications: [{ id: 7000, title: 't', body: 'b', channelId: 'uposatha-gong-v1', schedule: { at: new Date(Date.now() + 60000) } }] }); });
             check(`stream ${stream}: what is left of ours in the tray is taken away before a new reminder`, await page.evaluate(() => window.__calls.removed), [7000, 7990]);
             const suffix = stream === 'alarm' ? '-alarm' : '';
-            check(`stream ${stream}: channels are made ${stream === 'alarm' ? 'natively on the alarm stream' : 'by the plugin, as before'}`,
-                stream === 'alarm' ? got.native.some((n) => n[0] === 'uposatha-gong-v1-alarm' && n[1] === 'alarm' && n[2] === 'gong.mp3') && got.plugin.length === 0
-                    : got.plugin.includes('uposatha-gong-v1') && got.native.length === 0, true);
+            check(`stream ${stream}: channels are made natively on the ${stream} stream, asking to sound through Do Not Disturb`,
+                got.native.some((n) => n[0] === 'uposatha-gong-v1' + (stream === 'alarm' ? '-alarm' : '') && n[1] === stream && n[2] === 'gong.mp3' && n[3] === true) && got.plugin.length === 0, true);
             check(`stream ${stream}: reminders are scheduled on the ${stream} channels`, got.scheduled.length > 0 && got.scheduled.every((id) => id.endsWith('-v1' + suffix)), true);
             check(`stream ${stream}: reminders carry the mirror picture`, got.icons, ['uposatha_notification']);
             check(`stream ${stream}: the settings drawer has the source row`, await page.evaluate(() => [!!document.getElementById('dg-stream-row'), document.getElementById('dg-stream').value]), [true, stream]);
@@ -187,6 +188,27 @@ function capacitorStub() {
                 await page.evaluate(() => document.getElementById('dg-stream-row').scrollIntoView());
                 await page.screenshot({ path: path.join(SHOTS, 'launch-upo-stream-row-light.png') });
             }
+            await ctx.close();
+        }
+
+        // 4b. Do Not Disturb: with the access, channels are made again under "-dnd" ids and reminders move to them.
+        {
+            const ctx = await ctxOf('light', 'en');
+            await ctx.addInitScript(capacitorStub);
+            await ctx.addInitScript(() => {
+                localStorage.setItem('dgUposathaRemind', JSON.stringify({ on: true, lead: 24, d8: true, d14: true, d15: true, sound: 'gong', ownChannel: '', ownName: '' }));
+                window.__dnd = false;
+            });
+            await ctx.addInitScript(BRIDGE);
+            const page = await ctx.newPage();
+            await page.goto(PAGE, { waitUntil: 'load' });
+            await page.waitForTimeout(2500);
+            check('DND: without access the channels are the plain ones', await page.evaluate(() => [...new Set(window.__calls.scheduled.flat().map((n) => n.channelId))]), ['uposatha-gong-v1']);
+            check('DND: the drawer has the row and the button asks for access', await page.evaluate(() => { document.getElementById('dg-dnd-btn').click(); return [!!document.getElementById('dg-dnd-row'), window.__calls.dndAsked]; }), [true, 1]);
+            await page.evaluate(() => { window.__dnd = true; window.__calls.scheduled.length = 0; document.dispatchEvent(new Event('visibilitychange')); });
+            await page.waitForTimeout(1200);
+            check('DND: after the access is given, the reminders move to the "-dnd" channels', await page.evaluate(() => [...new Set(window.__calls.scheduled.flat().map((n) => n.channelId))]), ['uposatha-gong-v1-dnd']);
+            check('DND: and the button says it is allowed', await page.evaluate(() => document.getElementById('dg-dnd-btn').textContent.includes('Allowed')), true);
             await ctx.close();
         }
 
