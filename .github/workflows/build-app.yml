@@ -61,11 +61,11 @@ on:
         required: false
         type: string
       release:
-        description: 'Which store gets this build. Play goes to the INTERNAL track (testers only; production still needs a promote in the console) and covers BOTH Android apps — the reader (gift.dhamma.twa) and the dictionary (gift.dhamma.pali), each on its own package. Default none: a manual run is usually about trying something, not about shipping, and an unasked-for build in App Store Connect or a burnt versionCode is the cost of getting that wrong. A tag always releases to both.'
+        description: 'Which store gets this build. Play goes to the INTERNAL track (testers only; production still needs a promote in the console) and covers BOTH Android apps — the reader (gift.dhamma.twa) and the dictionary (gift.dhamma.pali), each on its own package. Default none: a manual run is usually about trying something, not about shipping, and an unasked-for build in App Store Connect or a burnt versionCode is the cost of getting that wrong. A tag always releases to both. uposatha = ONLY the Uposatha app (gift.dhamma.uposatha) to the internal track of Play; it does not go out with play, both or a tag.'
         required: false
         type: choice
         default: none
-        options: [none, play, testflight, both]
+        options: [none, play, testflight, both, uposatha]
       ios_checks:
         description: 'Also run the three iOS check jobs (simulator build, UI checks, screenshots). Off by default: a manual run is usually about the Android half, and those three only add ~17 minutes of waiting after it. A tag always runs them.'
         required: false
@@ -1070,6 +1070,60 @@ jobs:
           path: uposatha/android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 30
+
+  # The Uposatha app's Play release: the signed AAB uposatha-build made, uploaded to the INTERNAL track of gift.dhamma.uposatha.
+  # Only on a hand-started run with release = uposatha: it is a separate app with its own listing, so it does not ride along
+  # with `play`, `both` or a tag (those keep shipping the reader and the dictionary only).
+  uposatha-release:
+    name: Uposatha app release (Play internal track)
+    needs: uposatha-build
+    if: github.event_name == 'workflow_dispatch' && inputs.release == 'uposatha'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Is the service account there?
+        id: play
+        env:
+          PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -n "$PLAY_JSON" ]; then
+            echo "have=yes" >> "$GITHUB_OUTPUT"
+            echo "service account present"
+          else
+            echo "have=no" >> "$GITHUB_OUTPUT"
+            echo "::notice::PLAY_SERVICE_ACCOUNT_JSON is not set - nothing was uploaded to Play."
+            {
+              echo "### Uposatha release: nothing happened"
+              echo ""
+              echo "Missing repository secret: \`PLAY_SERVICE_ACCOUNT_JSON\`. Nothing was uploaded to Google Play."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      # The artifact uposatha-build uploaded, not a rebuild: the bytes that go to Play are the ones just built and signed.
+      - name: Download the signed AAB
+        if: steps.play.outputs.have == 'yes'
+        uses: actions/download-artifact@v4
+        with:
+          name: dg-uposatha-aab-release-${{ github.run_number }}
+          path: aab
+
+      - name: Upload to Google Play
+        if: steps.play.outputs.have == 'yes'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: gift.dhamma.uposatha
+          releaseFiles: aab/app-release.aab
+          track: internal
+          status: completed
+
+      - name: Say what went to Play
+        if: success() && steps.play.outputs.have == 'yes'
+        run: |
+          {
+            echo "### Uposatha app uploaded"
+            echo ""
+            echo "versionCode ${{ github.run_number }} is on the **internal** track of \`gift.dhamma.uposatha\`."
+          } >> "$GITHUB_STEP_SUMMARY"
 
   # ---------------------------------------------------------------------------------------------
   # The dictionary half of the Play release path, the same shape as android-release above and
