@@ -236,6 +236,18 @@
     overlay.querySelector('.dgr-primary').addEventListener('click', function () { DS.requestDndAccess(); close(); });
   }
 
+  // "Alarm" as the source means the reminder is played the way an alarm clock plays: the notification is silent (the banner
+  // and the tray entry), and DgAlarm sets an exact alarm that plays the sound on the ALARM stream, which Do Not Disturb
+  // lets through and phone makers' notification layers do not touch. The sound's name comes from the channel the page chose.
+  var RAW_OF = { gong: 'gong', gong2: 'gong2', gong3: 'gong3', gong4: 'gong4', gong5: 'gong5', bell: 'church' };
+  function alarmPlugin() { var p = Cap.Plugins && Cap.Plugins.DgAlarm; return p && typeof p.schedule === 'function' ? p : null; }
+  function directAlarm() { return alarmStream() && !!alarmPlugin(); }
+  function rawSoundOf(channelId) {
+    if (/^uposatha-own-/.test(channelId || '')) return 'own';
+    var m = /^uposatha-([a-z0-9]+)-v\d/.exec(channelId || '');
+    return m && RAW_OF[m[1]] || '';
+  }
+
   function wrapLocalNotifications() {
     var plugins = Cap.Plugins;
     var LN = plugins && plugins.LocalNotifications;
@@ -255,7 +267,7 @@
             lastChannels[ch.id] = ch;
             if (!sound() || typeof sound().channel !== 'function') return target.createChannel(ch);
             // Made natively, on the stream the reader chose, asking to sound through Do Not Disturb.
-            return sound().channel({ id: suffixed(ch.id), name: ch.name + (alarmStream() ? (isRu() ? ' (будильник)' : ' (alarm)') : ''), sound: ch.sound || '',
+            return sound().channel({ id: suffixed(ch.id), name: ch.name + (alarmStream() ? (isRu() ? ' (будильник)' : ' (alarm)') : ''), sound: directAlarm() ? '' : (ch.sound || ''),
               importance: ch.importance, vibration: !!ch.vibration, stream: alarmStream() ? 'alarm' : 'notification', bypass: true });
           };
         }
@@ -269,10 +281,24 @@
             // tray makes no sound and no vibration. The page's ids are their place in the list (the next reminder is always
             // 7000, and the test reminder is 7990), so a reminder that fires after another has been left in the tray would
             // arrive silent. Whatever of ours is still in the tray is taken away before new ones are set.
-            return clearDeliveredOurs(target).then(function () { return target.schedule(Object.assign({}, o, { notifications: list })); }).then(function (res) {
+            // The sound itself, on the alarm stream, at the same minute.
+            var alarm = alarmPlugin();
+            var items = directAlarm() ? ((o && o.notifications) || []).map(function (n) {
+              var at = n.schedule && n.schedule.at ? new Date(n.schedule.at).getTime() : 0;
+              return { id: n.id, at: at, sound: rawSoundOf(n.channelId) };
+            }).filter(function (i) { return i.at > 0 && i.sound; }) : [];
+            return clearDeliveredOurs(target).then(function () { return items.length ? alarm.schedule({ items: items }) : null; }).then(function () { return target.schedule(Object.assign({}, o, { notifications: list })); }).then(function (res) {
               if (list.length) setTimeout(function () { refreshDnd().then(maybeAskDnd); }, 2500);   // the page has settled; is the access there?
               return res;
             });
+          };
+        }
+        if (key === 'cancel') {
+          return function (o) {
+            var alarm = alarmPlugin();
+            var ids = ((o && o.notifications) || []).map(function (n) { return n.id; });
+            if (alarm && ids.length) alarm.cancel({ ids: ids });
+            return target.cancel(o);
           };
         }
         var v = target[key];
@@ -322,8 +348,8 @@
     });
     select.value = alarmStream() ? 'alarm' : 'notification';
     row.querySelector('.dg-stream-note').textContent = ru
-      ? 'Будильник звучит громкостью будильника, даже если звук уведомлений выключен.'
-      : 'The alarm plays at the alarm volume, even when the notification sound is off.';
+      ? 'Будильник звучит как будильник: громкостью будильника и сквозь «Не беспокоить».'
+      : 'The alarm sounds like an alarm clock: at the alarm volume, and through Do Not Disturb.';
     return row;
   }
 

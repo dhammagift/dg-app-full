@@ -27,6 +27,14 @@
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
         </activity>
 
+        <!-- DgAlarm: the reminders' sound on the alarm stream (DgAlarmPlugin), and re-setting them after a reboot or an update. -->
+        <receiver android:name=".DgAlarmReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
         <!-- DgSound: the sound the reader picked for the reminders. The file is copied into the app's
              own files/sounds/ and handed to the system UI (which plays a notification channel's
              sound) as a content:// URI of this provider. -->

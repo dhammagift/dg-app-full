@@ -33,6 +33,10 @@ function capacitorStub() {
         Plugins: {
             App: { addListener: (n, cb) => { if (n === 'backButton') window.__back = cb; return { remove() {} }; }, exitApp: () => { window.__calls.exit++; } },
             DgShortcuts: { set: (o) => { window.__calls.shortcuts.push(o.items); return Promise.resolve({ count: o.items.length }); } },
+            DgAlarm: {
+                schedule: (o) => { window.__calls.alarms = (window.__calls.alarms || []).concat(o.items); return Promise.resolve(); },
+                cancel: (o) => { window.__calls.alarmCancels = (window.__calls.alarmCancels || []).concat(o.ids); return Promise.resolve(); },
+            },
             DgSound: {
                 dndAccess: () => Promise.resolve({ granted: !!window.__dnd }),
                 requestDndAccess: () => { window.__calls.dndAsked = (window.__calls.dndAsked || 0) + 1; return Promise.resolve(); },
@@ -164,15 +168,17 @@ function capacitorStub() {
                 plugin: window.__calls.channels.map((c) => c.id), native: window.__calls.native.map((c) => [c.id, c.stream, c.sound, c.bypass]),
                 scheduled: [...new Set((window.__calls.scheduled.flat() || []).map((n) => n.channelId))],
                 icons: [...new Set((window.__calls.scheduled.flat() || []).map((n) => n.largeIcon))],
+                alarms: (window.__calls.alarms || []).map((a) => [a.sound, a.at > 0]),
             }));
             // A reminder left in the tray must not turn the next one with the same id into a silent update.
             await page.evaluate(() => { window.__delivered = [{ id: 7000 }, { id: 7990 }, { id: 1 }]; window.__calls.removed = []; return window.Capacitor.Plugins.LocalNotifications.schedule({ notifications: [{ id: 7000, title: 't', body: 'b', channelId: 'uposatha-gong-v1', schedule: { at: new Date(Date.now() + 60000) } }] }); });
             check(`stream ${stream}: what is left of ours in the tray is taken away before a new reminder`, await page.evaluate(() => window.__calls.removed), [7000, 7990]);
             const suffix = stream === 'alarm' ? '-alarm' : '';
             check(`stream ${stream}: channels are made natively on the ${stream} stream, asking to sound through Do Not Disturb`,
-                got.native.some((n) => n[0] === 'uposatha-gong-v1' + (stream === 'alarm' ? '-alarm' : '') && n[1] === stream && n[2] === 'gong.mp3' && n[3] === true) && got.plugin.length === 0, true);
+                got.native.some((n) => n[0] === 'uposatha-gong-v1' + (stream === 'alarm' ? '-alarm' : '') && n[1] === stream && n[2] === (stream === 'alarm' ? '' : 'gong.mp3') && n[3] === true) && got.plugin.length === 0, true);
             check(`stream ${stream}: reminders are scheduled on the ${stream} channels`, got.scheduled.length > 0 && got.scheduled.every((id) => id.endsWith('-v1' + suffix)), true);
             check(`stream ${stream}: reminders carry the mirror picture`, got.icons, ['uposatha_notification']);
+            check(`stream ${stream}: the sound is played by an alarm of its own only on the alarm source (its channel is then silent)`, stream === 'alarm' ? got.alarms.length > 0 && got.alarms.every((a) => a[0] === 'gong' && a[1]) : got.alarms.length === 0, true);
             check(`stream ${stream}: the settings drawer has the source row`, await page.evaluate(() => [!!document.getElementById('dg-stream-row'), document.getElementById('dg-stream').value]), [true, stream]);
             if (stream === 'notification') {
                 // The page redraws its drawer (a clone has none of the old listeners): the row must still work.

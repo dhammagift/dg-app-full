@@ -80,6 +80,7 @@ import java.io.OutputStream;
 @CapacitorPlugin(name = "DgSound")
 public class DgSoundPlugin extends Plugin {
 
+    static final String PREFS = "dg_sound";
     private static final String CHANNEL_PREFIX = "uposatha-own-";
     static final String ALARM_SUFFIX = "-alarm";
     private static final long MAX_BYTES = 10L * 1024 * 1024;   // a notification sound, not a track
@@ -161,6 +162,8 @@ public class DgSoundPlugin extends Plugin {
                 call.reject("could not copy the file");
                 return;
             }
+            // Kept for the reminder's alarm-stream sound (DgAlarmReceiver plays the file itself).
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString("own_uri", sound.toString()).apply();
             makeChannel(context, channelId, display, sound, false);
             makeChannel(context, channelId + ALARM_SUFFIX, display, sound, true);
             JSObject out = new JSObject();
