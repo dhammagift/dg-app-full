@@ -4,9 +4,11 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.view.View;
 import android.webkit.WebView;
 
+import androidx.core.splashscreen.SplashScreen;
 import androidx.webkit.WebViewCompat;
 import androidx.webkit.WebViewFeature;
 
@@ -48,12 +50,22 @@ public class MainActivity extends BridgeActivity {
     // through the override below and no explicit call belongs in onCreate.
     private Intent handledIntent;
 
+    // How long the animated splash mark is held on screen: its own length (see onCreate).
+    private static final long SPLASH_HOLD_MS = 900;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         // Before super.onCreate(): Capacitor collects the registered plugins while the bridge is
         // being created.
         registerPlugin(DgShortcutsPlugin.class);
         registerPlugin(DgSoundPlugin.class);
+        // The launch splash is the animated mark (res/drawable/dg_splash_icon.xml, 900 ms). The system takes the
+        // splash down the moment the first frame is ready, which on a warm start is before the mark has drawn;
+        // holding it for the length of the animation is what lets it play, and costs a cold start nothing it
+        // was not going to spend loading anyway.
+        SplashScreen splash = SplashScreen.installSplashScreen(this);
+        final long shownAt = SystemClock.uptimeMillis();
+        splash.setKeepOnScreenCondition(() -> SystemClock.uptimeMillis() - shownAt < SPLASH_HOLD_MS);
         super.onCreate(savedInstanceState);
 
         injectBridge();

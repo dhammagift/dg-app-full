@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/dg_splash_mark">
+    <target android:name="rise" android:animation="@animator/dg_splash_rise"/>
+    <target android:name="moon" android:animation="@animator/dg_splash_moonfade"/>
+    <target android:name="cloud1" android:animation="@animator/dg_splash_cloud1"/>
+    <target android:name="cloud2" android:animation="@animator/dg_splash_cloud2"/>
+    <target android:name="cloud3" android:animation="@animator/dg_splash_cloud3"/>
+</animated-vector>

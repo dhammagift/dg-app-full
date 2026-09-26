@@ -34,11 +34,12 @@ const APP_SCRIPTS = `<!-- Offline data shim: installs window.fetch interception 
 <!-- Native platform first: sets window.dgPlatform (see src/platform.js) so dg-node's browser
      platform.js, loaded right after, is a documented no-op. -->
 <script src="/offline/platform.js"></script>
-<!-- The launch splash (src/launch-screens.js) — one pass per launch of the app, on the home page only,
-     and the "no connection" screen the offline layer raises. Here, ahead of the heavy scripts, so the
-     mark is on screen at the first frame. -->
+<!-- The launch splash (src/launch-screens.js) on iOS only — Android draws its own, natively (the system
+     splash screen with the mark, res/drawable/dg_splash_icon.xml), which is faster than a page can be — and
+     the "no connection" screen the offline layer raises. Here, ahead of the heavy scripts, so the mark is
+     on screen at the first frame. -->
 <script src="/launch-screens.js"></script>
-<script>if (window.dgLaunch) window.dgLaunch.splash('dg');</script>
+<script>if (window.dgLaunch && window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'ios') window.dgLaunch.splash('dg');</script>
 <!-- speechSynthesis over Android TextToSpeech (src/tts.js), before the page's voice player. -->
 <script src="/tts.js"></script>
 <script src="/offline/app.js"></script>

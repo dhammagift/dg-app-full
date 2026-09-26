@@ -18,10 +18,9 @@
   var Cap = window.Capacitor;
   if (!Cap || typeof Cap.getPlatform !== 'function' || Cap.getPlatform() !== 'android') return;
 
-  // The launch splash and the "no connection" screen. Pasted in from src/launch-screens.js by
-  // dict/build.js; the splash goes up now, at document start, and leaves once the site has loaded.
-  // @launch-screens (inlined from src/launch-screens.js by dict/build.js)
-  if (window.dgLaunch) window.dgLaunch.splash('dict');
+  // The launch splash is native on Android (the animated mark of the system splash screen, res/drawable/
+  // dg_splash_icon.xml), so nothing is drawn here: a web splash on top of it made the app slower to open and
+  // the page under it showed a scroll strip.
 
   // Same flag name dg-app-full uses for its own switch. Different origin, so no collision — and
   // the same default: anything but 'off' means on.

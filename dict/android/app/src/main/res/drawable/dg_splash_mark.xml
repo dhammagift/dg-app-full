@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The dictionary's mark, drawn as a vector in its FINAL state; dg_splash_icon.xml animates it (the hook
+     and the stair are drawn on, the dot drops, the teal line comes last). Paths are the designer's
+     (docs/launch-screens/dict-mark.svg). 288dp is the canvas the system gives a splash icon, the mark sits
+     in its centre 192dp circle. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="288dp" android:height="288dp" android:viewportWidth="288" android:viewportHeight="288">
+    <group android:name="art" android:translateX="33.455" android:translateY="35.976" android:scaleX="0.19394" android:scaleY="0.19394">
+        <path android:name="hook" android:strokeColor="@color/dg_splash_ink" android:strokeWidth="48" android:strokeLineJoin="miter"
+            android:pathData="M410,381H282V600C282,690 330,721 372,721C420,721 462,690 462,612"/>
+        <path android:name="stair" android:strokeColor="@color/dg_splash_ink" android:strokeWidth="48" android:strokeLineJoin="miter"
+            android:pathData="M608,690V545H738V380H855V292"/>
+        <group android:name="drop">
+            <path android:name="dot" android:fillColor="@color/dg_splash_ink"
+                android:pathData="M608,712m-38,0a38,38 0 1,0 76,0a38,38 0 1,0 -76,0"/>
+        </group>
+        <path android:name="line" android:strokeColor="@color/dg_splash_teal" android:strokeWidth="22"
+            android:pathData="M258,822H879"/>
+    </group>
+</vector>

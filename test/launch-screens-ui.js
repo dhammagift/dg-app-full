@@ -41,6 +41,7 @@ function check(name, actual, expected) {
         {
             const ctx = await ctxOf('light', 'ru');
             await ctx.addInitScript(HOLD);
+            await ctx.addInitScript(() => { window.Capacitor = { getPlatform: () => 'ios' }; });   // the web splash is iOS's; Android's is native
             const page = await ctx.newPage();
             await page.goto(`http://127.0.0.1:${PORT}/index.html`, { waitUntil: 'commit' });
             await page.waitForSelector('.dgls-splash .dgls-name', { state: 'attached' });
@@ -52,6 +53,7 @@ function check(name, actual, expected) {
             await page.evaluate(() => { window.__hold = 0; });
             await ctx.close();
             const free = await ctxOf('light', 'ru');
+            await free.addInitScript(() => { window.Capacitor = { getPlatform: () => 'ios' }; });
             const fp = await free.newPage();
             await fp.goto(`http://127.0.0.1:${PORT}/index.html`, { waitUntil: 'commit' });
             await fp.waitForTimeout(3600);
@@ -64,6 +66,7 @@ function check(name, actual, expected) {
             await free.close();
             const dark = await ctxOf('dark', 'en');
             await dark.addInitScript(HOLD);
+            await dark.addInitScript(() => { window.Capacitor = { getPlatform: () => 'ios' }; });
             const p2 = await dark.newPage();
             await p2.goto(`http://127.0.0.1:${PORT}/index.html`, { waitUntil: 'commit' });
             await p2.waitForSelector('.dgls-splash .dgls-name', { state: 'attached' });
@@ -115,24 +118,24 @@ function check(name, actual, expected) {
             await ctx.close();
         }
 
-        // 4. Dictionary splash: the real bridge, injected the way MainActivity does (at document start),
-        //    over a stand-in for the live site.
+        // 4. Android draws its splash natively: the dictionary's bridge draws none (and neither does the reader's home page there).
         {
             const DICT = require(path.join(ROOT, 'dict', 'build.js')).bridgeSource();
-            for (const [theme, lang] of [['dark', 'ru'], ['light', 'en']]) {
-                const ctx = await ctxOf(theme, lang);
-                await ctx.addInitScript(() => { window.Capacitor = { getPlatform: () => 'android', isNativePlatform: () => true, Plugins: {} }; });
-                await ctx.addInitScript(HOLD);
-                await ctx.addInitScript(DICT);
-                const page = await ctx.newPage();
-                await page.route('https://dict.dhamma.gift/', (r) => r.fulfill({ contentType: 'text/html', body: '<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><body style="margin:0;background:Canvas;color:CanvasText">site</body>' }));
-                await page.goto('https://dict.dhamma.gift/', { waitUntil: 'commit' });
-                await page.waitForSelector('.dgls-splash .dgls-name', { state: 'attached' });
-                await page.waitForTimeout(850);
-                if (theme === 'dark') check('dict: splash is up', await page.evaluate(() => (document.querySelector('.dgls-splash .dgls-name') || {}).textContent), 'Dict');
-                await page.screenshot({ path: path.join(SHOTS, `launch-dict-splash-${theme}.png`) });
-                await ctx.close();
-            }
+            const ctx = await ctxOf('dark', 'ru');
+            await ctx.addInitScript(() => { window.Capacitor = { getPlatform: () => 'android', isNativePlatform: () => true, Plugins: {} }; });
+            await ctx.addInitScript(DICT);
+            const page = await ctx.newPage();
+            await page.route('https://dict.dhamma.gift/', (r) => r.fulfill({ contentType: 'text/html', body: '<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><body>site</body>' }));
+            await page.goto('https://dict.dhamma.gift/', { waitUntil: 'load' });
+            await page.waitForTimeout(600);
+            check('dict on Android: no web splash', await page.evaluate(() => !document.querySelector('.dgls')), true);
+            const ctx2 = await ctxOf('dark', 'en');
+            await ctx2.addInitScript(() => { window.Capacitor = { getPlatform: () => 'android', isNativePlatform: () => true, Plugins: {} }; });
+            const p2 = await ctx2.newPage();
+            await p2.goto(`http://127.0.0.1:${PORT}/index.html`, { waitUntil: 'load' });
+            await p2.waitForTimeout(600);
+            check('reader on Android: no web splash', await p2.evaluate(() => !document.querySelector('.dgls-splash')), true);
+            await ctx.close(); await ctx2.close();
         }
     } finally {
         await browser.close();

@@ -17,10 +17,9 @@
   var Cap = window.Capacitor;
   if (!Cap || typeof Cap.getPlatform !== 'function' || Cap.getPlatform() !== 'android') return;
 
-  // The launch splash and the "no connection" screen, pasted in from src/launch-screens.js by
-  // uposatha/build.js; the splash goes up now, at document start, and leaves once the page has loaded.
-  // @launch-screens (inlined from src/launch-screens.js by uposatha/build.js)
-  if (window.dgLaunch) window.dgLaunch.splash('upo');
+  // The launch splash is native on Android (the animated mark of the system splash screen, res/drawable/
+  // dg_splash_icon.xml), so nothing is drawn here: a web splash on top of it made the app slower to open and
+  // the page under it showed a scroll strip.
 
   var STORE_URL = 'https://play.google.com/store/apps/details?id=gift.dhamma.uposatha';
   // Set when the reader taps Rate Us (the page's own row, #up-rate) or "Rate" in the invitation: whoever

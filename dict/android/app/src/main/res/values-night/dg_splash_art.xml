@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The colours the animated splash mark draws with (res/drawable/dg_splash_icon.xml): the page's own
+         tokens, light and dark. -->
+    <color name="dg_splash_ink">#DDDDDD</color>
+    <color name="dg_splash_moon">#A9C4DC</color>
+    <color name="dg_splash_cloud">#7C7C7C</color>
+    <color name="dg_splash_teal">#136857</color>
+</resources>

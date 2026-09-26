@@ -36,7 +36,7 @@
          the splash theme and the WebView would never appear. -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/dg_splash_bg</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/dg_splash_blank</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/dg_splash_icon</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
         <item name="android:background">@color/dg_splash_bg</item>
         <!-- The splash window is #2E3E50 — dark — so its status bar needs the same light icons as
