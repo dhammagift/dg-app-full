@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Part of the 700 ms launch mark: clouds (and their cuts) fade out while they travel, first 320 ms. -->
+<!-- Part of the 1000 ms launch mark: clouds (and their cuts) fade out while they travel, 250-650 ms, after a 250 ms still frame. -->
 <objectAnimator xmlns:android="http://schemas.android.com/apk/res/android"
-    android:duration="700">
+    android:duration="1000">
     <propertyValuesHolder android:propertyName="strokeAlpha">
         <keyframe android:fraction="0" android:value="1"/>
-        <keyframe android:fraction="0.457" android:value="0" android:interpolator="@android:interpolator/fast_out_slow_in"/>
+        <keyframe android:fraction="0.25" android:value="1"/>
+        <keyframe android:fraction="0.65" android:value="0" android:interpolator="@android:interpolator/fast_out_slow_in"/>
         <keyframe android:fraction="1" android:value="0"/>
     </propertyValuesHolder>
 </objectAnimator>
