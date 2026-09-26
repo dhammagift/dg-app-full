@@ -63,7 +63,7 @@ function capacitorStub() {
             const changedBody = fs.readFileSync(path.join(WWW, changed), 'utf8') + '\n/* changed on the site */\n';
             await page.route(/^https?:\/\/(?!127\.0\.0\.1)/, (route) => {
                 const u = new URL(route.request().url());
-                if (u.origin === 'https://test.dhamma.gift') {
+                if (u.origin === 'https://dhamma.gift') {
                     const p = u.pathname === '/uposatha-calendar' ? '/uposatha-calendar.html' : u.pathname;
                     if (p === changed) return route.fulfill({ status: 200, contentType: 'text/css', body: changedBody });
                     const f = path.join(WWW, p);

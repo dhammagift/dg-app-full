@@ -1,7 +1,7 @@
 // Takes the Uposatha calendar page and everything it loads off a running site (tools/snapshot-lib.js), so the
 // app can bundle it and open with no network at all.
 //
-//   SITE=https://test.dhamma.gift node tools/snapshot.js [outdir]          (default outdir: snapshot/)
+//   SITE=https://dhamma.gift node tools/snapshot.js [outdir]          (default outdir: snapshot/)
 //
 // Both languages, every tab, the settings drawer: what the page's scripts fetch on demand (the quotes, the
 // zone table) is recorded too. The page itself is saved as /uposatha-calendar.html. What no script reaches
@@ -11,7 +11,7 @@ const path = require('path');
 const { snapshot } = require('../../tools/snapshot-lib');
 
 snapshot({
-    site: process.env.SITE || 'https://test.dhamma.gift',
+    site: process.env.SITE || 'https://dhamma.gift',
     out: process.argv[2] || path.join(__dirname, '..', 'snapshot'),
     visits: ['ru', 'en'].map((lang) => ({ url: `/uposatha-calendar?app=1&lang=${lang}`, save: '/uposatha-calendar.html' })),
     // What the settings' sound preview plays: SOUND_FILES in uposatha-calendar.js. Audio is only fetched when a sound

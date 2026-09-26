@@ -52,7 +52,7 @@ function copyTree(from, to, list) {
 
 function bundleSnapshot() {
     if (!fs.existsSync(path.join(SNAPSHOT, 'uposatha-calendar.html'))) {
-        throw new Error('uposatha/snapshot/ is missing: run  SITE=https://test.dhamma.gift node tools/snapshot.js  first (CI does).');
+        throw new Error('uposatha/snapshot/ is missing: run  SITE=https://dhamma.gift node tools/snapshot.js  first (CI does).');
     }
     const files = [];
     copyTree(SNAPSHOT, WWW, files);

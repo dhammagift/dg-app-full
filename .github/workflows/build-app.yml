@@ -956,7 +956,7 @@ jobs:
   # ---------------------------------------------------------------------------------------------
   # The Uposatha calendar app (gift.dhamma.uposatha) — a Capacitor shell around the site's calendar
   # page, living in uposatha/ of this repository. The same shape as dict-build above: no dg-node
-  # checkout, no database, `npm ci` plus Gradle. The page it shows is the live one (test.dhamma.gift
+  # checkout, no database, `npm ci` plus Gradle. The page it shows is the live one (dhamma.gift
   # for now, capacitor.config.json's server.url); this job builds only the layer around it — the
   # reminders' plugins, the sounds in res/raw, the launcher shortcuts, the launch screens.
   #
@@ -990,13 +990,13 @@ jobs:
 
       # The app bundles the calendar page: it opens with no network, and updates itself from the site when
       # there is one (uposatha/tools/snapshot.js). A real browser loads the page off the site and records
-      # everything it fetches. The site is test.dhamma.gift for now (the same value as SITE in
+      # everything it fetches. The site is dhamma.gift (the same value as SITE in
       # uposatha/src/uposatha-bridge.js). Fails the job when the site cannot be reached: an APK with no
       # page in it must never be built quietly.
       - name: Take the calendar page off the site
         working-directory: uposatha
         env:
-          SITE: https://test.dhamma.gift
+          SITE: https://dhamma.gift
         run: |
           npx playwright install --with-deps chromium
           node tools/snapshot.js
