@@ -39,6 +39,26 @@
     return /^ru/i.test(l || navigator.language || '');
   }
 
+  // ---- an app, not a page ----------------------------------------------------------------------
+  //
+  // A web page lets the reader select anything with a long press, flashes a tap highlight and offers
+  // the browser's menu on links; an app does none of it. Text can be selected only where it is text to
+  // take away: the quotes of the slideshow and any Pali (the page marks Pali with .pli-lang / lang="pi"),
+  // and the fields. Everything else is not selectable. Only on the calendar page: the other pages of
+  // the site the app may pass through (dhamma.gift/4as) are the reader's own business.
+  if (onCalendar) {
+    var feel = document.createElement('style');
+    feel.id = 'dg-native-feel';
+    feel.textContent = 'html{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}'
+      + 'html body,html body *{-webkit-user-select:none;user-select:none}'
+      + 'html body input,html body textarea,html body [contenteditable],html body .pli-lang,html body [lang="pi"],'
+      + 'html body #slides,html body #slides *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}';
+    (function put() {
+      if (document.documentElement) document.documentElement.appendChild(feel);
+      else new MutationObserver(function (m, mo) { if (document.documentElement) { mo.disconnect(); put(); } }).observe(document, { childList: true });
+    })();
+  }
+
   // ---- the tab a launcher shortcut asks for ------------------------------------------------
   //
   // A shortcut opens /uposatha-calendar?app=1&tab=cal. The page keeps its current tab in
@@ -159,12 +179,14 @@
   // At once, before the page's own scripts reach for the plugin (start() below tries again should Capacitor not have registered it yet).
   if (onCalendar) wrapLocalNotifications();
 
-  // The setting itself, in the settings drawer under the page's own sound row (the page never redraws
-  // it). Changing it reloads the page: the page schedules its reminders only when they change, and a
-  // reload is what makes it schedule them again — now on the other channels.
-  function addStreamRow() {
-    var anchor = document.getElementById('rem-sound-row');
-    if (!anchor || document.getElementById('dg-stream-row')) return;
+  // The setting itself, in the settings drawer under the page's own sound row. Changing it reloads the
+  // page: the page schedules its reminders only when they change, and a reload is what makes it
+  // schedule them again — now on the other channels.
+  //
+  // The page may rebuild or clone its drawer (a language switch redraws it), and a listener on the
+  // select would be lost with the node: the change is caught at the document instead, and the row is
+  // put back whenever the page's sound row is there without it.
+  function streamRow() {
     var ru = isRu();
     var row = document.createElement('div');
     row.id = 'dg-stream-row';
@@ -179,15 +201,27 @@
       select.appendChild(opt);
     });
     select.value = alarmStream() ? 'alarm' : 'notification';
-    var note = row.querySelector('.dg-stream-note');
-    note.textContent = ru
+    row.querySelector('.dg-stream-note').textContent = ru
       ? 'Будильник звучит громкостью будильника, даже если звук уведомлений выключен.'
       : 'The alarm plays at the alarm volume, even when the notification sound is off.';
-    select.addEventListener('change', function () {
-      try { localStorage.setItem(STREAM_KEY, select.value); } catch (e) { /* no storage: the choice is lost */ }
+    return row;
+  }
+
+  function ensureStreamRow() {
+    var anchor = document.getElementById('rem-sound-row');
+    if (!anchor || document.getElementById('dg-stream-row')) return;
+    anchor.parentNode.insertBefore(streamRow(), anchor.nextSibling);
+  }
+
+  function watchStreamRow() {
+    document.addEventListener('change', function (e) {
+      var t = e.target;
+      if (!t || t.id !== 'dg-stream') return;
+      try { localStorage.setItem(STREAM_KEY, t.value); } catch (err) { /* no storage: the choice is lost */ }
       location.reload();
-    });
-    anchor.parentNode.insertBefore(row, anchor.nextSibling);
+    }, true);
+    ensureStreamRow();
+    new MutationObserver(ensureStreamRow).observe(document.documentElement, { childList: true, subtree: true });
   }
 
   // ---- Back --------------------------------------------------------------------------------
@@ -225,7 +259,7 @@
     if (!onCalendar) { wireBackButton(); return; }
     wireBackButton();
     wrapLocalNotifications();
-    addStreamRow();
+    watchStreamRow();
     // The page's own Rate Us row: note the tap, so the invitation never asks someone who has been.
     document.addEventListener('click', function (e) {
       var a = e.target && e.target.closest && e.target.closest('#up-rate');

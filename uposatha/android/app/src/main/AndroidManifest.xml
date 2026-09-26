@@ -44,6 +44,12 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- "My place" on the calendar page asks the WebView for the phone's position (navigator.geolocation).
+         Capacitor answers the page's prompt with the system permission dialog, but only for permissions
+         the manifest declares: without these two the page never got a question and never got a place. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
     <!-- The reminders are local notifications: Android 13+ asks for this at the first reminder. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- A reminder has to arrive at its minute, with the app closed and the phone dozing. This is

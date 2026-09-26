@@ -120,6 +120,11 @@ function capacitorStub() {
             await page.goto(PAGE + '&tab=cal', { waitUntil: 'load' });
             await page.waitForTimeout(1500);
             check('shortcut ?tab=cal opens the calendar tab', await page.evaluate(() => [document.body.getAttribute('data-app-tab'), localStorage.getItem('dgUposathaView')]), ['cal', 'cal']);
+            check('text is not selectable on the page, but is in a field, a quote and a Pali word', await page.evaluate(() => {
+                const us = (el) => getComputedStyle(el).userSelect;
+                const probe = (html) => { const d = document.createElement('div'); d.innerHTML = html; document.body.appendChild(d); return d.firstElementChild; };
+                return [us(document.body), us(document.querySelector('h1, h2, .dg-drawer-subtitle') || document.body), us(document.querySelector('input')), us(probe('<span class="pli-lang" lang="pi">satipaṭṭhāna</span>')), us(document.querySelector('#slides') || document.body)];
+            }), ['none', 'none', 'text', 'text', 'text']);
             check('own sound: the picker plugin makes "own" an option', await page.evaluate(() => [...document.querySelectorAll('#rem-sound option')].some((o) => o.value === 'own')), true);
             await page.screenshot({ path: path.join(SHOTS, 'launch-upo-cal-dark.png') });
             await ctx.close();
@@ -166,6 +171,10 @@ function capacitorStub() {
             check(`stream ${stream}: reminders are scheduled on the ${stream} channels`, got.scheduled.length > 0 && got.scheduled.every((id) => id.endsWith('-v1' + suffix)), true);
             check(`stream ${stream}: the settings drawer has the source row`, await page.evaluate(() => [!!document.getElementById('dg-stream-row'), document.getElementById('dg-stream').value]), [true, stream]);
             if (stream === 'notification') {
+                // The page redraws its drawer (a clone has none of the old listeners): the row must still work.
+                await page.evaluate(() => { const d = document.getElementById('dg-drawer'); const c = d.cloneNode(true); d.parentNode.replaceChild(c, d); });
+                await page.waitForTimeout(400);
+                check('the source row comes back after the page redraws its drawer', await page.evaluate(() => !!document.getElementById('dg-stream')), true);
                 await page.evaluate(() => document.querySelector('.dg-menu-btn').click());
                 await page.waitForTimeout(700);
                 await page.selectOption('#dg-stream', 'alarm');
