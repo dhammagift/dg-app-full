@@ -40,6 +40,14 @@
     return /^ru/i.test(l || navigator.language || '');
   }
 
+  // ---- the page's own splash --------------------------------------------------------------------
+  //
+  // The page's app layer (app-refresh.js) draws a splash of its own once per session when it finds itself in an
+  // app. Android draws the launch splash natively (the animated system splash), so the reader saw two, one
+  // after the other. The page shows its splash only when sessionStorage.upSplash is unset: it is set here,
+  // before the page's scripts run.
+  if (onCalendar) { try { sessionStorage.setItem('upSplash', '1'); } catch (e) { /* no storage: the page draws its own */ } }
+
   // ---- no service worker ---------------------------------------------------------------------
   //
   // The site's page registers its own service worker (/sw.js, its caching for the website). In the app the

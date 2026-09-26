@@ -76,9 +76,12 @@ function capacitorStub() {
             page.on('response', (r) => { if (r.url().startsWith(`http://127.0.0.1:${PORT}`) && r.status() >= 400) bad.push(r.status() + ' ' + r.url()); });
             page.on('pageerror', (e) => errors.push(e.message));
             await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'load' });
-            await page.waitForTimeout(3000);
+            await page.waitForTimeout(600);
+            check(`${lang}/${theme}: no splash of the page at 0.6 s`, await page.evaluate(() => !document.getElementById('up-splash')), true);
+            await page.waitForTimeout(2400);
             check(`${lang}/${theme}: the app layer is up (tabs at the bottom)`, await page.evaluate(() => [document.body.classList.contains('app'), !document.getElementById('appnav').hidden]), [true, true]);
             check(`${lang}/${theme}: the calendar has days`, await page.evaluate(() => { document.querySelector('#appnav [data-tab="list"]').click(); return document.body.innerText.length > 500; }), true);
+            check(`${lang}/${theme}: the page draws no splash of its own (Android's is native)`, await page.evaluate(() => !document.getElementById('up-splash')), true);
             check(`${lang}/${theme}: no script errors offline`, errors, []);
             check(`${lang}/${theme}: nothing of the app's own is missing (no 4xx)`, bad, []);
             if (theme === 'light') {
